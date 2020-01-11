@@ -7,9 +7,16 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.buttons.JoystickButton;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
+
+import com.revrobotics.ColorMatch;
+import com.revrobotics.ColorSensorV3;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -24,6 +31,10 @@ public class Robot extends TimedRobot {
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
+  private final I2C.Port i2cPort = I2C.Port.kOnboard;
+  private final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
+
+  private Joystick joy = new Joystick(0);
   /**
    * This function is run when the robot is first started up and should be
    * used for any initialization code.
@@ -45,7 +56,10 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
+
   }
+
+
 
   /**
    * This autonomous (along with the chooser code above) shows how to select
@@ -93,5 +107,29 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void testPeriodic() {
+
+    Color detectedColor = m_colorSensor.getColor();
+    double IR = m_colorSensor.getIR();
+
+    //Color COLOR_WHEEL_RED = ColorMatch.makeColor(r, g, b);
+    
+
+
+    SmartDashboard.putNumber("Red", detectedColor.red);
+    SmartDashboard.putNumber("Green", detectedColor.green);
+    SmartDashboard.putNumber("Blue", detectedColor.blue);
+
+
+    SmartDashboard.putNumber("IR", IR);
+    int proximity = m_colorSensor.getProximity();
+
+    SmartDashboard.putNumber("Proximity", proximity);
+
+
+
+    if (joy.getRawButtonPressed(0)) {
+      System.out.println(detectedColor.red + ", " + detectedColor.green + ", " + detectedColor.blue);
+    }
+
   }
 }
