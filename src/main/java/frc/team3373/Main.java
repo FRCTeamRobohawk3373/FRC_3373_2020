@@ -5,11 +5,8 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-<<<<<<< HEAD:src/main/java/frc/robot/Main.java
-package frc.robot;// kyle
-=======
 package frc.team3373;
->>>>>>> 727e34c72958d1e80e2a641436801b59bc5d0d4f:src/main/java/frc/team3373/Main.java
+
 
 import edu.wpi.first.wpilibj.RobotBase;
 
