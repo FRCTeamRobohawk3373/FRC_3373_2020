@@ -6,6 +6,9 @@ import com.revrobotics.ColorSensorV3;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.util.Color;
 
+/**
+ * Provides easy output from the revrobotics.ColorSensorV3 color sensor.
+ */
 public class ColorSensor {
 
     private final I2C.Port i2cPort;
@@ -36,10 +39,6 @@ public class ColorSensor {
         UNKNOWN
     }
 
-    public void update() {
-        detectedColor = m_colorSensor.getColor();
-    }
-
     public double getR() {
         return m_colorSensor.getRed();
     }
@@ -53,9 +52,7 @@ public class ColorSensor {
     }
 
     public WheelColor getWheelColor() {
-        if (detectedColor == null) {
-            return WheelColor.UNKNOWN;
-        }
+        detectedColor = m_colorSensor.getColor();
         ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);
         if (match.color == WHEEL_COLOR_RED) {
           return WheelColor.RED;
