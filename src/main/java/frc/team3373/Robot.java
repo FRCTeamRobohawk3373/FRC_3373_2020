@@ -7,14 +7,17 @@
 
 package frc.team3373;
 
-import frc.team3373.drivers.ADIS16448_IMU;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.team3373.drivers.ADIS16448_IMU;
 
 
 public class Robot extends TimedRobot {
+  private final int HEADING_FRAMES = 10;
+
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
@@ -32,34 +35,29 @@ public class Robot extends TimedRobot {
   private double timeDelta;
   private double timeWas;
   
-
-
+  // IMU
   private final ADIS16448_IMU m_imu = new ADIS16448_IMU();
+
+  // Digital imput
+  private DigitalInput digin;
 
 
   public Robot() {
-    super(0.01);
+    super(0.02);
   }
 
   @Override
-  public void robotInit() {
-
+  public void robotInit()  {
 
     // Meta
     m_autoChooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_autoChooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_autoChooser);
-
-
-    ///
-
-    m_autoChooser.setDefaultOption("Default Auto", kDefaultAuto);
-    m_autoChooser.addOption("My Auto", kCustomAuto);
-    SmartDashboard.putData("Auto choices", m_autoChooser);
-
-    SmartDashboard.putBoolean("Green if calibrating", true);
     m_imu.calibrate();
-    SmartDashboard.putBoolean("Green if calibrating", false);
+
+    // Digital input
+    digin = new DigitalInput(0);
+    
 
   }
 
@@ -75,28 +73,13 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotPeriodic() {
-    //SmartDashboard.putNumber("Angle X", ezround(m_imu.getAngleX()));
-    //SmartDashboard.putNumber("Angle Y", ezround(m_imu.getAngleY()));
-    SmartDashboard.putNumber("Angle Z", ezround(m_imu.getAngleZ(), 1));
-    //SmartDashboard.putNumber("Rate X",  ezround(m_imu.getRateX(), 4));
-    //SmartDashboard.putNumber("Rate Y",  ezround(m_imu.getRateY(), 4));
-    //SmartDashboard.putNumber("Rate Z",  ezround(m_imu.getRateZ(), 4));
-    SmartDashboard.putNumber("Accel X", ezround(m_imu.getAccelX(), 5));
-    SmartDashboard.putNumber("Accel Y", ezround(m_imu.getAccelY(), 5));
-    //SmartDashboard.putNumber("Accel Z", ezround(m_imu.getAccelZ(), 5));
-    //SmartDashboard.putNumber("Mag X",   ezround(m_imu.getMagX(), 1));
-    //SmartDashboard.putNumber("Mag Y",   ezround(m_imu.getMagY(), 1));
-    //SmartDashboard.putNumber("Mag Z",   ezround(m_imu.getMagZ(), 1));
-    //SmartDashboard.putNumber("Temperature", ezround(m_imu.getTemperature()));
-
-    
 
   }
 
   @Override
   public void autonomousInit() {
     m_autoSelected = m_autoChooser.getSelected();
-    // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
+    m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
     System.out.println("Auto selected: " + m_autoSelected);
   }
 
@@ -121,18 +104,10 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
 
-    // Show data on shuffleboard  
-    SmartDashboard.putNumber("IR", myCs.getIR());
-    SmartDashboard.putNumber("Proximity", myCs.getProximity());
-    SmartDashboard.putString("Detected Color", myCs.getWheelColor().toString());
 
-    SmartDashboard.putBoolean("Is Not Green", myCs.getWheelColor().toString()!="GREEN");
+    SmartDashboard.putBoolean("test", digin.get());
 
-    if (driver.isAHeld()) {
-      m_imu.reset();
-    } else {
 
-    }
     
     timeNow = Timer.getFPGATimestamp();
     timeDelta = timeNow - timeWas;
