@@ -39,7 +39,7 @@ public class Robot extends TimedRobot {
   private final ADIS16448_IMU m_imu = new ADIS16448_IMU();
 
   // Digital imput
-  private DigitalInput digin;
+  ManualInput mi;
 
 
   public Robot() {
@@ -55,9 +55,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.putData("Auto choices", m_autoChooser);
     m_imu.calibrate();
 
-    // Digital input
-    digin = new DigitalInput(0);
-    
+    mi = new ManualInput();
 
   }
 
@@ -105,7 +103,14 @@ public class Robot extends TimedRobot {
   public void testPeriodic() {
 
 
-    SmartDashboard.putBoolean("test", digin.get());
+    //for (int i = 0; i < digins.length; i ++) {
+    //  SmartDashboard.putBoolean("DIGIN "+i, digins[i].get());
+    //}
+
+    SmartDashboard.putNumber("num", mi.getClockNumber());
+    SmartDashboard.putBoolean("l", mi.leftSwitchOn());
+    SmartDashboard.putBoolean("r", mi.rightSwitchOn());
+    SmartDashboard.putBoolean("r-t", mi.rightSwitchToggle());
 
 
     
