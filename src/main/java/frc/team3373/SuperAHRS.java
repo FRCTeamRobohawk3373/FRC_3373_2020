@@ -12,12 +12,23 @@ public class SuperAHRS extends AHRS {
 	private boolean hasBumped;
 
 	private double targetAngle;
+
+	private static SuperAHRS instance;
+
+	public static SuperAHRS GetInstance(){
+		if(instance == null){
+			instance = new SuperAHRS(SPI.Port.kMXP);
+		}
+
+		return instance;
+	}
 	
 	SuperAHRS (SPI.Port port) {
 		super(port);
 		previousAccelerationZ = super.getWorldLinearAccelZ();
 		hasBumped = false;
 	}
+
 	public float getRotation() {
 		float rotation;
 		rotation=(360-super.getYaw())%360;
