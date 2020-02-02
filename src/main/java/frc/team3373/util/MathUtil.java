@@ -48,14 +48,39 @@ public class MathUtil {
 
     /**
      * gets a value in between two values based on a percentage
-     * @param a value 1
-     * @param b value 2
-     * @param p percent in between
+     * @param start starting value
+     * @param end ending value
+     * @param t percent in between
      */
-    public static double interpolate(double a, double b, double p){
-        p=clamp(p, 0.0, 1.0);
-        return a+(a-b)*p;
-    }
+    public static double lerp(double start, double end, double t) {
+		return start + (end - start) * t;
+	}
+
+    /**
+     * gets a value in between two values based on a percentage
+     * @param start starting value
+     * @param end ending value
+     * @param query the lineraly interpolated value
+     */
+	public static double inverseLerp(double start, double end, double query) {
+		return inverseLerp(start, end, query, true);
+	}
+
+    /**
+     * gets a value in between two values based on a percentage
+     * @param start starting value
+     * @param end ending value
+     * @param query the lineraly interpolated value
+     * @param shouldClamp whether or not the finale value should be clamped between 0-1.0
+     */
+	public static double inverseLerp(double start, double end, double query, boolean shouldClamp) {
+		double t = (query - start) / (end - start);
+		if (shouldClamp) {
+			return clamp(t, 0.0, 1.0);
+		} else {
+			return t;
+		}
+	}
 
     /**
      * nomalizes the value between 0 to 1 for a given range.
@@ -77,6 +102,17 @@ public class MathUtil {
      */
     public static double floorMod(double x, double y) {
         return x - (Math.floor(x / y) * y);
+    }
+
+    /**
+     * converts the range of polar corodanates from (-PI, PI) to (0, 2PI)
+     * @param value the value in radians from (-PI, PI)
+     */
+    public static double translatePIRange(double value){
+        if(value<0){
+			value+=2*Math.PI;
+		}
+		return value;
     }
 
     /**
