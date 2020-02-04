@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class ManualInput {
 
@@ -34,10 +33,7 @@ public class ManualInput {
         map.put(0, 12);
         map.put(2, 13);
         map.put(10, 14);
-        map.put(8, 15);
-
- 
-  
+        map.put(8, 15); 
     }
 
     public int getClockNumber() {
@@ -57,5 +53,4 @@ public class ManualInput {
     public boolean rightSwitchToggle() {
         return !digins[4].get();
     }
-
 }
