@@ -9,6 +9,8 @@ public class Constants{
     //public static final double relativeEncoderRatio= 17.999954;
     public static final double relativeEncoderRatio= 17.9992371;
 
+    public static final double ROTATIONAL_CORRECTION_FACTOR = 4; 
+
     public static final int FLDriveMotorID = 7;
     public static final int FLRotateMotorID = 8;
 

@@ -100,7 +100,7 @@ public class Robot extends TimedRobot {
 
 
 
-    SmartDashboard.putNumber("P Gain", 1);
+    /* SmartDashboard.putNumber("P Gain", 1);
 	  SmartDashboard.putNumber("I Gain", 1e-6);
 		SmartDashboard.putNumber("D Gain", 0);
 		SmartDashboard.putNumber("I Zone", 0);
@@ -109,7 +109,7 @@ public class Robot extends TimedRobot {
 		SmartDashboard.putNumber("Min Output", -1);
 		SmartDashboard.putNumber("Set Rotations", 0);
 
-    SmartDashboard.putNumber("Current target", 0);
+    SmartDashboard.putNumber("Current target", 0); */
   }
 
   /**
@@ -131,10 +131,11 @@ public class Robot extends TimedRobot {
     }
  */ 
     double orientationOffset = Math.toRadians(ahrs.getYaw());
-    SmartDashboard.putNumber("orientationOffsetDegree", Math.toDegrees(orientationOffset));
-    SmartDashboard.putNumber("orientationOffsetRadians", orientationOffset);
+    SmartDashboard.putNumber("orientationDegree", Math.toDegrees(orientationOffset));
+    SmartDashboard.putNumber("orientationRadians", orientationOffset);
     SmartDashboard.putBoolean("isCalibrating", ahrs.isCalibrating());
     swerve.showPositions();
+    swerve.getRotationalCorrection();
 
     /* if(driver.isBackPushed()){
       ahrs.reset();
@@ -179,7 +180,7 @@ public class Robot extends TimedRobot {
   }
 
   public void teleopInit() {
-    ahrs.reset();
+    swerve.resetOrentation();
   }
 
   /**
@@ -213,6 +214,10 @@ public class Robot extends TimedRobot {
 
     if(driver.isXPushed()){
       swerve.recalculateWheelPosition();
+    }
+
+    if(driver.isBackPushed()){
+      swerve.resetOrentation();
     }
 
     switch (driver.getPOV()){

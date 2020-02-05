@@ -148,6 +148,14 @@ public class SwerveWheel {
 	}
 
 	/**
+	 * gets the current target speed.
+	 */
+	public double getSpeed() {
+		return targetSpeed;
+	}
+
+
+	/**
 	 * gets the current angle of the wheel in radians;
 	 */
 	public double getCurrentAngle() {
@@ -160,7 +168,13 @@ public class SwerveWheel {
 	 * gets the current angle of the abosolute postion encoder of the wheel in radians;
 	 */
 	public double getCurrentAbsAngle(){
-		double pos = rotateMotor.getAnalog(AnalogMode.kAbsolute).getPosition()-EHome;
+		double avg = 0;
+		for(int i = 0; i<10; i++){
+			avg+=rotateMotor.getAnalog(AnalogMode.kAbsolute).getVoltage();
+		}
+		avg /= 10;
+
+		double pos = avg-EHome;
 		if (pos < 0) {
 			pos += (EMax-EMin);
 		}
@@ -185,15 +199,16 @@ public class SwerveWheel {
 		double current = getCurrentAngle();
 		double localAngle = current % TWOPI;
 		double deltaTarget = targetAngle - localAngle;
-		double altDeltaTarget = (targetAngle+TWOPI)-localAngle;
+		double altDeltaTarget = (targetAngle-TWOPI)-localAngle;
 		double target;
 
-		if(Math.abs(deltaTarget)<Math.abs(altDeltaTarget)){
-			target = deltaTarget + current;
-		}else{
+		if(Math.abs(altDeltaTarget)<Math.abs(deltaTarget)){
 			target = altDeltaTarget + current;
+		}else{
+			target = deltaTarget + current;
 		}
-		
+		//target = deltaTarget + current;
+		SmartDashboard.putNumber(name+" targetAngle",targetAngle);
 		SmartDashboard.putNumber(name+" new Target",target*relRadfactor);
 		m_pidController.setReference(target*relRadfactor, ControlType.kPosition);
 		
