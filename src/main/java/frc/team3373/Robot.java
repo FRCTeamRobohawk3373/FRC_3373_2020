@@ -7,12 +7,18 @@
 
 package frc.team3373;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.util.Scanner;
+
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team3373.drivers.ADIS16448_IMU;
+
 
 
 public class Robot extends TimedRobot {
@@ -23,6 +29,13 @@ public class Robot extends TimedRobot {
   private String m_autoSelected;
   private final SendableChooser<String> m_autoChooser = new SendableChooser<>();
   
+  private enum state {
+    SCORE,
+    CLIMB
+
+  };
+
+  public state mode = state.SCORE;
 
   // Color sensor
   private ColorSensor myCs = new ColorSensor();
@@ -35,12 +48,11 @@ public class Robot extends TimedRobot {
   private double timeDelta;
   private double timeWas;
   
-  // IMU
   private final ADIS16448_IMU m_imu = new ADIS16448_IMU();
-
-  // Digital imput
   ManualInput mi;
+  Climber climber;
 
+  private File deployFilePath;
 
   public Robot() {
     super(0.02);
@@ -57,8 +69,36 @@ public class Robot extends TimedRobot {
 
     mi = new ManualInput();
 
+    // test file system
+    try {
+      FileWriter myWriter = new FileWriter(Filesystem.getDeployDirectory()+"\\test2.txt");
+      myWriter.write("No puedo hablar espanol.");
+      myWriter.close();
+      System.out.println("Successfully wrote to the file.");
+      
+      File myObj = new File(Filesystem.getDeployDirectory()+"\\test2.txt");
+      Scanner myReader = new Scanner(myObj);
+      while (myReader.hasNextLine()) {
+        String data = myReader.nextLine();
+        System.out.println(data);
+      }
+      myReader.close();
+    } catch (Exception e) {
+      System.out.println(e.toString());
+      e.printStackTrace();
+    }
+
+    // set climber values
+    climber = new Climber();
+    climber.setPoleConversion(1);
+    climber.setWinchConversion(1);
+    climber.setZeroInches(0);
+    climber.gotoInches(20);
+
   }
 
+
+  
   public double ezround(double val) {
     return Math.round(val);
   }
@@ -66,8 +106,6 @@ public class Robot extends TimedRobot {
     double exp = Math.pow(10, precision);
     return Math.round(val*exp)/exp;
   }
-
-
 
   @Override
   public void robotPeriodic() {
@@ -102,7 +140,6 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
 
-
     //for (int i = 0; i < digins.length; i ++) {
     //  SmartDashboard.putBoolean("DIGIN "+i, digins[i].get());
     //}
@@ -111,15 +148,11 @@ public class Robot extends TimedRobot {
     SmartDashboard.putBoolean("l", mi.leftSwitchOn());
     SmartDashboard.putBoolean("r", mi.rightSwitchOn());
     SmartDashboard.putBoolean("r-t", mi.rightSwitchToggle());
-
-
     
     timeNow = Timer.getFPGATimestamp();
     timeDelta = timeNow - timeWas;
     SmartDashboard.putString("ms / Hz", Math.round(timeDelta*1000)+" / "+Math.round(1/timeDelta));
     timeWas = timeNow;
-    
-
 
   }
 }
