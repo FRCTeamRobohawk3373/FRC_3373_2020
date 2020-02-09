@@ -87,10 +87,7 @@ public class Robot extends TimedRobot {
     }
 
     // set climber values
-    climber = new Climber(1, 2);
-    climber.setZeroInches(0);
-    climber.setExtenedInches(2, 25);
-    climber.setGotoInches(0);
+    climber = new Climber(1, 4);
 
   }
 
@@ -115,6 +112,7 @@ public class Robot extends TimedRobot {
       climber.onCalibrateButton();
     climber.update();
 
+    mi.displayOnShuffleboard();
 
     timeNow = Timer.getFPGATimestamp();
     timeDelta = timeNow - timeWas;
