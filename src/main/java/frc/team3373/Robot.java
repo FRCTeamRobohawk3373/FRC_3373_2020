@@ -14,6 +14,8 @@ import edu.wpi.first.wpilibj.SPI;
 
 import frc.team3373.util.MathUtil;
 import frc.team3373.SwerveWheel;
+import frc.team3373.SwerveControl.DriveMode;
+import frc.team3373.SwerveControl.Side;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -62,6 +64,9 @@ public class Robot extends TimedRobot {
   double min = Double.MAX_VALUE;
   double max = Double.MIN_VALUE;
 
+  int mode = 0;
+  double endtime=System.currentTimeMillis();
+
   /**
    * This function is run when the robot is first started up and should be used
    * for any initialization code.
@@ -76,6 +81,7 @@ public class Robot extends TimedRobot {
     
     swerve = SwerveControl.GetInstance();
     swerve.setDriveSpeed(0.25);
+    swerve.changeControllerLimiter(0);
     
 
     /* double rotAngle = Math.toDegrees(Math.atan((Constants.robotWidth / 2) / (Constants.robotLength / 2)));
@@ -135,7 +141,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("orientationRadians", orientationOffset);
     SmartDashboard.putBoolean("isCalibrating", ahrs.isCalibrating());
     swerve.showPositions();
-    swerve.getRotationalCorrection();
+    //swerve.getRotationalCorrection();
 
     /* if(driver.isBackPushed()){
       ahrs.reset();
@@ -195,15 +201,47 @@ public class Robot extends TimedRobot {
       e.printStackTrace();
     } */
     if(driver.isAHeld() ){
+      if(driver.isAPushed()){
+        endtime=System.currentTimeMillis()+4000;
+        mode=1;
+      }
       swerve.calculateSwerveControl(0, -1, 0);
+
+      if(System.currentTimeMillis()>endtime){
+        endtime=System.currentTimeMillis()+4000;
+        mode++;
+      }
+
+      switch(mode) {
+        case 1:
+          swerve.changeFront(Side.NORTH);
+          break;
+        case 2:
+          swerve.changeFront(Side.WEST);
+          break;
+        case 3:
+          swerve.changeFront(Side.SOUTH);
+          break;
+        case 4:
+          swerve.changeFront(Side.EAST);
+          break;
+        default:
+          mode=1;
+          break;
+        
+      }
     }else{
       swerve.calculateSwerveControl(driver.getRawAxis(0), driver.getRawAxis(1), driver.getRawAxis(4)*0.75);
     }
+    
+    if(driver.isBPushed()){
+      swerve.changeControllerLimiter();
+    }
 
-    if(driver.isRBHeld()){
-      swerve.setDriveSpeed(.75);
-    }else if(driver.isLBHeld()){
+    if(driver.isLBHeld()){
       swerve.setDriveSpeed(0.15);
+    }else if(driver.isRBHeld()){
+        swerve.setDriveSpeed(.75);
     }else{
       swerve.setDriveSpeed(0.45);
     }
@@ -212,14 +250,16 @@ public class Robot extends TimedRobot {
       swerve.calibrateHome();
     } */
 
-    if(driver.isXPushed()){
-      swerve.recalculateWheelPosition();
-    }
-
-    if(driver.isBackPushed()){
+    if(driver.isYPushed()){
       swerve.resetOrentation();
     }
 
+    if(driver.getRawAxis(2)>0.8)
+      swerve.setControlMode(DriveMode.FIELDCENTRIC);
+    else if(driver.getRawAxis(3)>0.8)
+      swerve.setControlMode(DriveMode.ROBOTCENTRIC);
+
+    
     switch (driver.getPOV()){
       case 0:
         swerve.changeFront(SwerveControl.Side.NORTH);
@@ -234,6 +274,11 @@ public class Robot extends TimedRobot {
         swerve.changeFront(SwerveControl.Side.WEST);
         break;
     }
+
+    if(driver.isBackPushed()){
+      swerve.recalculateWheelPosition();
+    }
+
     driver.clearButtons();
   }
 
@@ -242,132 +287,12 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void testPeriodic() {
-    if(driver.isRBPushed()){
-      target+=Constants.relativeEncoderRatio;
-      SmartDashboard.putNumber("Current target", target);
-      for(SwerveWheel wheel: wheels){
-        wheel.setPosition(target);
-      }
-    }else if(driver.isLBPushed()){
-      target-=Constants.relativeEncoderRatio;
-      SmartDashboard.putNumber("Current target", target);
-      for(SwerveWheel wheel: wheels){
-        wheel.setPosition(target);
-      }
-    }
-
-    if (driver.isAPushed()){
-      for(SwerveWheel wheel: wheels){
-        //wheel.rawRotate(0);
-        wheel.setTargetAngle(0);
-        wheel.goToAngle();
-        //wheel.setPosition(0);
-        target = 0;
-      }
-    }
-
-    /* if (driver.isYPushed()){
-      for(SwerveWheel wheel: wheels){
-        //wheel.rawRotate(0.2);
-        SmartDashboard.putNumber("Current target", Constants.relativeEncoderRatio*10);
-        wheel.setPosition(Constants.relativeEncoderRatio*10);
-      }
-    } */
-
-
-    if(driver.isBHeld()){
-      double speed = driver.getRawAxis(1);
-      SmartDashboard.putNumber("selected power", speed);
-      for(SwerveWheel wheel: wheels){
-        wheel.setSpeed(speed);
-        wheel.drive();
-      }
-    }
-    if(driver.isXPushed()){
-      for(SwerveWheel wheel: wheels){
-        wheel.setSpeed(0);
-        wheel.drive();
-      }
-    }
     if(driver.isStartPushed()){
-      for(SwerveWheel wheel: wheels){
-        wheel.zeroRotation();
-        target=0;
-      }
+      swerve.calibrateHome();
     }
-
     if(driver.isBackPushed()){
-      for(SwerveWheel wheel: wheels){
-        wheel.calabrateWheel();
-        wheel.rawRotate(0);
-      }
+      swerve.calibrateMinMax();
     }
-    if(driver.getPOV()!=-1){
-      //index=driver.getPOV();
-      switch (driver.getPOV()){
-        case 0:
-          /* SmartDashboard.putString("calabrating Swerve", wheels[0].name);
-          testRange(wheels[0]);
-          SmartDashboard.putNumber("Min", min);
-          SmartDashboard.putNumber("Max", max); */
-
-          //wheels[0].UIConfigPID();
-          for(SwerveWheel wheel: wheels){
-            target = Math.PI/2;
-            wheel.setTargetAngle(target);
-            wheel.goToAngle();
-          }
-          break;
-        case 90:
-          /* SmartDashboard.putString("calabrating Swerve", wheels[1].name);
-          //wheels[1].UIConfigPID();
-          testRange(wheels[1]);
-          SmartDashboard.putNumber("Min", min);
-          SmartDashboard.putNumber("Max", max); */
-          for(SwerveWheel wheel: wheels){
-            target = 0;
-            wheel.setTargetAngle(target);
-            wheel.goToAngle();
-          }
-          break;
-        case 180:
-          /* SmartDashboard.putString("calabrating Swerve", wheels[2].name);
-          //wheels[2].UIConfigPID();
-          testRange(wheels[2]);
-          SmartDashboard.putNumber("Min", min);
-          SmartDashboard.putNumber("Max", max); */
-          for(SwerveWheel wheel: wheels){
-            target = (3*Math.PI)/2;
-            wheel.setTargetAngle(target);
-            wheel.goToAngle();
-          }
-          break;
-        case 270:
-          /* SmartDashboard.putString("calabrating Swerve", wheels[3].name);
-          //wheels[3].UIConfigPID();
-          testRange(wheels[3]);
-          SmartDashboard.putNumber("Min", min);
-          SmartDashboard.putNumber("Max", max); */
-          for(SwerveWheel wheel: wheels){
-            target = Math.PI;
-            wheel.setTargetAngle(target);
-            wheel.goToAngle();
-          }
-          break;
-      }
-    } 
-
     driver.clearButtons();
-    
   }
-
-  public void testRange(SwerveWheel wheel){
-    double val = wheel.getRawAnalogRotation();
-    if(val>max)
-      max=val;
-    if(val<min)
-      min=val; 
-  }
-  
-
 }
