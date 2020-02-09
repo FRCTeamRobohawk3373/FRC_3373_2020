@@ -2,8 +2,8 @@ package frc.team3373;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class ManualInput {
 
@@ -52,5 +52,12 @@ public class ManualInput {
 
     public boolean rightSwitchToggle() {
         return !digins[4].get();
+    }
+
+    public void displayOnShuffleboard() {
+        SmartDashboard.putNumber("Clock input", getClockNumber());
+        SmartDashboard.putBoolean("Left switch", leftSwitchOn());
+        SmartDashboard.putBoolean("Right switch", rightSwitchOn());
+        SmartDashboard.putBoolean("Right toggle", rightSwitchToggle());
     }
 }

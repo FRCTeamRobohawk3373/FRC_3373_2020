@@ -18,8 +18,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team3373.drivers.ADIS16448_IMU;
-
-
+import frc.team3373.SuperJoystick;
 
 public class Robot extends TimedRobot {
   private final int HEADING_FRAMES = 10;
@@ -28,10 +27,9 @@ public class Robot extends TimedRobot {
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_autoChooser = new SendableChooser<>();
-  
+
   private enum state {
-    SCORE,
-    CLIMB
+    SCORE, CLIMB
 
   };
 
@@ -47,8 +45,8 @@ public class Robot extends TimedRobot {
   private double timeNow = Timer.getFPGATimestamp();
   private double timeDelta;
   private double timeWas;
-  
-  private final ADIS16448_IMU m_imu = new ADIS16448_IMU();
+
+  // private final ADIS16448_IMU m_imu = new ADIS16448_IMU();
   ManualInput mi;
   Climber climber;
 
@@ -59,24 +57,24 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void robotInit()  {
+  public void robotInit() {
 
     // Meta
     m_autoChooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_autoChooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_autoChooser);
-    m_imu.calibrate();
+    // m_imu.calibrate();
 
     mi = new ManualInput();
 
     // test file system
     try {
-      FileWriter myWriter = new FileWriter(Filesystem.getDeployDirectory()+"\\test2.txt");
+      FileWriter myWriter = new FileWriter(Filesystem.getDeployDirectory() + "\\test2.txt");
       myWriter.write("No puedo hablar espanol.");
       myWriter.close();
       System.out.println("Successfully wrote to the file.");
-      
-      File myObj = new File(Filesystem.getDeployDirectory()+"\\test2.txt");
+
+      File myObj = new File(Filesystem.getDeployDirectory() + "\\test2.txt");
       Scanner myReader = new Scanner(myObj);
       while (myReader.hasNextLine()) {
         String data = myReader.nextLine();
@@ -89,26 +87,42 @@ public class Robot extends TimedRobot {
     }
 
     // set climber values
-    climber = new Climber();
-    climber.setPoleConversion(1);
-    climber.setWinchConversion(1);
+    climber = new Climber(1, 2);
     climber.setZeroInches(0);
-    climber.gotoInches(20);
+    climber.setExtenedInches(2, 25);
+    climber.setGotoInches(0);
 
   }
 
-
-  
   public double ezround(double val) {
     return Math.round(val);
   }
+
   public double ezround(double val, int precision) {
     double exp = Math.pow(10, precision);
-    return Math.round(val*exp)/exp;
+    return Math.round(val * exp) / exp;
   }
 
   @Override
   public void robotPeriodic() {
+
+    if (driver.isDPadUpPushed())
+      climber.onDPadUp();
+    if (driver.isDPadDownPushed())
+      climber.onDPadDown();
+    climber.onYStick(-driver.getRawAxis(1));
+    if (driver.isStartPushed())
+      climber.onCalibrateButton();
+    climber.update();
+
+
+    timeNow = Timer.getFPGATimestamp();
+    timeDelta = timeNow - timeWas;
+    SmartDashboard.putString("ms / Hz", Math.round(timeDelta * 1000) + " / " + Math.round(1 / timeDelta));
+    timeWas = timeNow;
+
+    driver.clearButtons();
+    driver.clearDPad();
 
   }
 
@@ -119,17 +133,16 @@ public class Robot extends TimedRobot {
     System.out.println("Auto selected: " + m_autoSelected);
   }
 
-
   @Override
   public void autonomousPeriodic() {
     switch (m_autoSelected) {
-      case kCustomAuto:
-        // Put custom auto code here
-        break;
-      case kDefaultAuto:
-      default:
-        // Put default auto code here
-        break;
+    case kCustomAuto:
+      // Put custom auto code here
+      break;
+    case kDefaultAuto:
+    default:
+      // Put default auto code here
+      break;
     }
   }
 
@@ -140,19 +153,9 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
 
-    //for (int i = 0; i < digins.length; i ++) {
-    //  SmartDashboard.putBoolean("DIGIN "+i, digins[i].get());
-    //}
-
-    SmartDashboard.putNumber("num", mi.getClockNumber());
-    SmartDashboard.putBoolean("l", mi.leftSwitchOn());
-    SmartDashboard.putBoolean("r", mi.rightSwitchOn());
-    SmartDashboard.putBoolean("r-t", mi.rightSwitchToggle());
-    
-    timeNow = Timer.getFPGATimestamp();
-    timeDelta = timeNow - timeWas;
-    SmartDashboard.putString("ms / Hz", Math.round(timeDelta*1000)+" / "+Math.round(1/timeDelta));
-    timeWas = timeNow;
+    // for (int i = 0; i < digins.length; i ++) {
+    // SmartDashboard.putBoolean("DIGIN "+i, digins[i].get());
+    // }
 
   }
 }
