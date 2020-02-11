@@ -57,57 +57,15 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
 
-    if (RobotState.isOperatorControl()) {
-
-      double lSticky = -driver.getRawAxis(1);
-      if (Math.abs(lSticky) > 0.05) {
-        climber.onYStick(lSticky);
-      } else if (driver.isDPadDownPushed()) {
-        climber.gotoLowPosition();
-      } else if (driver.isDPadLeftPushed() || driver.isDPadRightPushed()) {
-        climber.gotoMiddlePosition();
-      } else if (driver.isDPadUpPushed()) {
-        climber.gotoHighPosition();
-      } else if (driver.isYPushed()) {
-        climber.climb();
-      }
-      climber.updateTeleOp();
-    } else if (RobotState.isTest()) {
-
-      double lSticky = -driver.getRawAxis(1);
-      if (Math.abs(lSticky) > 0.05) {
-        climber.onYStick(lSticky);
-      } else if (driver.isDPadDownPushed() && !climber.isCalibrating()) {
-        climber.gotoLowPosition();
-      } else if ((driver.isDPadLeftPushed() || driver.isDPadRightPushed()) && !climber.isCalibrating()) {
-        climber.gotoMiddlePosition();
-      } else if (driver.isDPadUpPushed() && !climber.isCalibrating()) {
-        climber.gotoHighPosition();
-      } else if (driver.isYPushed() && !climber.isCalibrating()) {
-        climber.climb();
-      } else if (driver.isStartPushed()) {
-        climber.onCalibrateButton();
-      } else if (driver.isAPushed()) {
-        climber.onAButton();
-      } else if (driver.isBPushed()) {
-        climber.onBButton();
-      }
-      climber.updateTestMode();
-    }
-    
-
     mi.displayOnShuffleboard();
 
-    
     timeNow = Timer.getFPGATimestamp();
     timeDelta = timeNow - timeWas;
     SmartDashboard.putString("ms / Hz", Math.round(timeDelta * 1000) + " / " + Math.round(1 / timeDelta));
     timeWas = timeNow;
 
-
     driver.clearButtons();
     driver.clearDPad();
-
   }
 
   @Override
@@ -132,9 +90,47 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
+
+    // Climber
+    double lSticky = -driver.getRawAxis(1);
+    if (Math.abs(lSticky) > 0.05) {
+      climber.onYStick(lSticky);
+    } else if (driver.isDPadDownPushed()) {
+      climber.gotoLowPosition();
+    } else if (driver.isDPadLeftPushed() || driver.isDPadRightPushed()) {
+      climber.gotoMiddlePosition();
+    } else if (driver.isDPadUpPushed()) {
+      climber.gotoHighPosition();
+    } else if (driver.isYPushed()) {
+      climber.climb();
+    }
+    climber.updateTeleOp();
+
   }
 
   @Override
   public void testPeriodic() {
+
+    // Climber
+    double lSticky = -driver.getRawAxis(1);
+    if (Math.abs(lSticky) > 0.05) {
+      climber.onYStick(lSticky);
+    } else if (driver.isDPadDownPushed() && !climber.isCalibrating()) {
+      climber.gotoLowPosition();
+    } else if ((driver.isDPadLeftPushed() || driver.isDPadRightPushed()) && !climber.isCalibrating()) {
+      climber.gotoMiddlePosition();
+    } else if (driver.isDPadUpPushed() && !climber.isCalibrating()) {
+      climber.gotoHighPosition();
+    } else if (driver.isYPushed() && !climber.isCalibrating()) {
+      climber.climb();
+    } else if (driver.isStartPushed()) {
+      climber.onCalibrateButton();
+    } else if (driver.isAPushed()) {
+      climber.onAButton();
+    } else if (driver.isBPushed()) {
+      climber.onBButton();
+    }
+    climber.updateTestMode();
+
   }
 }

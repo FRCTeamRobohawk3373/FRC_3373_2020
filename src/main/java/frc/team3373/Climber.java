@@ -15,9 +15,9 @@ public class Climber {
     final double START_POLE_TICKS_PER_INCH = 0.28;
     final double START_WINCH_TICKS_PER_INCH = 0.155033;
 
-    final double ALL_MODES_MAX_SPEED = 0.16;
-    final double MAX_MANUAL_CONTROL_SPEED = 0.12;
-    final double MAX_CALIBRATE_CONTROL_SPEED = 0.08;
+    final double ALL_MODES_MAX_SPEED = 0.08;
+    final double MAX_MANUAL_CONTROL_SPEED = 0.07;
+    final double MAX_CALIBRATE_CONTROL_SPEED = 0.06;
     final double POLE_MOTOR_EXTENDED_INCHES = 25;//! For calibration
     final double WINCH_MOTOR_EXTENDED_INCHES = 16;//!
 
@@ -250,17 +250,14 @@ calibrationMode == calibration_state.b_W_WAIT_FOR_EXTENDED_INCHES) w_goto += val
     }   
 
     public void onCalibrateButton() {
-        if (mode != motor_state.CALIBRATE) { 
+        if (mode == motor_state.CALIBRATE) {
+            SmartDashboard.putString("Calibration", "Calibration aborted");
+        } else { 
             mode = motor_state.CALIBRATE;
             calibrationMode = calibration_state.WAITING_FOR_A_OR_B;
-        }
-        if (mode == motor_state.CALIBRATE) {
-            switch (calibrationMode) {
-                case FAIL_SAFE:
-                    SmartDashboard.putString("Calibration", "Error");
-                    break;                   
-            }
-        }
+            SmartDashboard.putString("Calibration", "Waiting for A or B config.")
+        } 
+
     }
 
     public void onAButton() {
@@ -277,7 +274,7 @@ calibrationMode == calibration_state.b_W_WAIT_FOR_EXTENDED_INCHES) w_goto += val
                 break;
             case a_W_WAIT_FOR_ZERO_INCHES:
                 setWinchZeroInches(w_goto);
-                SmartDashboard.putString("Calibration", "a-All done");
+                SmartDashboard.putString("Calibration", "a-Calibration done");
                 calibrationMode = calibration_state.FAIL_SAFE;
                 mode = motor_state.GOTO;
                 setPoleGotoInches(0);
@@ -310,7 +307,7 @@ calibrationMode == calibration_state.b_W_WAIT_FOR_EXTENDED_INCHES) w_goto += val
                 break;
             case b_W_WAIT_FOR_EXTENDED_INCHES:
                 setWinchExtenedInches(w_goto, WINCH_MOTOR_EXTENDED_INCHES);
-                SmartDashboard.putString("Calibration", "b-All done");
+                SmartDashboard.putString("Calibration", "b-Calibration done");
                 calibrationMode = calibration_state.FAIL_SAFE;
                 smartAdjustManualAndCalibrateSpeeds();
                 mode = motor_state.GOTO;
