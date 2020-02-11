@@ -7,33 +7,19 @@
 
 package frc.team3373;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.util.Scanner;
-
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.team3373.drivers.ADIS16448_IMU;
 import frc.team3373.SuperJoystick;
 
 public class Robot extends TimedRobot {
-  private final int HEADING_FRAMES = 10;
 
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_autoChooser = new SendableChooser<>();
-
-  private enum state {
-    SCORE, CLIMB
-
-  };
-
-  public state mode = state.SCORE;
 
   // Color sensor
   private ColorSensor myCs = new ColorSensor();
@@ -50,8 +36,6 @@ public class Robot extends TimedRobot {
   ManualInput mi;
   Climber climber;
 
-  private File deployFilePath;
-
   public Robot() {
     super(0.02);
   }
@@ -63,61 +47,63 @@ public class Robot extends TimedRobot {
     m_autoChooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_autoChooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_autoChooser);
-    // m_imu.calibrate();
+
 
     mi = new ManualInput();
-
-    // test file system
-    try {
-      FileWriter myWriter = new FileWriter(Filesystem.getDeployDirectory() + "\\test2.txt");
-      myWriter.write("No puedo hablar espanol.");
-      myWriter.close();
-      System.out.println("Successfully wrote to the file.");
-
-      File myObj = new File(Filesystem.getDeployDirectory() + "\\test2.txt");
-      Scanner myReader = new Scanner(myObj);
-      while (myReader.hasNextLine()) {
-        String data = myReader.nextLine();
-        System.out.println(data);
-      }
-      myReader.close();
-    } catch (Exception e) {
-      System.out.println(e.toString());
-      e.printStackTrace();
-    }
-
-    // set climber values
     climber = new Climber(1, 4);
 
-  }
-
-  public double ezround(double val) {
-    return Math.round(val);
-  }
-
-  public double ezround(double val, int precision) {
-    double exp = Math.pow(10, precision);
-    return Math.round(val * exp) / exp;
   }
 
   @Override
   public void robotPeriodic() {
 
-    if (driver.isDPadUpPushed())
-      climber.onDPadUp();
-    if (driver.isDPadDownPushed())
-      climber.onDPadDown();
-    climber.onYStick(-driver.getRawAxis(1));
-    if (driver.isStartPushed())
-      climber.onCalibrateButton();
-    climber.update();
+    if (RobotState.isOperatorControl()) {
+
+      double lSticky = -driver.getRawAxis(1);
+      if (Math.abs(lSticky) > 0.05) {
+        climber.onYStick(lSticky);
+      } else if (driver.isDPadDownPushed()) {
+        climber.gotoLowPosition();
+      } else if (driver.isDPadLeftPushed() || driver.isDPadRightPushed()) {
+        climber.gotoMiddlePosition();
+      } else if (driver.isDPadUpPushed()) {
+        climber.gotoHighPosition();
+      } else if (driver.isYPushed()) {
+        climber.climb();
+      }
+      climber.updateTeleOp();
+    } else if (RobotState.isTest()) {
+
+      double lSticky = -driver.getRawAxis(1);
+      if (Math.abs(lSticky) > 0.05) {
+        climber.onYStick(lSticky);
+      } else if (driver.isDPadDownPushed() && !climber.isCalibrating()) {
+        climber.gotoLowPosition();
+      } else if ((driver.isDPadLeftPushed() || driver.isDPadRightPushed()) && !climber.isCalibrating()) {
+        climber.gotoMiddlePosition();
+      } else if (driver.isDPadUpPushed() && !climber.isCalibrating()) {
+        climber.gotoHighPosition();
+      } else if (driver.isYPushed() && !climber.isCalibrating()) {
+        climber.climb();
+      } else if (driver.isStartPushed()) {
+        climber.onCalibrateButton();
+      } else if (driver.isAPushed()) {
+        climber.onAButton();
+      } else if (driver.isBPushed()) {
+        climber.onBButton();
+      }
+      climber.updateTestMode();
+    }
+    
 
     mi.displayOnShuffleboard();
 
+    
     timeNow = Timer.getFPGATimestamp();
     timeDelta = timeNow - timeWas;
     SmartDashboard.putString("ms / Hz", Math.round(timeDelta * 1000) + " / " + Math.round(1 / timeDelta));
     timeWas = timeNow;
+
 
     driver.clearButtons();
     driver.clearDPad();
@@ -150,10 +136,5 @@ public class Robot extends TimedRobot {
 
   @Override
   public void testPeriodic() {
-
-    // for (int i = 0; i < digins.length; i ++) {
-    // SmartDashboard.putBoolean("DIGIN "+i, digins[i].get());
-    // }
-
   }
 }
