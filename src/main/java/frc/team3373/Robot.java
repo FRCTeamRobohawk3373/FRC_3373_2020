@@ -112,6 +112,12 @@ public class Robot extends TimedRobot {
   public void testPeriodic() {
 
     // Climber
+    
+    if (climber.isCalibrating()) {
+      double rSticky = -driver.getRawAxis(5);
+      if (Math.abs(rSticky) > 0.05)
+        climber.onYStick2(rSticky);
+    }
     double lSticky = -driver.getRawAxis(1);
     if (Math.abs(lSticky) > 0.05) {
       climber.onYStick(lSticky);
@@ -127,10 +133,18 @@ public class Robot extends TimedRobot {
       climber.onCalibrateButton();
     } else if (driver.isAPushed()) {
       climber.onAButton();
-    } else if (driver.isBPushed()) {
+    } else if (driver.isBPushed()) {                  
       climber.onBButton();
     }
     climber.updateTestMode();
 
   }
+
+  public void disabledInit() {
+    climber.disable();
+    //climber = null;
+    System.out.println("Called");
+
+  }
+
 }

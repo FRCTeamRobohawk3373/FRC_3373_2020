@@ -12,19 +12,19 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Climber {
 
-    final double START_POLE_TICKS_PER_INCH = 0.28;
-    final double START_WINCH_TICKS_PER_INCH = 0.155033;
+    final double START_POLE_TICKS_PER_INCH = 0.173;
+    final double START_WINCH_TICKS_PER_INCH = 0.1653;
 
-    final double ALL_MODES_MAX_SPEED = 0.08;
-    final double MAX_MANUAL_CONTROL_SPEED = 0.07;
-    final double MAX_CALIBRATE_CONTROL_SPEED = 0.06;
+    final double ALL_MODES_MAX_SPEED = 0.05;
+    final double MAX_MANUAL_CONTROL_SPEED = 0.05;
+    final double MAX_CALIBRATE_CONTROL_SPEED = 0.05;
     final double POLE_MOTOR_EXTENDED_INCHES = 25;//! For calibration
-    final double WINCH_MOTOR_EXTENDED_INCHES = 16;//!
+    final double WINCH_MOTOR_EXTENDED_INCHES = 25;//!
 
     final double LOW_POSITION_INCHES = 15;
-    final double MIDDLE_POSITION_INCHES = 21;
-    final double HIGH_POSITION_INCHES = 27;
-    final double CLIMB_POSITION_INCHES = -2;
+    final double MIDDLE_POSITION_INCHES = 20;
+    final double HIGH_POSITION_INCHES = 25;
+    final double CLIMB_POSITION_INCHES = 0;
 
     private double p_manualSpeed = MAX_MANUAL_CONTROL_SPEED;
     private double p_calibrateSpeed = MAX_CALIBRATE_CONTROL_SPEED;
@@ -36,8 +36,8 @@ public class Climber {
 
     CANPIDController p_pid, w_pid;
 
-    private double p_zeroInchesPos;
-    private double w_zeroInchesPos;
+    private double p_zeroInchesPos = 0;
+    private double w_zeroInchesPos = 0;
     private double p_lastGoto = 0;
     private double w_lastGoto = 0;
 
@@ -47,13 +47,15 @@ public class Climber {
     private double p_ticksPerInch = 1;
     private double w_ticksPerInch = 1;
 
+    private double rStickVelocity = 0;
+
     private static enum motor_state {
         GOTO, MANUAL, CALIBRATE, STOP
     }
     private static enum calibration_state {
         FAIL_SAFE, WAITING_FOR_A_OR_B, 
-        a_P_WAIT_FOR_ZERO_INCHES, a_W_WAIT_FOR_ZERO_INCHES,
-        b_P_WAIT_FOR_ZERO_INCHES, b_P_WAIT_FOR_EXTENDED_INCHES, b_W_WAIT_FOR_ZERO_INCHES, b_W_WAIT_FOR_EXTENDED_INCHES 
+        A_WAIT_FOR_ZERO_INCHES,
+        B_WAIT_FOR_ZERO_INCHES, B_WAIT_FOR_EXTENDED_INCHES 
     }
 
     private motor_state mode = motor_state.GOTO;
@@ -70,6 +72,7 @@ public class Climber {
     private double w_d = 0.0;
     private double w_goto = 0;
     private double w_inch = 0;
+
 
     public Climber(int poleMotorID, int winchMotorID) {
         
@@ -103,11 +106,11 @@ public class Climber {
 
         
         setPoleZeroInches(0);
-        setPoleExtenedInches(START_POLE_TICKS_PER_INCH, 1);
+        setPoleExtenedInches(1, START_POLE_TICKS_PER_INCH);
         setPoleGotoInches(0);
 
         setWinchZeroInches(0);
-        setWinchExtenedInches(START_WINCH_TICKS_PER_INCH, 1);
+        setWinchExtenedInches(1, START_WINCH_TICKS_PER_INCH);
         setWinchGotoInches(0);
 
         smartAdjustManualAndCalibrateSpeeds();
@@ -115,19 +118,18 @@ public class Climber {
         if (RobotState.isTest()) {
             SmartDashboard.putNumber("Go to (inches)", 0);
 
-            SmartDashboard.putNumber("pole now", polePosToInches(poleEncoder.getPosition()));
-            SmartDashboard.putNumber("pole goto", polePosToInches(p_goto));
+            SmartDashboard.putNumber("pole now", polePosToInches(0));
+            SmartDashboard.putNumber("pole goto", polePosToInches(0));
             SmartDashboard.putNumber("pole motor P", p_p);
             SmartDashboard.putNumber("pole motor I", p_i);
             SmartDashboard.putNumber("pole motor D", p_d);
             
-            SmartDashboard.putNumber("winch now", winchPosToInches(winchEncoder.getPosition()));
-            SmartDashboard.putNumber("winch goto", winchPosToInches(w_goto));
+            SmartDashboard.putNumber("winch now", winchPosToInches(0));
+            SmartDashboard.putNumber("winch goto", winchPosToInches(0));
             SmartDashboard.putNumber("winch motor P", w_p);
             SmartDashboard.putNumber("winch motor I", w_i);
             SmartDashboard.putNumber("winch motor D", w_d);
         }
-
     }
 
     public boolean isCalibrating() {
@@ -218,21 +220,15 @@ public class Climber {
                 break;
             
             case CALIBRATE:
-
-                if (
-calibrationMode == calibration_state.a_P_WAIT_FOR_ZERO_INCHES ||
-calibrationMode == calibration_state.b_P_WAIT_FOR_ZERO_INCHES ||
-calibrationMode == calibration_state.b_P_WAIT_FOR_EXTENDED_INCHES) p_goto += value*p_calibrateSpeed;
-
-                if (
-calibrationMode == calibration_state.a_W_WAIT_FOR_ZERO_INCHES ||
-calibrationMode == calibration_state.b_W_WAIT_FOR_ZERO_INCHES ||
-calibrationMode == calibration_state.b_W_WAIT_FOR_EXTENDED_INCHES) w_goto += value*w_calibrateSpeed;
-
+                p_goto += value*p_calibrateSpeed;
                 break;
         }
     }
     
+    public void onYStick2(double value) {
+        if (mode == motor_state.CALIBRATE)
+            w_goto += value*w_calibrateSpeed;
+    }
 
     public void smartAdjustManualAndCalibrateSpeeds() {
         double ratio = p_ticksPerInch/w_ticksPerInch;
@@ -255,7 +251,7 @@ calibrationMode == calibration_state.b_W_WAIT_FOR_EXTENDED_INCHES) w_goto += val
         } else { 
             mode = motor_state.CALIBRATE;
             calibrationMode = calibration_state.WAITING_FOR_A_OR_B;
-            SmartDashboard.putString("Calibration", "Waiting for A or B config.")
+            SmartDashboard.putString("Calibration", "Waiting for A or B config.");
         } 
 
     }
@@ -264,17 +260,13 @@ calibrationMode == calibration_state.b_W_WAIT_FOR_EXTENDED_INCHES) w_goto += val
         switch(calibrationMode) {
 
             case WAITING_FOR_A_OR_B:
-                SmartDashboard.putString("Calibration", "a-[P] Waiting for 0 inches");
-                calibrationMode = calibration_state.a_P_WAIT_FOR_ZERO_INCHES;
+                SmartDashboard.putString("Calibration", "[A] Waiting for 0 inches");
+                calibrationMode = calibration_state.A_WAIT_FOR_ZERO_INCHES;
                 break;
-            case a_P_WAIT_FOR_ZERO_INCHES:
+            case A_WAIT_FOR_ZERO_INCHES:
                 setPoleZeroInches(p_goto);
-                SmartDashboard.putString("Calibration", "a-[P] Waiting for 0 inches");
-                calibrationMode = calibration_state.a_W_WAIT_FOR_ZERO_INCHES;
-                break;
-            case a_W_WAIT_FOR_ZERO_INCHES:
                 setWinchZeroInches(w_goto);
-                SmartDashboard.putString("Calibration", "a-Calibration done");
+                SmartDashboard.putString("Calibration", "[A] Calibration done");
                 calibrationMode = calibration_state.FAIL_SAFE;
                 mode = motor_state.GOTO;
                 setPoleGotoInches(0);
@@ -288,31 +280,21 @@ calibrationMode == calibration_state.b_W_WAIT_FOR_EXTENDED_INCHES) w_goto += val
 
             case WAITING_FOR_A_OR_B:
                 SmartDashboard.putString("Calibration", "[P] Waiting for 0 inches");
-                calibrationMode = calibration_state.b_P_WAIT_FOR_ZERO_INCHES;
+                calibrationMode = calibration_state.B_WAIT_FOR_ZERO_INCHES;
                 break;
-            case b_P_WAIT_FOR_ZERO_INCHES:
+            case B_WAIT_FOR_ZERO_INCHES:
                 setPoleZeroInches(p_goto);
-                SmartDashboard.putString("Calibration", "b-[P] Waiting for "+POLE_MOTOR_EXTENDED_INCHES+" inches");
-                calibrationMode = calibration_state.b_P_WAIT_FOR_EXTENDED_INCHES;
-                break;
-            case b_P_WAIT_FOR_EXTENDED_INCHES:
-                setPoleExtenedInches(p_goto, POLE_MOTOR_EXTENDED_INCHES);
-                SmartDashboard.putString("Calibration", "b-[W] Waiting for 0 inches");
-                calibrationMode = calibration_state.b_W_WAIT_FOR_ZERO_INCHES;
-                break;
-            case b_W_WAIT_FOR_ZERO_INCHES:
                 setWinchZeroInches(w_goto);
-                SmartDashboard.putString("Calibration", "b-[W] Waiting for "+WINCH_MOTOR_EXTENDED_INCHES+" inches");
-                calibrationMode = calibration_state.b_W_WAIT_FOR_EXTENDED_INCHES;
+                SmartDashboard.putString("Calibration", "[B] Waiting for "+POLE_MOTOR_EXTENDED_INCHES+" inches");
+                calibrationMode = calibration_state.B_WAIT_FOR_EXTENDED_INCHES;
                 break;
-            case b_W_WAIT_FOR_EXTENDED_INCHES:
+            case B_WAIT_FOR_EXTENDED_INCHES:
+                setPoleExtenedInches(p_goto, POLE_MOTOR_EXTENDED_INCHES);
                 setWinchExtenedInches(w_goto, WINCH_MOTOR_EXTENDED_INCHES);
-                SmartDashboard.putString("Calibration", "b-Calibration done");
+                SmartDashboard.putString("Calibration", "[B] Calibration done");
                 calibrationMode = calibration_state.FAIL_SAFE;
                 smartAdjustManualAndCalibrateSpeeds();
                 mode = motor_state.GOTO;
-                setPoleGotoInches(0);
-                setWinchGotoInches(0);
                 break;
         }
     }
@@ -327,18 +309,18 @@ calibrationMode == calibration_state.b_W_WAIT_FOR_EXTENDED_INCHES) w_goto += val
     public void updateTestMode() {
         if (mode == motor_state.MANUAL || mode == motor_state.CALIBRATE) {
             /* Manually control pole motor */
-           if (calibrationMode != calibration_state.a_W_WAIT_FOR_ZERO_INCHES && calibrationMode != calibration_state.b_W_WAIT_FOR_ZERO_INCHES && calibrationMode != calibration_state.b_W_WAIT_FOR_EXTENDED_INCHES) {
+           //!if (calibrationMode != calibration_state.a_W_WAIT_FOR_ZERO_INCHES && calibrationMode != calibration_state.b_W_WAIT_FOR_ZERO_INCHES && calibrationMode != calibration_state.b_W_WAIT_FOR_EXTENDED_INCHES) {
                 if (p_lastGoto != p_goto) {
                     p_pid.setReference(p_goto, ControlType.kPosition);
                 }
-            }
+           //! }
 
             /* Manually control winch motor */
-            if (calibrationMode != calibration_state.a_P_WAIT_FOR_ZERO_INCHES && calibrationMode != calibration_state.b_P_WAIT_FOR_ZERO_INCHES && calibrationMode != calibration_state.b_P_WAIT_FOR_EXTENDED_INCHES) {
+            //!if (calibrationMode != calibration_state.a_P_WAIT_FOR_ZERO_INCHES && calibrationMode != calibration_state.b_P_WAIT_FOR_ZERO_INCHES && calibrationMode != calibration_state.b_P_WAIT_FOR_EXTENDED_INCHES) {
                 if (w_lastGoto != w_goto) {
                     w_pid.setReference(w_goto, ControlType.kPosition);
                 }  
-            }
+           //! }
 
             p_lastGoto = p_goto;
             w_lastGoto = w_goto;
@@ -421,5 +403,10 @@ calibrationMode == calibration_state.b_W_WAIT_FOR_EXTENDED_INCHES) w_goto += val
             w_inch = inch;
             setWinchGotoInches(inch);
         }
+    }
+
+    public void disable() {
+        poleMotor.disable();
+        winchMotor.disable();
     }
 }
