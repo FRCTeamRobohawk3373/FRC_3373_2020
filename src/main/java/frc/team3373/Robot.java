@@ -27,6 +27,9 @@ import frc.team3373.SwerveControl.Side;
 public class Robot extends TimedRobot {
   private static final String kDefaultAuto = "Default";
   private static final String kCustomAuto = "My Auto";
+  private static final String kDriveAuto = "Test drive";
+  private static final String kRelRotAuto = "Test RelRotate";
+  private static final String kAbsRotAuto = "Test ABSRotate";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
@@ -59,13 +62,13 @@ public class Robot extends TimedRobot {
 
   double target = 0.0;
 
-  int index=0;
+  int index = 0;
 
   double min = Double.MAX_VALUE;
   double max = Double.MIN_VALUE;
 
   int mode = 0;
-  double endtime=System.currentTimeMillis();
+  double endtime = System.currentTimeMillis();
 
   /**
    * This function is run when the robot is first started up and should be used
@@ -75,47 +78,56 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
+    m_chooser.addOption("Test drive", kDriveAuto);
+    m_chooser.addOption("Test RelRotate", kRelRotAuto);
+    m_chooser.addOption("Test ABSRotate", kAbsRotAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
+
     driver = new SuperJoystick(0);
     ahrs = SuperAHRS.GetInstance();
-    
+
     swerve = SwerveControl.GetInstance();
     swerve.setDriveSpeed(0.25);
     swerve.changeControllerLimiter(0);
-    
 
-    /* double rotAngle = Math.toDegrees(Math.atan((Constants.robotWidth / 2) / (Constants.robotLength / 2)));
+    /*
+     * double rotAngle = Math.toDegrees(Math.atan((Constants.robotWidth / 2) /
+     * (Constants.robotLength / 2)));
+     * 
+     * FLWheel = new SwerveWheel("FrontLeft", Constants.FLRotateMotorID,
+     * Constants.FLDriveMotorID, Constants.FLEncMin, Constants.FLEncMax,
+     * Constants.FLEncHome, Constants.relativeEncoderRatio, 270 - rotAngle); FRWheel
+     * = new SwerveWheel("FrontRight", Constants.FRRotateMotorID,
+     * Constants.FRDriveMotorID, Constants.FREncMin, Constants.FREncMax,
+     * Constants.FREncHome, Constants.relativeEncoderRatio, rotAngle + 90); BLWheel
+     * = new SwerveWheel("BackLeft", Constants.BLRotateMotorID,
+     * Constants.BLDriveMotorID, Constants.BLEncMin, Constants.BLEncMax,
+     * Constants.BLEncHome, Constants.relativeEncoderRatio, rotAngle + 270); BRWheel
+     * = new SwerveWheel("BackRight", Constants.BRRotateMotorID,
+     * Constants.BRDriveMotorID, Constants.BREncMin, Constants.BREncMax,
+     * Constants.BREncHome, Constants.relativeEncoderRatio, rotAngle);
+     * 
+     * System.out.println(Constants.ROTATE_FL_PID);
+     * 
+     * FLWheel.setPIDController(Constants.ROTATE_FL_PID);
+     * FRWheel.setPIDController(Constants.ROTATE_FR_PID);
+     * BLWheel.setPIDController(Constants.ROTATE_BL_PID);
+     * BRWheel.setPIDController(Constants.ROTATE_BR_PID);
+     * 
+     * wheels = new SwerveWheel[] { FLWheel, BLWheel, BRWheel, FRWheel};
+     */
 
-    FLWheel = new SwerveWheel("FrontLeft", Constants.FLRotateMotorID, Constants.FLDriveMotorID, Constants.FLEncMin,
-        Constants.FLEncMax, Constants.FLEncHome, Constants.relativeEncoderRatio, 270 - rotAngle);
-    FRWheel = new SwerveWheel("FrontRight", Constants.FRRotateMotorID, Constants.FRDriveMotorID, Constants.FREncMin,
-        Constants.FREncMax, Constants.FREncHome, Constants.relativeEncoderRatio, rotAngle + 90);
-    BLWheel = new SwerveWheel("BackLeft", Constants.BLRotateMotorID, Constants.BLDriveMotorID, Constants.BLEncMin,
-        Constants.BLEncMax, Constants.BLEncHome, Constants.relativeEncoderRatio, rotAngle + 270);
-    BRWheel = new SwerveWheel("BackRight", Constants.BRRotateMotorID, Constants.BRDriveMotorID, Constants.BREncMin,
-        Constants.BREncMax, Constants.BREncHome, Constants.relativeEncoderRatio, rotAngle);
-    
-    System.out.println(Constants.ROTATE_FL_PID);
-    
-    FLWheel.setPIDController(Constants.ROTATE_FL_PID);
-    FRWheel.setPIDController(Constants.ROTATE_FR_PID);
-    BLWheel.setPIDController(Constants.ROTATE_BL_PID);
-    BRWheel.setPIDController(Constants.ROTATE_BR_PID);
-
-    wheels = new SwerveWheel[] { FLWheel, BLWheel, BRWheel, FRWheel}; */
-
-
-
-    /* SmartDashboard.putNumber("P Gain", 1);
-	  SmartDashboard.putNumber("I Gain", 1e-6);
-		SmartDashboard.putNumber("D Gain", 0);
-		SmartDashboard.putNumber("I Zone", 0);
-		SmartDashboard.putNumber("Feed Forward", 1.56e-4);
-		SmartDashboard.putNumber("Max Output", 1);
-		SmartDashboard.putNumber("Min Output", -1);
-		SmartDashboard.putNumber("Set Rotations", 0);
-
-    SmartDashboard.putNumber("Current target", 0); */
+    /*
+     * SmartDashboard.putNumber("P Gain", 1); SmartDashboard.putNumber("I Gain",
+     * 1e-6); SmartDashboard.putNumber("D Gain", 0);
+     * SmartDashboard.putNumber("I Zone", 0);
+     * SmartDashboard.putNumber("Feed Forward", 1.56e-4);
+     * SmartDashboard.putNumber("Max Output", 1);
+     * SmartDashboard.putNumber("Min Output", -1);
+     * SmartDashboard.putNumber("Set Rotations", 0);
+     * 
+     * SmartDashboard.putNumber("Current target", 0);
+     */
   }
 
   /**
@@ -129,24 +141,23 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
-    /*  for (SwerveWheel wheel : wheels) {
-      SmartDashboard.putNumber(wheel.name + " Position", wheel.getRawRotation());
-      double pos = wheel.getRawAnalogRotation();
-      SmartDashboard.putNumber(wheel.name + " Analog Position", pos);
-      //SmartDashboard.putNumber(wheel.name + " Analog Raw Position", pos / 0.00080566406);
-    }
- */ 
+    /*
+     * for (SwerveWheel wheel : wheels) { SmartDashboard.putNumber(wheel.name +
+     * " Position", wheel.getRawRotation()); double pos =
+     * wheel.getRawAnalogRotation(); SmartDashboard.putNumber(wheel.name +
+     * " Analog Position", pos); //SmartDashboard.putNumber(wheel.name +
+     * " Analog Raw Position", pos / 0.00080566406); }
+     */
     double orientationOffset = Math.toRadians(ahrs.getYaw());
     SmartDashboard.putNumber("orientationDegree", Math.toDegrees(orientationOffset));
     SmartDashboard.putNumber("orientationRadians", orientationOffset);
-    SmartDashboard.putBoolean("isCalibrating", ahrs.isCalibrating());
+    SmartDashboard.putBoolean("isNavxCalibrating", ahrs.isCalibrating());
     swerve.showPositions();
-    //swerve.getRotationalCorrection();
+    // swerve.getRotationalCorrection();
 
-    /* if(driver.isBackPushed()){
-      ahrs.reset();
-    }
-    driver.clearButtons(); */
+    /*
+     * if(driver.isBackPushed()){ ahrs.reset(); } driver.clearButtons();
+     */
 
   }
 
@@ -174,14 +185,32 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousPeriodic() {
+    m_autoSelected = m_chooser.getSelected();
     switch (m_autoSelected) {
     case kCustomAuto:
       // Put custom auto code here
+      break;
+    case kDriveAuto:
+      swerve.relativeMoveRobot(0, .15, 1);
+      break;
+    case kRelRotAuto:
+      swerve.setDriveSpeed(0.45);
+      swerve.relativeRotateRobot(90);
+      break;
+    case kAbsRotAuto:
+      swerve.absoluteRotateRobot(270);
       break;
     case kDefaultAuto:
     default:
       // Put default auto code here
       break;
+    }
+
+    try {
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
   }
 

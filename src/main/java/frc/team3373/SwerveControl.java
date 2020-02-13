@@ -1,5 +1,7 @@
 package frc.team3373;
 
+import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team3373.util.MathUtil;
 
@@ -33,12 +35,14 @@ public class SwerveControl {
 
 	private long getTargetAngleDelay = System.currentTimeMillis();
 
-	private double maxTargetSpeed = 0.5;
+	private double maxTargetSpeed = 0.45;
 	private double targetRobotAngle = 0;
 
 	private SuperAHRS ahrs;
 
 	private byte controllerMode = 1;
+
+	private PIDController rotationPID;
 
 	private static SwerveControl instance;
 
@@ -61,6 +65,8 @@ public class SwerveControl {
 		double rotAngle = Math.atan((Constants.robotWidth / 2) / (Constants.robotLength / 2));
 		System.out.println("Rotational Offset: "+Math.toDegrees(rotAngle));
 		
+		rotationPID = new PIDController(0.005,0.005,0);
+		initPIDController();
 
 		ahrs = SuperAHRS.GetInstance();
 		ahrs.reset();
@@ -75,35 +81,50 @@ public class SwerveControl {
 		BRWheel = new SwerveWheel("BackRight", Constants.BRRotateMotorID, Constants.BRDriveMotorID, Constants.BREncMin, 
 			Constants.BREncMax, Constants.BREncHome, Constants.relativeEncoderRatio, rotAngle);
 
-		//FLWheel.setPIDController(Constants.ROTATE_FL_PID);
+		FLWheel.setPIDController(Constants.ROTATE_FL_PID);
 		FRWheel.setPIDController(Constants.ROTATE_FR_PID);
 		BLWheel.setPIDController(Constants.ROTATE_BL_PID);
 		BRWheel.setPIDController(Constants.ROTATE_BR_PID);
 
 		wheelArray = new SwerveWheel[] { FLWheel, BLWheel, BRWheel, FRWheel };
-
 	}
 
 	// ######################################################
 	// ########### 			  Autonomus 	     ############
 	// ######################################################
 
-	/* public void initPIDControllers(){
-		rotationPID.enable();
-		rotationPID.setInputRange(-180, 180); //sets input range from 0 to 360(degrees)
-		rotationPID.setOutputRange(-0.5, 0.5); //sets output range from -1 to 1(max rotation values)
-		rotationPID.setContinuous();
-		updatePIDControllers();
-	} */
+	public void initPIDController(){
+		rotationPID.reset();
+		rotationPID.enableContinuousInput(-180, 180);
+		rotationPID.setTolerance(0.5);
+	}
 	
-	/* public void updatePIDControllers(){
-		rotatePIDInput.setValue(imu.getYaw());
-		SmartDashboard.putNumber("PIDInput Value: ", rotatePIDInput.pidGet());
-	} */
-	
-	/* public void relativeRotateRobot(double angle){
-		SmartDashboard.putNumber("Delta Angle", angle);
-		double currentAngle = imu.getYaw();
+	/**
+	 * moves the robot in a direction for a certain amount of time
+	 * @param angle the angle in degrees to drive at (0,360)
+	 * @param speed	the speed the drive at (0,1)
+	 * @param time the time in seconds to drive for
+	 */
+	public void relativeMoveRobot(double angle, double speed, double time){
+		double oldSpeed = maxTargetSpeed;
+		setDriveSpeed(speed);
+		calculateSwerveControl(Math.sin(Math.toRadians(angle)), -Math.cos(Math.toRadians(angle)), 0);
+		try{
+			Thread.sleep((long) (time * 1000));
+		}catch(Exception e){
+			//Do nothing
+		}
+		calculateSwerveControl(0, 0, 0);
+		setDriveSpeed(oldSpeed);
+	}
+
+	/**
+	 * Rotates the robot a relative amount
+	 * @param angle	The amount to rotate by
+	 */
+	public void relativeRotateRobot(double angle){
+		//SmartDashboard.putNumber("Delta Angle", angle);
+		double currentAngle = ahrs.getYaw();
 		SmartDashboard.putNumber("Current Angle:", currentAngle);
 		double targetAngle = currentAngle + angle;
 
@@ -113,62 +134,72 @@ public class SwerveControl {
 			targetAngle += 360;
 		}
 		SmartDashboard.putNumber("Target Angle: ", targetAngle);
-		updatePIDControllers();
-		while(Math.abs(currentAngle - targetAngle) >= 2){ //waits until we are within range of the angle
-			rotationPID.setSetpoint(targetAngle); //tells PID loop to go to the targetAngle
-			currentAngle = imu.getYaw();
-			updatePIDControllers();
+		
+		initPIDController();
+		//rotationPID.setSetpoint(targetAngle);
+		double power = rotationPID.calculate(currentAngle,targetAngle);
+		//SmartDashboard.putBoolean("atSetpoint", rotationPID.atSetpoint());
+		while(!rotationPID.atSetpoint() && RobotState.isEnabled()){ //waits until we are within range of the angle
+			//SmartDashboard.putBoolean("atSetpoint", rotationPID.atSetpoint());
+			//rotationPID.setSetpoint(targetAngle); //tells PID loop to go to the targetAngle
+			currentAngle = ahrs.getYaw();
+			SmartDashboard.putNumber("Current Angle:", currentAngle);
+			SmartDashboard.putNumber("Position Error", rotationPID.getPositionError());
+			//SmartDashboard.putNumber("Velocity Error", rotationPID.getVelocityError());
+			power = rotationPID.calculate(currentAngle);
+			//SmartDashboard.putNumber("PID Power: ", power);
 			//calculateSwerveControl(0,0,0.2);
-			calculateSwerveControl(0, 0, rotatePIDOutput.getPIDValue()); //sets the wheels to rotate based off PID loop
+			calculateSwerveControl(0, 0, MathUtil.clamp(power, -.75, .75)); //sets the wheels to rotate based off PID loop
 			try{
 				Thread.sleep(1);
 			} catch(Exception e){
 				//Do nothing
 			}
 		}
+		//SmartDashboard.putBoolean("atSetpoint", rotationPID.atSetpoint());
 		calculateSwerveControl(0,0,0); //stops robot spinning
 		SmartDashboard.putNumber("Current Angle:", currentAngle);
-	} */
-	
-	/* public void relativeMoveRobot(double angle, double speed, double time){
-		calculateSwerveControl(Math.sin(Math.toRadians(angle)) * speed, Math.cos(Math.toRadians(angle)) * speed, 0);
-		try{
-			Thread.sleep((long) (time * 1000));
-		}catch(Exception e){
-			//Do nothing
-		}
+	}
 
-		calculateSwerveControl(0, 0, 0);
-	 
-	}*/
-	
 	/**
 	 * Used in Autonomous Mode Only, Rotates robot to a certain angle regardless of robots current position
 	 * @param targetAngle Angle(degrees) to which the robot will rotate
 	 */
 	
-	/* public void absoluteRotateRobot(double targetAngle){
-		double currentAngle = imu.getYaw();
+	public void absoluteRotateRobot(double targetAngle){
+		double currentAngle = ahrs.getYaw();
 		if(targetAngle >= 180){
 			targetAngle-=360;
 		} else if(targetAngle < -180){
 			targetAngle +=360;
 		}
-		updatePIDControllers();
-		while(Math.abs(currentAngle - targetAngle) >= 1){//waits until we are within range of our target angle
-			rotationPID.setSetpoint(targetAngle);//tells PID loop to go to the target angle
-			currentAngle = imu.getYaw();
-			SmartDashboard.putNumber("Absolute Current Angle", currentAngle);
-			updatePIDControllers();
-			calculateSwerveControl(0, 0, rotatePIDOutput.getPIDValue());//sets the wheels to rotate based off PID loop
+
+		SmartDashboard.putNumber("Target Angle: ", targetAngle);
+		initPIDController();
+		//rotationPID.setSetpoint(targetAngle);
+		double power = rotationPID.calculate(currentAngle,targetAngle);
+		//SmartDashboard.putBoolean("atSetpoint", rotationPID.atSetpoint());
+		while(!rotationPID.atSetpoint() && RobotState.isEnabled()){ //waits until we are within range of the angle
+			//SmartDashboard.putBoolean("atSetpoint", rotationPID.atSetpoint());
+			//rotationPID.setSetpoint(targetAngle); //tells PID loop to go to the targetAngle
+			currentAngle = ahrs.getYaw();
+			SmartDashboard.putNumber("Current Angle:", currentAngle);
+			SmartDashboard.putNumber("Position Error", rotationPID.getPositionError());
+			//SmartDashboard.putNumber("Velocity Error", rotationPID.getVelocityError());
+			power = rotationPID.calculate(currentAngle);
+			//SmartDashboard.putNumber("PID Power: ", power);
+			//calculateSwerveControl(0,0,0.2);
+			calculateSwerveControl(0, 0, MathUtil.clamp(power, -.75, .75)); //sets the wheels to rotate based off PID loop
 			try{
-				Thread.sleep(10);
+				Thread.sleep(1);
 			} catch(Exception e){
 				//Do nothing
 			}
 		}
+
 		calculateSwerveControl(0,0,0); //stops robot spinning
-	} */
+		SmartDashboard.putNumber("Current Angle:", currentAngle);
+	} 
 
 	// ######################################################
 	// ########### 				Teleop 		     ############
