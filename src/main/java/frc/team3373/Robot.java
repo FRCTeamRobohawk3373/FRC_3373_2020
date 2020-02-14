@@ -22,22 +22,22 @@ public class Robot extends TimedRobot {
   private final SendableChooser<String> m_autoChooser = new SendableChooser<>();
 
   // Color sensor
-  private ColorSensor myCs = new ColorSensor();
+  ////private ColorSensor myCs = new ColorSensor();
 
   // Joystick
-  private SuperJoystick driver = new SuperJoystick(0);
+  private SuperJoystick shooter = new SuperJoystick(0);
 
   // Timer
   private double timeNow = Timer.getFPGATimestamp();
   private double timeDelta;
   private double timeWas;
 
-  // private final ADIS16448_IMU m_imu = new ADIS16448_IMU();
+  ////private final ADIS16448_IMU m_imu = new ADIS16448_IMU();
   ManualInput mi;
   Climber climber;
 
   public Robot() {
-    super(0.02);
+    super(0.02);// Frame rate = 50Hz
   }
 
   @Override
@@ -48,10 +48,8 @@ public class Robot extends TimedRobot {
     m_autoChooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_autoChooser);
 
-
     mi = new ManualInput();
-    climber = new Climber(1, 4);
-
+    climber = new Climber();
   }
 
   @Override
@@ -64,8 +62,8 @@ public class Robot extends TimedRobot {
     SmartDashboard.putString("ms / Hz", Math.round(timeDelta * 1000) + " / " + Math.round(1 / timeDelta));
     timeWas = timeNow;
 
-    driver.clearButtons();
-    driver.clearDPad();
+    shooter.clearButtons();
+    shooter.clearDPad();
   }
 
   @Override
@@ -91,60 +89,69 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
 
-    // Climber
-    double lSticky = -driver.getRawAxis(1);
+    //* Climber
+    double lSticky = -shooter.getRawAxis(1);
     if (Math.abs(lSticky) > 0.05) {
-      climber.onYStick(lSticky);
-    } else if (driver.isDPadDownPushed()) {
+      climber.yStickManual(lSticky);
+    } else if (shooter.isDPadDownPushed()) {
       climber.gotoLowPosition();
-    } else if (driver.isDPadLeftPushed() || driver.isDPadRightPushed()) {
+    } else if (shooter.isDPadLeftPushed() || shooter.isDPadRightPushed()) {
       climber.gotoMiddlePosition();
-    } else if (driver.isDPadUpPushed()) {
+    } else if (shooter.isDPadUpPushed()) {
       climber.gotoHighPosition();
-    } else if (driver.isYPushed()) {
-      climber.climb();
+    } else if (shooter.isYPushed()) {
+      climber.initiateClimbMode();
     }
-    climber.updateTeleOp();
-
+    climber.update();
   }
 
   @Override
   public void testPeriodic() {
 
-    // Climber
-    
-    if (climber.isCalibrating()) {
-      double rSticky = -driver.getRawAxis(5);
-      if (Math.abs(rSticky) > 0.05)
-        climber.onYStick2(rSticky);
-    }
-    double lSticky = -driver.getRawAxis(1);
-    if (Math.abs(lSticky) > 0.05) {
-      climber.onYStick(lSticky);
-    } else if (driver.isDPadDownPushed() && !climber.isCalibrating()) {
-      climber.gotoLowPosition();
-    } else if ((driver.isDPadLeftPushed() || driver.isDPadRightPushed()) && !climber.isCalibrating()) {
-      climber.gotoMiddlePosition();
-    } else if (driver.isDPadUpPushed() && !climber.isCalibrating()) {
-      climber.gotoHighPosition();
-    } else if (driver.isYPushed() && !climber.isCalibrating()) {
-      climber.climb();
-    } else if (driver.isStartPushed()) {
-      climber.onCalibrateButton();
-    } else if (driver.isAPushed()) {
-      climber.onAButton();
-    } else if (driver.isBPushed()) {                  
-      climber.onBButton();
-    }
-    climber.updateTestMode();
+    //* Climber
+    double yStick1 = -shooter.getRawAxis(1);
+    double yStick2 = -shooter.getRawAxis(5);
 
+    if (climber.getCalibrating()) {
+      if (shooter.isAPushed()) {
+        climber.calibrateHeights();
+      } else if (shooter.isBPushed()) {                  
+        climber.calibrateInches();
+      }
+      // Secondary y-stick for calibrating the climber
+
+      if (Math.abs(yStick1) > 0.05) {
+        climber.yStick1Calibrate(yStick1);
+      } 
+      
+      if (Math.abs(yStick2) > 0.05) {
+        climber.yStick2Calibrate(yStick2);
+      }
+    } else {
+      if (shooter.isDPadDownPushed()) {
+        climber.gotoLowPosition();
+      } else if (shooter.isDPadLeftPushed() || shooter.isDPadRightPushed()) {
+        climber.gotoMiddlePosition();
+      } else if (shooter.isDPadUpPushed()) {
+        climber.gotoHighPosition();
+      } else if (shooter.isYPushed()) {
+        climber.initiateClimbMode();
+      }
+
+      if (Math.abs(yStick1) > 0.05) {
+        climber.yStickManual(yStick1);
+      } 
+    }
+
+    if (shooter.isStartPushed()) {
+      climber.startCalibrateOptions();
+    }
+    
+    climber.update();
+    climber.displayOnShuffleboard();
   }
 
   public void disabledInit() {
     climber.disable();
-    //climber = null;
-    System.out.println("Called");
-
   }
-
 }
