@@ -13,8 +13,11 @@ public class Constants{
 
     public static final int POLE_MOTOR_ID = 1;
     public static final int WINCH_MOTOR_ID = 4;
+    public static final int PCM_ID = 10;
     public static final int POLE_SOLENOID_ID = 0;
     public static final int WINCH_SOLENOID_ID = 1;
     public static final int INCLINE_MOTOR_ID = -1;
+
+    public static final int SHOOTER_MOTOR_ID = 1;
 
 }

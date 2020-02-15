@@ -1,16 +1,12 @@
 package frc.team3373;
 
-import java.sql.Ref;
-
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.ControlType;
-
 import edu.wpi.first.wpilibj.Solenoid;
-
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -87,7 +83,7 @@ public class Climber {
         poleMotor.setInverted(false);
         
         poleMotor.setIdleMode(IdleMode.kBrake);
-        poleSolenoid = new Solenoid(10, Constants.POLE_SOLENOID_ID);
+        poleSolenoid = new Solenoid(Constants.PCM_ID, Constants.POLE_SOLENOID_ID);
         poleSolenoid.set(true);
 
         winchMotor = new CANSparkMax(Constants.WINCH_MOTOR_ID, MotorType.kBrushless);
@@ -95,7 +91,7 @@ public class Climber {
         winchMotor.setInverted(false);
         
         winchMotor.setIdleMode(IdleMode.kBrake);
-        winchSolenoid = new Solenoid(10, Constants.WINCH_SOLENOID_ID);
+        winchSolenoid = new Solenoid(Constants.PCM_ID, Constants.WINCH_SOLENOID_ID);
         winchSolenoid.set(true);
 
         ////inclineMotor = new CANSparkMax(Constants.INCLINE_MOTOR_ID, MotorType.kBrushed);
