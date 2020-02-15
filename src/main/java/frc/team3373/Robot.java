@@ -50,6 +50,7 @@ public class Robot extends TimedRobot {
 
     mi = new ManualInput();
     climber = new Climber();
+    climber.setMotorsToZero();
   }
 
   @Override
@@ -90,6 +91,10 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
 
     //* Climber
+    double lStickx = shooter.getRawAxis(0);
+    if (Math.abs(lStickx) > 0.05) {
+      climber.xStickManual(lStickx);
+    }
     double lSticky = -shooter.getRawAxis(1);
     if (Math.abs(lSticky) > 0.05) {
       climber.yStickManual(lSticky);
@@ -109,6 +114,10 @@ public class Robot extends TimedRobot {
   public void testPeriodic() {
 
     //* Climber
+    double lStickx = shooter.getRawAxis(0);
+    if (Math.abs(lStickx) > 0.05) {
+      climber.xStickManual(lStickx);
+    }
     double yStick1 = -shooter.getRawAxis(1);
     double yStick2 = -shooter.getRawAxis(5);
 

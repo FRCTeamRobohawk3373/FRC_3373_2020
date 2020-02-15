@@ -15,5 +15,6 @@ public class Constants{
     public static final int WINCH_MOTOR_ID = 4;
     public static final int POLE_SOLENOID_ID = 0;
     public static final int WINCH_SOLENOID_ID = 1;
+    public static final int INCLINE_MOTOR_ID = -1;
 
 }
