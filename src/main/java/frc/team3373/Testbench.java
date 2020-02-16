@@ -1,7 +1,7 @@
 package frc.team3373;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-//import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 class Testbench extends TimedRobot {
     private SuperJoystick driver;
@@ -26,8 +26,8 @@ class Testbench extends TimedRobot {
     @Override
     public void teleopPeriodic() {
         joystickControls();
-        System.out.println(indexer.getBall4Pos());
-        System.out.println(indexer.getBall5Pos());
+        SmartDashboard.putNumber("Ball 4 Pos", indexer.getRelBall4Pos());
+        SmartDashboard.putNumber("Ball 5 Pos", indexer.getBall5Pos());
     }
 
     private void joystickControls() {
@@ -37,8 +37,11 @@ class Testbench extends TimedRobot {
         if (driver.isBPushed()) {
             indexer.toggleControl();
         }
-        if (driver.getRawAxis(0) > 0.1) {
-            indexer.rotate4(driver.getRawAxis(0));
+        if (Math.abs(driver.getRawAxis(0)) > 0.05) {
+            indexer.rotate4(Math.pow(driver.getRawAxis(0), 3) / 2);
+        } else {
+            indexer.rotate4(0);
         }
+        driver.clearButtons();
     }
 }

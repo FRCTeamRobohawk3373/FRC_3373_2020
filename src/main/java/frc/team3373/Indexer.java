@@ -5,29 +5,35 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Indexer {
+    private final int scale = 1988;
     private WPI_TalonSRX ball4;
     private WPI_TalonSRX ball5;
-    private int zeroPos4;
-    private int zeroPos5;
+    private int ball4Zero;
+    private int ball5Zero;
     private boolean manual;
 
     public Indexer(int ball4Index, int ball5Index) {
         ball4 = new WPI_TalonSRX(ball4Index);
         ball5 = new WPI_TalonSRX(ball5Index);
-        zeroPos4 = ball4.getSensorCollection().getAnalogInRaw();
-        zeroPos5 = ball5.getSensorCollection().getAnalogInRaw();
+        ball4Zero = ball4.getSensorCollection().getAnalogInRaw();
+        ball5Zero = ball5.getSensorCollection().getAnalogInRaw();
         ball4.setNeutralMode(NeutralMode.Brake);
         ball5.setNeutralMode(NeutralMode.Brake);
 
-        manual = false;
+        manual = true;
 
         SmartDashboard.putBoolean("Manual", manual);
-        SmartDashboard.putNumber("Zero Pos 4", zeroPos4);
-        SmartDashboard.putNumber("Zero Pos 5", zeroPos5);
+        SmartDashboard.putNumber("Zero Pos 4", ball4Zero);
+        SmartDashboard.putNumber("Zero Pos 5", ball5Zero);
     }
 
-    public int getBall4Pos() {
-        return ball4.getSensorCollection().getAnalogInRaw();
+    public int getAbsBall4Pos() {
+        return ball4.getSensorCollection().getQuadraturePosition();
+    }
+
+    public int getRelBall4Pos() {
+        int mod = (getAbsBall4Pos() % scale) - ball4Zero;
+        return (mod >= 0) ? mod : scale + mod;
     }
 
     public int getBall5Pos() {
@@ -35,7 +41,11 @@ public class Indexer {
     }
 
     public boolean toggleControl() {
-        manual = manual ? false : true;
+        manual = !manual;
+        if (manual) {
+            ball4.setNeutralMode(NeutralMode.Coast);
+            ball5.setNeutralMode(NeutralMode.Coast);
+        }
         SmartDashboard.putBoolean("Manual", manual);
         return manual;
     }
@@ -49,9 +59,9 @@ public class Indexer {
     }
 
     public void zero() {
-        zeroPos4 = getBall4Pos();
-        zeroPos5 = getBall5Pos();
-        SmartDashboard.putNumber("Zero Pos 4", zeroPos4);
-        SmartDashboard.putNumber("Zero Pos 5", zeroPos5);
+        ball4Zero = getRelBall4Pos();
+        ball5Zero = getBall5Pos();
+        SmartDashboard.putNumber("Ball 4 Zero", ball4Zero);
+        SmartDashboard.putNumber("Ball 5 Zero", ball5Zero);
     }
 }
