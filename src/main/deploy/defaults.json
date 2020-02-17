@@ -7,5 +7,6 @@
     "advancePreloadSpeed": 0.7,
     "advanceLoadSpeed": 0.8,
     "advancePreloadDuration": 2.1,
-    "advanceLoadDuration": 1.1
+    "advanceLoadDuration": 1.1,
+    "loadingMotorLockOffset": 30.0
 }

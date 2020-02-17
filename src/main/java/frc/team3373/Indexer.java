@@ -64,8 +64,10 @@ public class Indexer {
         SmartDashboard.putBoolean("Sensor", ballSensor.get());
         SmartDashboard.putBoolean("Preload Stopping", preload.stopping);
         SmartDashboard.putBoolean("Preload Running", preload.running);
+            
+        SmartDashboard.putString("State of Preload", preload.getState().toString());
+        SmartDashboard.putString("State of Load", load.getState().toString());
 
-        intake.set(-0.15);// for testing
 
         preload.update();
         load.update();
@@ -89,7 +91,7 @@ public class Indexer {
         return manual;
     }
 
-    private WPI_TalonSRX getMotor(Motors motor) {
+    public WPI_TalonSRX getMotor(Motors motor) {
         switch (motor) {
         case INTAKE:
             return intake;
@@ -149,7 +151,7 @@ public class Indexer {
 
         private State state;
         private boolean isAvailable;
-        private TimedBoolean timer;
+        private TimedBoolean timer = new TimedBoolean();
         private double advanceBallSpeed;
         private double advanceBallDuration;
 
@@ -195,12 +197,16 @@ public class Indexer {
          * 
          * @return If the motor has an empty ball slot for the previous motor in the intake sequence to reference
          */
-        public boolean getAvailable() {
-            return isAvailable;
+        public State getState() {
+            return state;
         }
 
         public void setState(State newState) {
             state = newState;
+        }
+
+        public boolean getAvailable() {
+            return isAvailable;
         }
 
         /**
@@ -255,21 +261,16 @@ public class Indexer {
                             // When preload motor is done, the ball will have travelled to the load motor position, so set its isAvailable to false
                             ////load.setAvailable(false);
                             if (isAHeld) {
+
                                 load.state = State.ADVANCE; 
                             } else {
-                                load.state = State.HOME;
-                            }
-                            if (load.getAvailable()) {// If load motor has empty slot
                                 state = State.HOME;
-                                
-                            } else {
-                                state = State.LOCK;
                             }
                         } else if (this == load) {
                             if (isAHeld) {
                                 state = State.ADVANCE; 
                             } else {
-                                state = State.HOME;
+                                state = State.LOCK;
                             }
                         }           
                         timer.restart();// Reset the all-purpose timer/boolean
@@ -294,13 +295,12 @@ public class Indexer {
                     break;
             }
 
-            SmartDashboard.putString("State", state.toString());
-            SmartDashboard.putBoolean("isAvailable", isAvailable);
+
             
 //TODO put in case statement
-            if (state == State.ADVANCE) {// Set speed
+            if (state == State.ADVANCE) { // Set speed
                 super.set(advanceBallSpeed);
-            } else if (state == State.HOME) {// Go to position
+            } else if (state == State.HOME) { // Go to position
                 gotoHomePosition();
             } else if (state == State.LOCK) {
                 gotoLockPosition();
@@ -320,7 +320,7 @@ public class Indexer {
         };
 
         public void gotoLockPosition() {
-            double relDeg = getRelDeg();
+            double relDeg = getRelDeg()-Config.getNumber("loadingMotorLockOffset");
             if (relDeg > scale - deadband || relDeg < deadband) {
                 super.set(0);
                 stopping = false;

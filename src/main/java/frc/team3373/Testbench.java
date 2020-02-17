@@ -32,6 +32,7 @@ class Testbench extends TimedRobot {
         SmartDashboard.putBoolean("Save Config", false);
         SmartDashboard.putBoolean("Restore Backup", false);
         SmartDashboard.putBoolean("Update Config", false);
+        SmartDashboard.putBoolean("Restore Defaults (!)", false);
     }
 
     @Override
@@ -81,6 +82,8 @@ class Testbench extends TimedRobot {
         SmartDashboard.putNumber("Preload Deg", indexer.getRelDeg(Motors.PRELOAD));
         SmartDashboard.putNumber("Load Pos", indexer.getRelPos(Motors.LOAD));
         SmartDashboard.putNumber("Load Abs", indexer.getAbsPos(Motors.LOAD));
+
+       
     }
 
     @Override
@@ -97,12 +100,12 @@ class Testbench extends TimedRobot {
         SmartDashboard.putNumber("Preload Deg", indexer.getRelDeg(Motors.PRELOAD));
         SmartDashboard.putNumber("Load Pos", indexer.getRelPos(Motors.LOAD));
         SmartDashboard.putNumber("Load Abs", indexer.getAbsPos(Motors.LOAD));
+
     }
 
     private void joystickControls() {
-        double intakePower = (1 - driver.getRawAxis(2));
-        SmartDashboard.putNumber("intakePower", intakePower * INTAKE_MOTOR_SPEED);
-        indexer.rotate(Motors.INTAKE, intakePower * INTAKE_MOTOR_SPEED);
+        double intakePower = (1 - driver.getRawAxis(2)*2);
+        indexer.getMotor(Motors.INTAKE).set(intakePower * INTAKE_MOTOR_SPEED);
         // indexer.rotate(Motors.CONVEYOR, intakePower*CONVEYOR_MOTOR_SPEED);
 
         
