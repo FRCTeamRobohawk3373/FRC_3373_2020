@@ -10,9 +10,9 @@ package frc.team3373;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.SPI;
+//import edu.wpi.first.wpilibj.SPI;
 
-import frc.team3373.util.MathUtil;
+//import frc.team3373.util.MathUtil;
 import frc.team3373.SwerveWheel;
 import frc.team3373.SwerveControl.DriveMode;
 import frc.team3373.SwerveControl.Side;
@@ -84,9 +84,9 @@ public class Robot extends TimedRobot {
     SmartDashboard.putData("Auto choices", m_chooser);
 
     driver = new SuperJoystick(0);
-    ahrs = SuperAHRS.GetInstance();
+    ahrs = SuperAHRS.getInstance();
 
-    swerve = SwerveControl.GetInstance();
+    swerve = SwerveControl.getInstance();
     swerve.setDriveSpeed(0.25);
     swerve.changeControllerLimiter(0);
 

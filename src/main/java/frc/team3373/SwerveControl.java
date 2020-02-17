@@ -46,7 +46,7 @@ public class SwerveControl {
 
 	private static SwerveControl instance;
 
-	public static SwerveControl GetInstance(){
+	public static SwerveControl getInstance(){
 		if(instance == null){
 			instance = new SwerveControl();
 		}
@@ -68,7 +68,7 @@ public class SwerveControl {
 		rotationPID = new PIDController(0.005,0.005,0);
 		initPIDController();
 
-		ahrs = SuperAHRS.GetInstance();
+		ahrs = SuperAHRS.getInstance();
 		ahrs.reset();
 		// System.out.println(rotAngle);
 
@@ -93,7 +93,7 @@ public class SwerveControl {
 	// ########### 			  Autonomus 	     ############
 	// ######################################################
 
-	public void initPIDController(){
+	public void initPIDController() {
 		rotationPID.reset();
 		rotationPID.enableContinuousInput(-180, 180);
 		rotationPID.setTolerance(0.5);
@@ -166,7 +166,7 @@ public class SwerveControl {
 	 * @param targetAngle Angle(degrees) to which the robot will rotate
 	 */
 	
-	public void absoluteRotateRobot(double targetAngle){
+	public void absoluteRotateRobot(double targetAngle) {
 		double currentAngle = ahrs.getYaw();
 		if(targetAngle >= 180){
 			targetAngle-=360;

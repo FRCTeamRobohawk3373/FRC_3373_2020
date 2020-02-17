@@ -15,7 +15,7 @@ public class SuperAHRS extends AHRS {
 
 	private static SuperAHRS instance;
 
-	public static SuperAHRS GetInstance(){
+	public static SuperAHRS getInstance(){
 		if(instance == null){
 			instance = new SuperAHRS(SPI.Port.kMXP);
 		}

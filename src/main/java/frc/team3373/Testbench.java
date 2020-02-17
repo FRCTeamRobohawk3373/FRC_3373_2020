@@ -2,6 +2,8 @@ package frc.team3373;
 
 import java.io.IOException;
 
+import org.json.JSONException;
+
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team3373.Indexer.Motors;
@@ -16,7 +18,7 @@ class Testbench extends TimedRobot {
     public void robotInit() {
         try {
             Config.loadConfig();
-        } catch (IOException e) {
+        } catch (IOException | JSONException e) {
             try {
                 Config.loadDefaults();
             } catch (Exception f) {
@@ -25,11 +27,44 @@ class Testbench extends TimedRobot {
             }
         }
         driver = new SuperJoystick(0);
-        indexer = new Indexer(4, 0, 2, 3);
+        indexer = new Indexer(4, 0, 2, 3, 7);
+
+        SmartDashboard.putBoolean("Save Config", false);
+        SmartDashboard.putBoolean("Restore Backup", false);
+        SmartDashboard.putBoolean("Update Config", false);
     }
 
     @Override
     public void robotPeriodic() {
+        if (SmartDashboard.getBoolean("Update Config", false)) {
+            Config.updateValues();
+            SmartDashboard.putBoolean("Update Config", false);
+        } else if (SmartDashboard.getBoolean("Save Config", false)) {
+            try {
+                Config.saveConfig();
+                SmartDashboard.putBoolean("Save Config", false);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else if (SmartDashboard.getBoolean("Restore Backup", false)) {
+            try {
+                Config.restoreBackup();
+                SmartDashboard.putBoolean("Restore Backup", false);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else if (SmartDashboard.getBoolean("Restore Defaults", false)) {
+            try {
+                Config.loadDefaults();
+                SmartDashboard.putBoolean("Restore Defaults", false);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            SmartDashboard.putBoolean("Save Config", false);
+            SmartDashboard.putBoolean("Restore Backup", false);
+
+        }
 
     }
 
@@ -65,14 +100,16 @@ class Testbench extends TimedRobot {
     }
 
     private void joystickControls() {
-        double intakePower = (1-driver.getRawAxis(2));
-        SmartDashboard.putNumber("intakePower", intakePower*INTAKE_MOTOR_SPEED);
-        indexer.rotate(Motors.INTAKE, intakePower*INTAKE_MOTOR_SPEED);
-        //indexer.rotate(Motors.CONVEYOR, intakePower*CONVEYOR_MOTOR_SPEED);
+        double intakePower = (1 - driver.getRawAxis(2));
+        SmartDashboard.putNumber("intakePower", intakePower * INTAKE_MOTOR_SPEED);
+        indexer.rotate(Motors.INTAKE, intakePower * INTAKE_MOTOR_SPEED);
+        // indexer.rotate(Motors.CONVEYOR, intakePower*CONVEYOR_MOTOR_SPEED);
 
+        
         if (driver.isYPushed()) {
             indexer.toggleRunning(Motors.PRELOAD);
         }
+        indexer.onAHeld(driver.isAHeld());
         driver.clearButtons();
     }
 

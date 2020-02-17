@@ -62,4 +62,11 @@ public class Constants{
     public static final double FREncMin = 0.45703125;
     public static final double FREncMax = 3.26953125;
     public static final double FREncHome = 1.402344;
+
+    // Indexer constructor values
+    public static final int INTAKE_INDEX = 4;
+    public static final int CONVEYOR_INDEX = 0;
+    public static final int PRELOAD_INDEX = 2;
+    public static final int LOAD_INDEX = 3;
+    public static final int BALL_SENSOR_INDEX = 7;
 } 

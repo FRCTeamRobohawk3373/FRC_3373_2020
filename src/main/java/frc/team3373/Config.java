@@ -29,8 +29,8 @@ import edu.wpi.first.wpilibj.Filesystem;
  * Add your docs here.
  */
 public class Config {
-    private static final String path = "/home/lvuser/config/constants.json";
-    private static final String backupPath = "/home/lvuser/config/backup-constants.json";
+    private static final String path = "/home/lvuser/config/config.json";
+    private static final String backupPath = "/home/lvuser/config/backup-config.json";
     private static final String defaultsPath = Filesystem.getDeployDirectory() + "/defaults.json";
     // private static final Object JSONArray = null;
     private static JSONObject configObject;
@@ -38,12 +38,16 @@ public class Config {
     public static boolean initialized = false;
     private static boolean isBackup = false;
 
-    public static void loadConfig() throws IOException { // Reads constants.json and creates a JSON object
+    /**
+     * Reads constants.json and creates a JSON object.
+     * @throws IOException if file at constants path doesn't exist
+     */
+    public static void loadConfig() throws IOException {
         BufferedReader br;
         try {
             br = new BufferedReader(new FileReader(new File(path)));
         } catch (IOException e) {
-            System.err.println("Failed to load constants, loading defaults");
+            System.err.println("Failed to load config, loading defaults");
             loadDefaults();
             return;
         }
@@ -60,6 +64,10 @@ public class Config {
         display();
     }
 
+    /**
+     * Loads config defaults from a file at backupPath (defaults.json).
+     * @throws IOException if defaults file doesn't exist
+     */
     public static void loadDefaults() throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(new File(defaultsPath)));
         String st = "";
@@ -75,8 +83,11 @@ public class Config {
         display();
     }
 
-    public static void saveConfig() throws IOException { // Copies constants.json to backup-constants.json and copies
-                                                         // Json object to constants.json
+    /**
+     * Copies constants.json to backup-constants.json and copies the Json object to constants.json
+     * @throws IOException if there is an exception when writing the file
+     */
+    public static void saveConfig() throws IOException { 
         if (!isBackup) {
             try {
                 copy(path, backupPath);
@@ -96,13 +107,23 @@ public class Config {
         bw.close();
     }
 
-    public static void restoreBackup() throws IOException { // Copies backup-constants.json to constants.json
+    /**
+     * Copies backup-constants.json to constants.json.
+     * @throws IOException if backup-constants.json doesn't exist.
+     */
+    public static void restoreBackup() throws IOException {
         copy(backupPath, path);
         loadConfig();
         isBackup = true;
     }
 
-    private static void copy(String sourcePath, String destPath) throws IOException { // Method to copy files
+    /**
+     * Copies a file from sourcePath to destPath.
+     * @param sourcePath
+     * @param destPath
+     * @throws IOException if source file doesn't exist
+     */
+    private static void copy(String sourcePath, String destPath) throws IOException {
         FileChannel sourceChannel = null;
         FileChannel destChannel = null;
         FileInputStream sourceStream = null;
@@ -123,12 +144,12 @@ public class Config {
 
     public static void writeNumber(String name, double value) { // Writes a number to the JSON object and displays it
         configObject.put(name, value);
-        NetworkTableInstance.getDefault().getTable("Constants").getEntry(name).setNumber(value);
+        NetworkTableInstance.getDefault().getTable("Config").getEntry(name).setNumber(value);
     }
 
     public static void removeValue(String name) { // Removes a number from the JSON object
         configObject.remove(name);
-        NetworkTableInstance.getDefault().getTable("Constants").delete(name);
+        NetworkTableInstance.getDefault().getTable("Config").delete(name);
     }
 
     /*
@@ -161,6 +182,18 @@ public class Config {
         return getNumber(name, 0);
     }
 
+    public static boolean getBool(String name, boolean defaultValue) {
+        try {
+            return configObject.getBoolean(name);
+        } catch (JSONException e) {
+            return defaultValue;
+        }
+    }
+
+    public static boolean getBool(String name) {
+        return getBool(name, false);
+    }
+
     public static String getString(String name, String defaultValue) {
         try {
             return configObject.getString(name);
@@ -182,7 +215,7 @@ public class Config {
     }
 
     public static void display() {
-        NetworkTable table = NetworkTableInstance.getDefault().getTable("Constants");
+        NetworkTable table = NetworkTableInstance.getDefault().getTable("Config");
         String[] names = JSONObject.getNames(configObject);
         for (String name : names) {
             if (!(configObject.get(name) instanceof JSONArray)) {

@@ -1,4 +1,11 @@
 {
     "encoderScale": 1992,
-    "indexerSpeed": 1.0
+    "indexerSpeed": 1.0,
+    "predeadband": 55,
+    "deadband": 20,
+    "ballLoaded": false,
+    "advancePreloadSpeed": 0.7,
+    "advanceLoadSpeed": 0.8,
+    "advancePreloadDuration": 2.1,
+    "advanceLoadDuration": 1.1
 }
