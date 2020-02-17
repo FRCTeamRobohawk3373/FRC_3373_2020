@@ -33,12 +33,12 @@ public class Config {
     private static final String backupPath = "/home/lvuser/config/backup-constants.json";
     private static final String defaultsPath = Filesystem.getDeployDirectory() + "/defaults.json";
     // private static final Object JSONArray = null;
-    private static JSONObject constantsObject;
+    private static JSONObject configObject;
 
     public static boolean initialized = false;
     private static boolean isBackup = false;
 
-    public static void loadConstants() throws IOException { // Reads constants.json and creates a JSON object
+    public static void loadConfig() throws IOException { // Reads constants.json and creates a JSON object
         BufferedReader br;
         try {
             br = new BufferedReader(new FileReader(new File(path)));
@@ -53,8 +53,8 @@ public class Config {
             st = st + bst;
         }
         br.close();
-        constantsObject = new JSONObject(st);
-        if (constantsObject != null) {
+        configObject = new JSONObject(st);
+        if (configObject != null) {
             initialized = true;
         }
         display();
@@ -68,14 +68,14 @@ public class Config {
             st = st + bst;
         }
         br.close();
-        constantsObject = new JSONObject(st);
-        if (constantsObject != null) {
+        configObject = new JSONObject(st);
+        if (configObject != null) {
             initialized = true;
         }
         display();
     }
 
-    public static void saveConstants() throws IOException { // Copies constants.json to backup-constants.json and copies
+    public static void saveConfig() throws IOException { // Copies constants.json to backup-constants.json and copies
                                                             // Json object to constants.json
         if (!isBackup) {
             try {
@@ -91,14 +91,14 @@ public class Config {
             f.getParentFile().mkdirs();
         }
         BufferedWriter bw = new BufferedWriter(new FileWriter(f, false));
-        String jsonString = constantsObject.toString();
+        String jsonString = configObject.toString();
         bw.write(jsonString);
         bw.close();
     }
 
     public static void restoreBackup() throws IOException { // Copies backup-constants.json to constants.json
         copy(backupPath, path);
-        loadConstants();
+        loadConfig();
         isBackup = true;
     }
 
@@ -122,12 +122,12 @@ public class Config {
     }
 
     public static void writeNumber(String name, double value) { // Writes a number to the JSON object and displays it
-        constantsObject.put(name, value);
+        configObject.put(name, value);
         NetworkTableInstance.getDefault().getTable("Constants").getEntry(name).setNumber(value);
     }
 
     public static void removeValue(String name) { // Removes a number from the JSON object
-        constantsObject.remove(name);
+        configObject.remove(name);
         NetworkTableInstance.getDefault().getTable("Constants").delete(name);
     }
 
@@ -151,7 +151,7 @@ public class Config {
 
     public static double getNumber(String name, double defaultValue) { // Returns a number from the JSON object
         try {
-            return constantsObject.getDouble(name);
+            return configObject.getDouble(name);
         } catch (JSONException e) {
             return defaultValue;
         }
@@ -163,7 +163,7 @@ public class Config {
 
     public static String getString(String name, String defaultValue) {
         try {
-            return constantsObject.getString(name);
+            return configObject.getString(name);
         } catch (JSONException e) {
             return defaultValue;
         }
@@ -175,7 +175,7 @@ public class Config {
 
     public static JSONArray getArray(String name) {
         try {
-            return constantsObject.getJSONArray(name);
+            return configObject.getJSONArray(name);
         } catch (JSONException e) {
             return new JSONArray();
         }
@@ -183,10 +183,10 @@ public class Config {
 
     public static void display() {
         NetworkTable table = NetworkTableInstance.getDefault().getTable("Constants");
-        String[] names = JSONObject.getNames(constantsObject);
+        String[] names = JSONObject.getNames(configObject);
         for (String name : names) {
-            if (!(constantsObject.get(name) instanceof JSONArray)) {
-                table.getEntry(name).setValue(constantsObject.get(name));
+            if (!(configObject.get(name) instanceof JSONArray)) {
+                table.getEntry(name).setValue(configObject.get(name));
             } /*else {
                 if (!(constantsObject.getJSONArray(name).get(0) instanceof JSONArray)) {
                     JSONArray array = constantsObject.getJSONArray(name);
@@ -211,10 +211,10 @@ public class Config {
 
     public static void updateValues() {
         NetworkTable table = NetworkTableInstance.getDefault().getTable("Constants");
-        String[] keys = JSONObject.getNames(constantsObject);
+        String[] keys = JSONObject.getNames(configObject);
         for (String key : keys) {
-            if (!(constantsObject.get(key) instanceof JSONArray)) {
-                constantsObject.put(key, table.getEntry(key).getDouble(-1));
+            if (!(configObject.get(key) instanceof JSONArray)) {
+                configObject.put(key, table.getEntry(key).getDouble(-1));
             } /*else {
                 if (!(constantsObject.getJSONArray(key).get(0) instanceof JSONArray)) {
                     JSONArray array = constantsObject.getJSONArray(key);
