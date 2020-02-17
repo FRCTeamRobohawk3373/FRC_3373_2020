@@ -76,7 +76,7 @@ public class Config {
     }
 
     public static void saveConfig() throws IOException { // Copies constants.json to backup-constants.json and copies
-                                                            // Json object to constants.json
+                                                         // Json object to constants.json
         if (!isBackup) {
             try {
                 copy(path, backupPath);
@@ -187,25 +187,25 @@ public class Config {
         for (String name : names) {
             if (!(configObject.get(name) instanceof JSONArray)) {
                 table.getEntry(name).setValue(configObject.get(name));
-            } /*else {
-                if (!(constantsObject.getJSONArray(name).get(0) instanceof JSONArray)) {
-                    JSONArray array = constantsObject.getJSONArray(name);
-                    NetworkTable subTable = table.getSubTable(name);
-                    for (int i = 0; i < array.length(); i++) {
-                        subTable.getEntry(Integer.toString(i)).setDouble(array.getDouble(i));
-                    }
-                } else {
-                    JSONArray array = constantsObject.getJSONArray(name);
-                    NetworkTable subTable = table.getSubTable(name);
-                    for (int i = 0; i < array.length(); i++) {
-                        JSONArray array2 = array.getJSONArray(i);
-                        NetworkTable subTable2 = subTable.getSubTable(Integer.toString(i));
-                        for (int j = 0; j < array2.length(); j++) {
-                            subTable2.getEntry(Integer.toString(j)).setDouble(array2.getDouble(j));
-                        }
-                    }
-                }
-            }*/
+            } // else {
+            //     if (!(constantsObject.getJSONArray(name).get(0) instanceof JSONArray)) {
+            //         JSONArray array = constantsObject.getJSONArray(name);
+            //         NetworkTable subTable = table.getSubTable(name);
+            //         for (int i = 0; i < array.length(); i++) {
+            //             subTable.getEntry(Integer.toString(i)).setDouble(array.getDouble(i));
+            //         }
+            //     } else {
+            //         JSONArray array = constantsObject.getJSONArray(name);
+            //         NetworkTable subTable = table.getSubTable(name);
+            //         for (int i = 0; i < array.length(); i++) {
+            //             JSONArray array2 = array.getJSONArray(i);
+            //             NetworkTable subTable2 = subTable.getSubTable(Integer.toString(i));
+            //             for (int j = 0; j < array2.length(); j++) {
+            //                 subTable2.getEntry(Integer.toString(j)).setDouble(array2.getDouble(j));
+            //             }
+            //         }
+            //     }
+            // }
         }
     }
 
@@ -215,25 +215,25 @@ public class Config {
         for (String key : keys) {
             if (!(configObject.get(key) instanceof JSONArray)) {
                 configObject.put(key, table.getEntry(key).getDouble(-1));
-            } /*else {
-                if (!(constantsObject.getJSONArray(key).get(0) instanceof JSONArray)) {
-                    JSONArray array = constantsObject.getJSONArray(key);
-                    NetworkTable subTable = table.getSubTable(key);
-                    for (int i = 0; i < array.length(); i++) {
-                        array.put(i, subTable.getEntry(Integer.toString(i)));
-                    }
-                } else {
-                    JSONArray array = constantsObject.getJSONArray(key);
-                    NetworkTable subTable = table.getSubTable(key);
-                    for (int i = 0; i < array.length(); i++) {
-                        JSONArray array2 = array.getJSONArray(i);
-                        NetworkTable subTable2 = subTable.getSubTable(Integer.toString(i));
-                        for (int j = 0; j < array2.length(); j++) {
-                            array2.put(j, subTable2.getEntry(Integer.toString(j)).getDouble(-1));
-                        }
-                    }
-                }
-            }*/
+            } // else {
+            //     if (!(constantsObject.getJSONArray(key).get(0) instanceof JSONArray)) {
+            //         JSONArray array = constantsObject.getJSONArray(key);
+            //         NetworkTable subTable = table.getSubTable(key);
+            //         for (int i = 0; i < array.length(); i++) {
+            //             array.put(i, subTable.getEntry(Integer.toString(i)));
+            //         }
+            //     } else {
+            //         JSONArray array = constantsObject.getJSONArray(key);
+            //         NetworkTable subTable = table.getSubTable(key);
+            //         for (int i = 0; i < array.length(); i++) {
+            //             JSONArray array2 = array.getJSONArray(i);
+            //             NetworkTable subTable2 = subTable.getSubTable(Integer.toString(i));
+            //             for (int j = 0; j < array2.length(); j++) {
+            //                 array2.put(j, subTable2.getEntry(Integer.toString(j)).getDouble(-1));
+            //             }
+            //         }
+            //     }
+            // }
         }
     }
 }
