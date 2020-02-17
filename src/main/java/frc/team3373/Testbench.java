@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.team3373.Indexer.Motors;
 
 class Testbench extends TimedRobot {
     private SuperJoystick driver;
@@ -27,7 +28,7 @@ class Testbench extends TimedRobot {
 
     @Override
     public void robotPeriodic() {
-
+        indexer.update();
     }
 
     @Override
@@ -38,10 +39,11 @@ class Testbench extends TimedRobot {
     @Override
     public void teleopPeriodic() {
         joystickControls();
-        SmartDashboard.putNumber("Ball 3 Pos", indexer.getRelBall3Pos());
-        SmartDashboard.putNumber("Ball 4 Pos", indexer.getRelBall4Pos());
-        SmartDashboard.putNumber("Ball 3 Abs", indexer.getAbsBall3Pos());
-        SmartDashboard.putNumber("Ball 4 Abs", indexer.getAbsBall4Pos());
+        indexer.update();
+        SmartDashboard.putNumber("Ball 3 Pos", indexer.getRelPos(Motors.PRELOAD));
+        SmartDashboard.putNumber("Ball 4 Pos", indexer.getRelPos(Motors.LOAD));
+        SmartDashboard.putNumber("Ball 3 Abs", indexer.getAbsPos(Motors.PRELOAD));
+        SmartDashboard.putNumber("Ball 4 Abs", indexer.getAbsPos(Motors.LOAD));
     }
 
     private void joystickControls() {
@@ -51,15 +53,18 @@ class Testbench extends TimedRobot {
         if (driver.isBPushed()) {
             indexer.toggleControl();
         }
+        if (driver.isYPushed()) {
+            indexer.toggleRunning(Motors.PRELOAD);
+        }
         if (Math.abs(driver.getRawAxis(1)) > 0.05) {
-            indexer.rotate3(Math.pow(driver.getRawAxis(1), 3) / 1.5);
+            indexer.rotate(Motors.PRELOAD, Math.pow(driver.getRawAxis(1), 3) / 1.5);
         } else {
-            indexer.rotate3(0);
+            indexer.rotate(Motors.PRELOAD, 0);
         }
         if (Math.abs(driver.getRawAxis(5)) > 0.05) {
-            indexer.rotate4(Math.pow(driver.getRawAxis(5), 3) / 1.5);
+            indexer.rotate(Motors.LOAD, Math.pow(driver.getRawAxis(5), 3) / 1.5);
         } else {
-            indexer.rotate4(0);
+            indexer.rotate(Motors.LOAD, 0);
         }
         driver.clearButtons();
     }
