@@ -1,4 +1,3 @@
-  
 package frc.team3373;
 
 import com.revrobotics.CANEncoder;
@@ -79,23 +78,24 @@ public class Climber {
         
         //public static Climber 
         poleMotor = new CANSparkMax(Constants.POLE_MOTOR_ID, MotorType.kBrushless);
-        
-        poleEncoder = new CANEncoder(poleMotor);
         poleMotor.setInverted(false);
-        
         poleMotor.setIdleMode(IdleMode.kBrake);
+
+        poleEncoder = new CANEncoder(poleMotor);
+        
         poleSolenoid = new Solenoid(Constants.PCM_ID, Constants.POLE_SOLENOID_ID);
         poleSolenoid.set(true);
 
         winchMotor = new CANSparkMax(Constants.WINCH_MOTOR_ID, MotorType.kBrushless);
-        winchEncoder = new CANEncoder(winchMotor);
-        winchMotor.setInverted(false);
-        
+        winchMotor.setInverted(false);        
         winchMotor.setIdleMode(IdleMode.kBrake);
+
+        winchEncoder = new CANEncoder(winchMotor);
+
         winchSolenoid = new Solenoid(Constants.PCM_ID, Constants.WINCH_SOLENOID_ID);
         winchSolenoid.set(true);
 
-        ////inclineMotor = new CANSparkMax(Constants.INCLINE_MOTOR_ID, MotorType.kBrushed);
+        //inclineMotor = new CANSparkMax(Constants.INCLINE_MOTOR_ID, MotorType.kBrushed);
     
         p_pid = poleMotor.getPIDController();
         p_pid.setP(p_p);

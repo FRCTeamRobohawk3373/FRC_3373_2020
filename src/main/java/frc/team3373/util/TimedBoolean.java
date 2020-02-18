@@ -12,11 +12,6 @@ public class TimedBoolean {
     private Timer t = new Timer();
     private boolean m_old = false;
 
-    public void restart() {
-        t.reset();
-        t.start();
-    }
-
     public boolean update(boolean value, double timeout) {
         if (!m_old && value) {
             t.reset();

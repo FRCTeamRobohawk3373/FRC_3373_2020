@@ -18,9 +18,11 @@ class Testbench extends TimedRobot {
     public void robotInit() {
         try {
             Config.loadConfig();
+            System.out.println("Configs loaded");
         } catch (IOException | JSONException e) {
             try {
                 Config.loadDefaults();
+                System.out.println("Defaults loaded");
             } catch (Exception f) {
                 System.out.println("Fatal config error");
                 f.printStackTrace();
@@ -32,7 +34,7 @@ class Testbench extends TimedRobot {
         SmartDashboard.putBoolean("Save Config", false);
         SmartDashboard.putBoolean("Restore Backup", false);
         SmartDashboard.putBoolean("Update Config", false);
-        SmartDashboard.putBoolean("Restore Defaults (!)", false);
+        SmartDashboard.putBoolean("Restore Defaults", false);
     }
 
     @Override
@@ -112,7 +114,9 @@ class Testbench extends TimedRobot {
         if (driver.isYPushed()) {
             indexer.toggleRunning(Motors.PRELOAD);
         }
-        indexer.onAHeld(driver.isAHeld());
+        if (driver.isAPushed()) {
+            indexer.shoot();
+        }
         driver.clearButtons();
     }
 

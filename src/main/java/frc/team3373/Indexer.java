@@ -7,13 +7,17 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team3373.util.TimedBoolean;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.Timer;
 
 public class Indexer {
     private WPI_TalonSRX intake; //, conveyor;
     private LoadingMotor preload, load;
     private DigitalInput ballSensor;
     private boolean manual;
-    private boolean isAHeld = false;
+
+    private boolean shooting;
+
+    private int stateCounter = 0;
 
     private static Indexer instance;
 
@@ -45,10 +49,12 @@ public class Indexer {
     public Indexer(int intakeIndex, int conveyorIndex, int preloadIndex, int loadIndex, int ballSensorIndex) {
         intake = new WPI_TalonSRX(intakeIndex);
         // conveyor = new WPI_TalonSRX(conveyorIndex);
-        preload = new LoadingMotor(preloadIndex);
-        load = new LoadingMotor(loadIndex);
+        preload = new LoadingMotor(preloadIndex, Motors.PRELOAD);
+        load = new LoadingMotor(loadIndex, Motors.LOAD);
         preload.setNeutralMode(NeutralMode.Brake);
         load.setNeutralMode(NeutralMode.Brake);
+        
+        shooting = false;
 
         ballSensor = new DigitalInput(ballSensorIndex);
 
@@ -72,6 +78,13 @@ public class Indexer {
         preload.update();
         load.update();
     }
+    
+    public void stateMachine() {
+        switch(stateCounter) {
+            case 1:
+
+        }
+    }
 
     public boolean toggleRunning(Motors motor) {
         LoadingMotor m = (LoadingMotor) getMotor(motor);
@@ -83,8 +96,9 @@ public class Indexer {
         return false;
     }
 
-    public void onAHeld(boolean val) {
-        isAHeld = val;
+    public void shoot() {
+        if (!shooting)
+            shooting = true;
     }
 
     public boolean getManual() {
@@ -150,34 +164,41 @@ public class Indexer {
         private double deadband; // Range of error in degrees that is acceptable
 
         private State state;
-        private boolean isAvailable;
+        private boolean isOccupied;
         private TimedBoolean timer = new TimedBoolean();
         private double advanceBallSpeed;
         private double advanceBallDuration;
+
+        private Motors name;
+
+        private int lockTime;
+        private Timer lockTimer;
 
         /**
          * Class used by the preloading and loading motors for the Indexer class.
          * 
          * @param index Index of the motor
          */
-        public LoadingMotor(int index) {
+        public LoadingMotor(int index, Motors name) {
             super(index);
             running = false;
             scale = (int) Config.getNumber("encoderScale", 1992); // Number of encoder units per rotation
             predeadband = Config.getNumber("predeadband", 55);
             deadband = Config.getNumber("deadband", 25);
+            lockTime = (int) Config.getNumber("lockTime", 0.1);
+            lockTimer = new Timer();
 
             state = State.HOME;
-            isAvailable = !Config.getBool("ballLoaded", false);
+            this.name = name;
+            isOccupied = false;
 
-            if (this == preload) {
-                advanceBallSpeed = Config.getNumber("advancePreloadSpeed");
-                advanceBallDuration = Config.getNumber("advancePreloadDuration");
-            } else if (this == load) {
-                advanceBallSpeed = Config.getNumber("advanceLoadSpeed");
-                advanceBallDuration = Config.getNumber("advanceLoadDuration");
+            if (name == Motors.PRELOAD) {
+                advanceBallSpeed = Config.getNumber("advancePreloadSpeed", 1);
+                advanceBallDuration = Config.getNumber("advancePreloadDuration", 2.1);
+            } else if (name == Motors.LOAD) {
+                advanceBallSpeed = Config.getNumber("advanceLoadSpeed", 0.5);
+                advanceBallDuration = Config.getNumber("advanceLoadDuration", 0.7);
             }
-            
 
             super.configOpenloopRamp(0); // Set ramp rate to 0
         }
@@ -205,9 +226,6 @@ public class Indexer {
             state = newState;
         }
 
-        public boolean getAvailable() {
-            return isAvailable;
-        }
 
         /**
          * Starts the stopping routine for the motor.
@@ -225,89 +243,70 @@ public class Indexer {
          * Updates every time that the code runs. Updates the stopping routine.
          */
         private void update() {
-
             boolean changeState = false;
             switch (state) {
                 case HOME:
-                    isAvailable = true;
-
                     // Triggers for a state change
-                    if (this == preload) {
-                        changeState = timer.update(ballSensor.get(), 0.25);
-                    } else if (this == load) {
-                        // Important! Only the preload motor can change the state of the load motor
+                    if (name == Motors.PRELOAD) {
+                        changeState = timer.update(ballSensor.get(), 0.5);
                     }
-                    
+
                     if (changeState) {
                         // Which state to change to?
-                        if (this == preload) {
-                            if (load.getAvailable()) {// If load motor has empty slot
-                                state = State.ADVANCE;
-                            } else {
+                        if (name == Motors.PRELOAD) {
+                            if (load.isOccupied) {// If load motor has empty slot
                                 state = State.LOCK;
+                            } else {
+                                state = State.ADVANCE;
+                                timer = new TimedBoolean();
+                                preload.set(advanceBallSpeed);
                             }
-                        }                  
-                        timer.restart();// Reset the all-purpose timer/boolean
+                        }
+                        
                     }
-
+                    gotoHomePosition();
                     break;
                 case ADVANCE:
-                    isAvailable = true;
-
+                    timer.update(true, advanceBallDuration);
+    
                     if (timer.update(true, advanceBallDuration)) {// When push timer expires
-         
-                        // Which state to change to?
-                        if (this == preload) {
-                            // When preload motor is done, the ball will have travelled to the load motor position, so set its isAvailable to false
-                            ////load.setAvailable(false);
-                            if (isAHeld) {
-
-                                load.state = State.ADVANCE; 
-                            } else {
-                                state = State.HOME;
-                            }
-                        } else if (this == load) {
-                            if (isAHeld) {
-                                state = State.ADVANCE; 
-                            } else {
-                                state = State.LOCK;
-                            }
-                        }           
-                        timer.restart();// Reset the all-purpose timer/boolean
-                    
+                        if (name == Motors.PRELOAD) {
+                            state = State.HOME;
+                            //!
+                            load.state = State.LOCK;
+                            //!
+                            isOccupied = false;
+                        } else if (name == Motors.LOAD) {
+                            state = State.HOME;
+                            isOccupied = false;
+                        }
                     }
                     break;
                 case LOCK:
-                    isAvailable = false;
+                    gotoLockPosition();
 
-                    // Triggers for a state change
-                    if (this == preload) {
-                        changeState = load.isAvailable;
-                    } else if (this == load) {
-                        changeState = isAHeld;
+                    if (name == Motors.PRELOAD) {
+                        if (!load.isOccupied) {
+
+                            state = State.ADVANCE;
+                            timer = new TimedBoolean();
+                        }
+                    } else if (name == Motors.LOAD) {
+                        if (shooting) {
+        
+                            state = State.ADVANCE;
+                            timer = new TimedBoolean();
+                        }
                     }
-                    
-                    if (changeState) {
-                        state = State.ADVANCE;       
-                        timer.restart();// Reset the all-purpose timer/boolean
-                    }
+
                     
                     break;
-            }
-
-
-            
-//TODO put in case statement
-            if (state == State.ADVANCE) { // Set speed
-                super.set(advanceBallSpeed);
-            } else if (state == State.HOME) { // Go to position
-                gotoHomePosition();
-            } else if (state == State.LOCK) {
-                gotoLockPosition();
             }
         }
 
         public void gotoHomePosition() {
+            if (!(state == State.HOME))
+                return;
             double relDeg = getRelDeg();
             if (relDeg > scale - deadband || relDeg < deadband) {
                 super.set(0);
@@ -317,19 +316,19 @@ public class Indexer {
             } else {
                 super.set(-1);
             }
-        };
+        }
 
-        public void gotoLockPosition() {
+        public void gotoLockPosition() { // TODO Fix
+            if (!(state == State.LOCK))
+                return;
             double relDeg = getRelDeg()-Config.getNumber("loadingMotorLockOffset");
             if (relDeg > scale - deadband || relDeg < deadband) {
                 super.set(0);
                 stopping = false;
-            } else if (relDeg > 360 - predeadband) {
-                super.set(-0.2);
             } else {
-                super.set(-1);
+                super.set(0.1);
             }
-        };
+        }
 
         private int getAbsPos() {
             return super.getSensorCollection().getQuadraturePosition();
