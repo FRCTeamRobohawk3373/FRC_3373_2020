@@ -159,7 +159,7 @@ public class Intake {
             int index = (p1?8:0)+(p2?4:0)+(p3?2:0)+(p4?1:0);
 
 
-            
+
 
             switch (key[index]) {
                 case 0:
