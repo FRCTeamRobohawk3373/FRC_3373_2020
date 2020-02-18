@@ -134,7 +134,7 @@ public class Intake {
                 ( )[  ]
                 ( )[  ]O
                 ( )( O)
-                ( )[ O]O
+                ( )[ O]O *counter-advance
                 ( )(O )
                 ( )[O ]O
                 ( )(OO)
@@ -142,7 +142,7 @@ public class Intake {
                 (O)(  )
                 (O)(  )O
                 (O)( O)
-                [O][ O]O
+                [O][ O]O *counter-advance
                 (O)(O )
                 (O)(O )O
                 (O)(OO)
