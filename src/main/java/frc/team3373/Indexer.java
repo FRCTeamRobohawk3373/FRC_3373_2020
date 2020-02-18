@@ -101,8 +101,9 @@ public class Indexer {
             shooting = true;
     }
 
-    public boolean getManual() {
-        return manual;
+    public void getOccupied() {
+        SmartDashboard.putBoolean("Preload Occ", preload.isOccupied);
+        SmartDashboard.putBoolean("Load Occ", load.isOccupied);
     }
 
     public WPI_TalonSRX getMotor(Motors motor) {
@@ -164,7 +165,7 @@ public class Indexer {
         private double deadband; // Range of error in degrees that is acceptable
 
         private State state;
-        private boolean isOccupied;
+        public boolean isOccupied;
         private TimedBoolean timer = new TimedBoolean();
         private double advanceBallSpeed;
         private double advanceBallDuration;
@@ -254,12 +255,11 @@ public class Indexer {
                     if (changeState) {
                         // Which state to change to?
                         if (name == Motors.PRELOAD) {
-                            if (load.isOccupied) {// If load motor has empty slot
+                            if (load.isOccupied || load.state != State.HOME) { // If load motor has empty slot
                                 state = State.LOCK;
                             } else {
                                 state = State.ADVANCE;
                                 timer = new TimedBoolean();
-                                preload.set(advanceBallSpeed);
                             }
                         }
                         
@@ -267,13 +267,14 @@ public class Indexer {
                     gotoHomePosition();
                     break;
                 case ADVANCE:
-                    timer.update(true, advanceBallDuration);
+                    super.set(advanceBallSpeed);
     
                     if (timer.update(true, advanceBallDuration)) {// When push timer expires
                         if (name == Motors.PRELOAD) {
                             state = State.HOME;
                             //!
                             load.state = State.LOCK;
+                            load.isOccupied = true;
                             //!
                             isOccupied = false;
                         } else if (name == Motors.LOAD) {
@@ -293,7 +294,7 @@ public class Indexer {
                         }
                     } else if (name == Motors.LOAD) {
                         if (shooting) {
-        
+                            shooting = false;
                             state = State.ADVANCE;
                             timer = new TimedBoolean();
                         }
@@ -321,10 +322,10 @@ public class Indexer {
         public void gotoLockPosition() { // TODO Fix
             if (!(state == State.LOCK))
                 return;
-            double relDeg = getRelDeg()-Config.getNumber("loadingMotorLockOffset");
-            if (relDeg > scale - deadband || relDeg < deadband) {
+            double relDeg = getRelDeg();
+            double position = scale - Config.getNumber("loadingMotorLockOffset", 15.0);
+            if (relDeg < position) {
                 super.set(0);
-                stopping = false;
             } else {
                 super.set(0.1);
             }
