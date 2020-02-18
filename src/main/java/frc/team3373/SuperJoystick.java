@@ -46,14 +46,10 @@ public class SuperJoystick extends Joystick{
      * @see Joystick
      ********************************/
     public boolean isButtonPushed(int button){
-        if (getRawButton(button)){
-            return true;
-        } else { 
-            return false;
-        }
+        return getRawButton(button);
     }
     public boolean isAPushed(){
-        if(isButtonPushed(1) && flagA){
+        if(getRawButton(1) && flagA){
             flagA = false;
             return true;
         }
@@ -62,7 +58,7 @@ public class SuperJoystick extends Joystick{
         }
     }    
     public boolean isBPushed(){
-        if(isButtonPushed(2) && flagB){
+        if(getRawButton(2) && flagB){
             flagB = false;
             return true;
         }
@@ -71,7 +67,7 @@ public class SuperJoystick extends Joystick{
         }
     }
     public boolean isXPushed(){
-        if(isButtonPushed(3) && flagX){
+        if(getRawButton(3) && flagX){
             flagX = false;
             return true;
         }
@@ -80,7 +76,7 @@ public class SuperJoystick extends Joystick{
         }
     }
     public boolean isYPushed(){
-        if(isButtonPushed(4) && flagY){
+        if(getRawButton(4) && flagY){
             flagY = false;
             return true;
         }
@@ -89,7 +85,7 @@ public class SuperJoystick extends Joystick{
         }
     }
     public boolean isLBPushed(){
-        if(isButtonPushed(5) && flagLB){
+        if(getRawButton(5) && flagLB){
             flagLB = false;
             return true;
         }
@@ -98,7 +94,7 @@ public class SuperJoystick extends Joystick{
         }
     }
     public boolean isRBPushed(){
-        if(isButtonPushed(6) && flagRB){
+        if(getRawButton(6) && flagRB){
             flagRB = false;
             return true;
         }
@@ -107,7 +103,7 @@ public class SuperJoystick extends Joystick{
         }
     }
     public boolean isBackPushed(){
-        if(isButtonPushed(7) && flagBack){
+        if(getRawButton(7) && flagBack){
             flagBack = false;
             return true;
         }
@@ -116,7 +112,7 @@ public class SuperJoystick extends Joystick{
         }
     }
     public boolean isStartPushed(){
-        if(isButtonPushed(8) && flagStart){
+        if(getRawButton(8) && flagStart){
             flagStart = false;
             return true;
         }
@@ -125,7 +121,7 @@ public class SuperJoystick extends Joystick{
         }
     }
     public boolean isLStickPushed(){
-        if(isButtonPushed(9) && flagLStick){
+        if(getRawButton(9) && flagLStick){
             flagLStick = false;
             return true;
         }
@@ -134,7 +130,7 @@ public class SuperJoystick extends Joystick{
         }
     }
     public boolean isRStickPushed(){
-        if(isButtonPushed(10) && flagRStick){
+        if(getRawButton(10) && flagRStick){
             flagRStick = false;
             return true;
         }
@@ -215,137 +211,61 @@ public class SuperJoystick extends Joystick{
     	}
     }
     public boolean isAHeld(){
-        if (getRawButton(1)){
-            return true;
-        } else {
-            return false;
-        }
+        return getRawButton(1);
     }
     public boolean isBHeld(){
-        if (getRawButton(2)){
-            return true;
-        } else {
-            return false;
-        }
+        return getRawButton(2);
     }
     public boolean isXHeld(){
-        if (getRawButton(3)){
-            return true;
-        } else {
-            return false;
-        }
+        return getRawButton(3);
     }
     public boolean isYHeld(){
-        if (getRawButton(4)){
-            return true;
-        } else {
-            return false;
-        }
+        return getRawButton(4);
     }
     public boolean isLBHeld(){
-        if (getRawButton(5)){
-            return true;
-        } else {
-            return false;
-        }
+        return getRawButton(5);
     }
     public boolean isRBHeld(){
-        if (getRawButton(6)){
-            return true;
-        } else {
-            return false;
-        }
+        return getRawButton(6);
     }
     public boolean isBackHeld(){
-        if (getRawButton(7)){
-            return true;
-        } else {
-            return false;
-        }
+        return getRawButton(7);
     }
     public boolean isStartHeld(){
-        if (getRawButton(8)){
-            return true;
-        } else {
-            return false;
-        }
+        return getRawButton(8);
     }
     public boolean isLStickHeld(){
-        if (getRawButton(9)){
-            return true;
-        } else {
-            return false;
-        }
+        return getRawButton(9);
     }
     public boolean isRStickHeld(){
-        if (getRawButton(10)){
-            return true;
-        } else {
-            return false;
-        }
+        return getRawButton(10);
     }
     public boolean isDPadUpHeld(){
-    	if(getPOV() == 0){
-    		return true;
-    	} else {
-    		return false;
-    	}
+    	return (getPOV() == 0);
     }
     public boolean isDPadDownHeld(){
-    	if(getPOV() == 180){
-    		return true;
-    	} else {
-    		return false;
-    	}
+    	return (getPOV() == 180);
     }
     public boolean isDPadLeftHeld(){
-    	if(getPOV() == 270){
-    		return true;
-    	} else {
-    		return false;
-    	}
+    	return (getPOV() == 270);
     }
     public boolean isDPadRightHeld(){
-    	if(getPOV() == 90){
-    		return true;
-    	} else {
-    		return false;
-    	}
+    	return (getPOV() == 90);
     }
     public boolean isDPadUpRightHeld(){
-    	if(getPOV() == 45){
-    		return true;
-    	} else {
-    		return false;
-    	}
+    	return (getPOV() == 45);
     }
     public boolean isDPadUpLeftHeld(){
-    	if(getPOV() == 315){
-    		return true;
-    	} else {
-    		return false;
-    	}
+    	return (getPOV() == 315);
     }
     public boolean isDPadDownRightHeld(){
-    	if(getPOV() == 135){
-    		return true;
-    	} else {
-    		return false;
-    	}
+    	return (getPOV() == 135);
     }
     public boolean isDPadDownLeftHeld(){
-    	if(getPOV() == 225){
-    		return true;
-    	} else {
-    		return false;
-    	}
+    	return (getPOV() == 225);
     }
     public boolean isDPadNotHeld(){
-    	if(getPOV() == -1){
-    		return true;
-    	} else {
-    		return false;
-    	}
+    	return (getPOV() == -1);
     }
     public void clearButtons(){
         if (!flagA && !getRawButton(1)) { //toggles

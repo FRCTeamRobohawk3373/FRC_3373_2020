@@ -11,6 +11,8 @@ import frc.team3373.Indexer.Motors;
 class Testbench extends TimedRobot {
     private SuperJoystick driver;
     private Indexer indexer;
+    private Intake intake;
+
     double INTAKE_MOTOR_SPEED = 0.2; // TODO put in Constants.java
     double CONVEYOR_MOTOR_SPEED = 0.4;
 
@@ -29,7 +31,8 @@ class Testbench extends TimedRobot {
             }
         }
         driver = new SuperJoystick(0);
-        indexer = new Indexer(4, 0, 2, 3, 7);
+        indexer = new Indexer(2, 3, 7);
+        intake = new Intake(1, 4, 8, 9);
 
         SmartDashboard.putBoolean("Save Config", false);
         SmartDashboard.putBoolean("Restore Backup", false);

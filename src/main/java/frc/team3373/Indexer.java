@@ -10,19 +10,16 @@ import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
 
 public class Indexer {
-    private WPI_TalonSRX intake; //, conveyor;
-    private LoadingMotor preload, load;
-    private DigitalInput ballSensor;
-    private boolean manual;
-
-    private boolean shooting;
-
-    private int stateCounter = 0;
-
     private static Indexer instance;
 
+    private LoadingMotor preload, load;
+    private DigitalInput ballSensor;
+
+    private boolean shooting;
+    private int stateCounter = 0;
+
     public enum Motors {
-        INTAKE, CONVEYOR, PRELOAD, LOAD
+        PRELOAD, LOAD
     }
     
     public enum State {
@@ -31,24 +28,21 @@ public class Indexer {
 
     public static Indexer getInstance() {
         if (instance == null) {
-            instance = new Indexer(Constants.INTAKE_INDEX, Constants.CONVEYOR_INDEX, 
-                Constants.PRELOAD_INDEX, Constants.LOAD_INDEX, Constants.BALL_SENSOR_INDEX);
+            instance = new Indexer(Constants.PRELOAD_INDEX, Constants.LOAD_INDEX,
+                Constants.PRELOAD_BALL_SENSOR_INDEX);
         }
         return instance;
     }
 
 
     /**
-     * Initializes the indexer for the intake and storage of balls.
+     * Initializes the indexer for the storage and shooting of balls.
      * 
-     * @param intakeIndex   Motor index for the intake
-     * @param conveyorIndex Motor index for the conveyor
-     * @param preloadIndex  Motor index for the preloader
-     * @param loadIndex     Motor index for the loader
+     * @param preloadIndex    Motor index for the preloader
+     * @param loadIndex       Motor index for the loader
+     * @param ballSensorIndex DIO port for ball sensor
      */
-    public Indexer(int intakeIndex, int conveyorIndex, int preloadIndex, int loadIndex, int ballSensorIndex) {
-        intake = new WPI_TalonSRX(intakeIndex);
-        // conveyor = new WPI_TalonSRX(conveyorIndex);
+    public Indexer(int preloadIndex, int loadIndex, int ballSensorIndex) {
         preload = new LoadingMotor(preloadIndex, Motors.PRELOAD);
         load = new LoadingMotor(loadIndex, Motors.LOAD);
         preload.setNeutralMode(NeutralMode.Brake);
@@ -78,12 +72,9 @@ public class Indexer {
         preload.update();
         load.update();
     }
-    
-    public void stateMachine() {
-        switch(stateCounter) {
-            case 1:
 
-        }
+    public boolean isAvailable() {
+        return ((LoadingMotor)getMotor(Motors.PRELOAD)).isOccupied;
     }
 
     public boolean toggleRunning(Motors motor) {
@@ -108,10 +99,6 @@ public class Indexer {
 
     public WPI_TalonSRX getMotor(Motors motor) {
         switch (motor) {
-        case INTAKE:
-            return intake;
-        case CONVEYOR:
-            // return conveyor;
         case PRELOAD:
             return preload;
         case LOAD:
