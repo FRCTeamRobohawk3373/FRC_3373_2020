@@ -7,7 +7,6 @@
 
 package frc.team3373;
 
-import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -22,7 +21,7 @@ public class Robot extends TimedRobot {
   private final SendableChooser<String> m_autoChooser = new SendableChooser<>();
 
   // Color sensor
-  ////private ColorSensor myCs = new ColorSensor();
+  //private ColorSensor myCs = new ColorSensor();
 
   // Joystick
   private SuperJoystick shooter = new SuperJoystick(0);
@@ -32,9 +31,11 @@ public class Robot extends TimedRobot {
   private double timeDelta;
   private double timeWas;
 
-  ////private final ADIS16448_IMU m_imu = new ADIS16448_IMU();
+  //private final ADIS16448_IMU m_imu = new ADIS16448_IMU();
   ManualInput mi;
-  Climber climber;
+  //Climber climber;
+  Shooter foo;
+  boolean isShooting = false;
 
   public Robot() {
     super(0.02);// Frame rate = 50Hz
@@ -49,8 +50,11 @@ public class Robot extends TimedRobot {
     SmartDashboard.putData("Auto choices", m_autoChooser);
 
     mi = new ManualInput();
-    climber = new Climber();
-    climber.setMotorsToZero();
+    //climber = new Climber();
+    //climber.setMotorsToZero();
+
+        
+    foo = new Shooter();
   }
 
   @Override
@@ -90,7 +94,22 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
 
-    //* Climber
+    //* Shooter
+    
+    if (shooter.isAPushed()) isShooting = !isShooting;
+    if (isShooting) foo.setSpeedFromDistance(50);
+    else foo.setRawSpeed(0);
+
+    if (shooter.isRBPushed()) {
+      System.out.println("hi");
+      foo.bumpUpSpeed();
+    } else if (shooter.isLBPushed()) {
+      foo.bumpDownSpeed();
+    }
+    foo.updateTeleOp();
+    //*/
+      
+    /* Climber
     double lStickx = shooter.getRawAxis(0);
     if (Math.abs(lStickx) > 0.05) {
       climber.xStickManual(lStickx);
@@ -108,12 +127,22 @@ public class Robot extends TimedRobot {
       climber.initiateClimbMode();
     }
     climber.update();
+    //*/
   }
 
   @Override
   public void testPeriodic() {
 
-    //* Climber
+
+    foo.calibrationMotorSpeed(shooter.isLBPushed(), shooter.isRBPushed(), shooter.getRawAxis(2), shooter.getRawAxis(3));
+
+    if (shooter.isAPushed()) {
+      foo.nextCalibrationInterval();
+    }
+
+    foo.updateTestMode();
+
+    /* Climber
     double lStickx = shooter.getRawAxis(0);
     if (Math.abs(lStickx) > 0.05) {
       climber.xStickManual(lStickx);
@@ -122,7 +151,7 @@ public class Robot extends TimedRobot {
     double yStick2 = -shooter.getRawAxis(5);
 
     if (climber.getCalibrating()) {
-      if (shooter.isAPushed()) {
+      if (shooter.isYPushed()) {
         climber.calibrateHeights();
       } else if (shooter.isBPushed()) {                  
         climber.calibrateInches();
@@ -146,21 +175,20 @@ public class Robot extends TimedRobot {
       } else if (shooter.isYPushed()) {
         climber.initiateClimbMode();
       }
-
       if (Math.abs(yStick1) > 0.05) {
         climber.yStickManual(yStick1);
       } 
     }
-
     if (shooter.isStartPushed()) {
       climber.startCalibrateOptions();
     }
-    
     climber.update();
     climber.displayOnShuffleboard();
+    //*/
+
   }
 
   public void disabledInit() {
-    climber.disable();
+    //climber.disable();
   }
 }
