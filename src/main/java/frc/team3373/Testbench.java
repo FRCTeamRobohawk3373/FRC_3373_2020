@@ -6,7 +6,6 @@ import org.json.JSONException;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.team3373.Indexer.Motors;
 
 class Testbench extends TimedRobot {
     private SuperJoystick driver;
@@ -31,7 +30,7 @@ class Testbench extends TimedRobot {
             }
         }
         driver = new SuperJoystick(0);
-        indexer = new Indexer(2, 3, 7);
+        indexer = new Indexer();
         intake = new Intake(1, 4, 8, 9);
 
         SmartDashboard.putBoolean("Save Config", false);

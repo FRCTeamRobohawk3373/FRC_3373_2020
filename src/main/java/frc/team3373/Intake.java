@@ -5,7 +5,6 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 
-
 public class Intake {
     private static Intake instance;
     private WPI_TalonSRX intake, conveyor;
@@ -20,6 +19,12 @@ public class Intake {
     private State state1 = State.AVAILABLE;
     private State state2 = State.AVAILABLE;
     private State state3 = State.AVAILABLE;
+    private State state4 = State.AVAILABLE;
+    private State state5 = State.AVAILABLE;
+
+    private boolean realSensor1 = false;
+    private boolean realSensor2 = false;
+    private boolean realSensor4 = false;
 
     long whenTimerExpires = 0;
     boolean p3, p4;
@@ -40,6 +45,20 @@ public class Intake {
 
         intakeBallSensor = new DigitalInput(intakeBallSensorIndex);
         conveyorBallSensor = new DigitalInput(conveyorBallSensorIndex);
+    }
+
+    public void updatePos1() {
+
+    }
+    public void updatePos2() {
+
+    }
+    public void updatePos3() {
+
+    }
+    public void updatePos4() {
+    }
+    public void updatePos5() {
     }
 
     public void updateLoading() {
@@ -78,13 +97,13 @@ public class Intake {
         }
 
         //! Can be counteradvanced
-        if (state1 == State.AVAILABLE && state2 == State.AVAILABLE && state3 == State.OCCUPIED) {
-            if (Indexer.getInstance().isAvailable()) {
+        /* if (state1 == State.AVAILABLE && state2 == State.AVAILABLE && state3 == State.OCCUPIED) {
+            if (Indexer.getInstance().isAvailable(Motors.PRELOAD)) {
                 state3 = State.ADVANCING;
             }
             // Intake is moving
         }
-
+        */
         //! Can be counteradvanced
         if (state1 == State.OCCUPIED && state2 == State.AVAILABLE && state3 == State.OCCUPIED) {
             //* Wait for 4 to be empty
@@ -129,7 +148,7 @@ public class Intake {
         if (timeNow > whenTimerExpires) {
             whenTimerExpires = timeNow + 500l;//* 0.5 seconds
 
-            int[] key = new int[]{2,2,3,2,3,2,2,3,3,3,0,3,3,3,0};
+            int[] key = new int[]{2,2,3,7,3,2,2,3,3,3,7,3,3,3,0};
             /*
                 ( )[  ]
                 ( )[  ]O
@@ -150,16 +169,12 @@ public class Intake {
 
                 () = moving
                 [] = stop
-
             */
 
             boolean p1 = intakeBallSensor.get();
             boolean p2 = conveyorBallSensor.get();
-            boolean p4 = Indexer.getInstance(). //TODO get indexer's preload state
+            //boolean p4 = Indexer.getInstance().isAvailable(Motors.PRELOAD); //TODO get indexer's preload state
             int index = (p1?8:0)+(p2?4:0)+(p3?2:0)+(p4?1:0);
-
-
-
 
             switch (key[index]) {
                 case 0:
@@ -183,6 +198,14 @@ public class Intake {
                     conveyor.set(1);
                     p3 = p2;
                     break;
+
+                case 7:// Counter-advance
+                    intake.set(0);
+                    conveyor.set(1);
+                    p2 = p3;
+                    p3 = false;
+                    break;
+
             }
         }
     }
