@@ -11,10 +11,11 @@ public class Indexer {
     private WPI_TalonSRX intake, conveyor, preload, load;
     private DigitalInput intakeSensor, conveyorSensor, preloadSensor;
 
-    private TimedBoolean tbool;
+    private TimedBoolean tbool1, tbool2, tbool4;
+    private boolean bool1, bool2, bool4;
 
     public enum State {
-        OCCUPIED, ADVANCING, AVAILABLE
+        AVAILABLE, OCCUPIED, ADVANCING
     }
 
     State[] ballStates = new State[] { State.AVAILABLE, State.AVAILABLE, State.AVAILABLE, State.AVAILABLE,
@@ -43,15 +44,24 @@ public class Indexer {
         preloadSensor = new DigitalInput(Constants.PRELOAD_BALL_SENSOR_INDEX);
 
         // Timed booleans
-        tbool = new 
+        tbool1 = new TimedBoolean();
+        tbool2 = new TimedBoolean();
+        tbool4 = new TimedBoolean();
+    }
+
+    private boolean isState(int index, State val) {
+        return ballStates[index - 1] == val;
+    }
+    private boolean isState(int index, State val1, State val2) {
+        return isState(index, val1) || isState(index, val2);
     }
 
     private State getState(int index) {
         return ballStates[index - 1];
     }
 
-    private void setState(int index, State value) {
-        ballStates[index - 1] = value;
+    private void setState(int index, State val) {
+        ballStates[index - 1] = val;
     }
 
     /**
@@ -87,15 +97,42 @@ public class Indexer {
     }
 
     public void updatePos1() {
+        switch (getState(1)) {
+            case AVAILABLE:
+                break;
 
+            case OCCUPIED:
+                break;
+
+            case ADVANCING:
+                break;
+        }
     }
 
     public void updatePos2() {
+        switch (getState(2)) {
+            case AVAILABLE:
+                break;
 
+            case OCCUPIED:
+                break;
+
+            case ADVANCING:
+                break;
+        }
     }
 
     public void updatePos3() {
+        switch (getState(3)) {
+            case AVAILABLE:
+                break;
 
+            case OCCUPIED:
+                break;
+
+            case ADVANCING:
+                break;
+        }        
     }
 
     public void updatePos4() {
@@ -110,6 +147,9 @@ public class Indexer {
      * Updates status of all 5 positions and real sensor booleans
      */
     public void update() {
+        bool1 = tbool1.update(intakeSensor.get(), 0.5);
+        bool2 = tbool2.update(conveyorSensor.get(), 0.5);
+        bool4 = tbool4.update(preloadSensor.get(), 0.5);
         updatePos1();
         updatePos2();
         updatePos3();
