@@ -1,16 +1,15 @@
 {
     "encoderScale": 1992,
     "indexerSpeed": 1.0,
-    "predeadband": 55,
-    "deadband": 20,
     "ballLoaded": false,
-    "advancePreloadSpeed": 0.7,
-    "advanceLoadSpeed": 0.8,
-    "advancePreloadDuration": 2.1,
-    "advanceLoadDuration": 1.1,
+    "maxPreloadSpeed": 0.7,
+    "maxLoadSpeed": 0.8,
     "loadingMotorLockOffset": 15.0,
     "intakeMotorSpeed": 0.6,
     "advanceIntakeDuration": 1.33,
     "advanceConveyorDuration": 1.55,
-    "conveyorMotorSpeed": 0.7
+    "conveyorMotorSpeed": 0.7,
+    "preload_P": 5,
+    "pidError": 0.1,
+    "lockOffsetRotations": 0.1
 }

@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 class Testbench extends TimedRobot {
     private SuperJoystick driver;
     private Indexer indexer;
-    private Intake intake;
 
     double INTAKE_MOTOR_SPEED = 0.2; // TODO put in Constants.java
     double CONVEYOR_MOTOR_SPEED = 0.4;
@@ -81,11 +80,11 @@ class Testbench extends TimedRobot {
     public void testPeriodic() {
         calibControls();
         indexer.update();
-        SmartDashboard.putNumber("Preload Pos", indexer.getRelPos(Motors.PRELOAD));
-        SmartDashboard.putNumber("Preload Abs", indexer.getAbsPos(Motors.PRELOAD));
-        SmartDashboard.putNumber("Preload Deg", indexer.getRelDeg(Motors.PRELOAD));
-        SmartDashboard.putNumber("Load Pos", indexer.getRelPos(Motors.LOAD));
-        SmartDashboard.putNumber("Load Abs", indexer.getAbsPos(Motors.LOAD));
+        // SmartDashboard.putNumber("Preload Pos", indexer.getRelPos(Motors.PRELOAD));
+        // SmartDashboard.putNumber("Preload Abs", indexer.getAbsPos(Motors.PRELOAD));
+        // SmartDashboard.putNumber("Preload Deg", indexer.getRelDeg(Motors.PRELOAD));
+        // SmartDashboard.putNumber("Load Pos", indexer.getRelPos(Motors.LOAD));
+        // SmartDashboard.putNumber("Load Abs", indexer.getAbsPos(Motors.LOAD));
     }
 
     @Override
@@ -97,13 +96,13 @@ class Testbench extends TimedRobot {
     public void teleopPeriodic() {
         joystickControls();
         indexer.update();
-        SmartDashboard.putNumber("Preload Pos", indexer.getRelPos(Motors.PRELOAD));
-        SmartDashboard.putNumber("Preload Abs", indexer.getAbsPos(Motors.PRELOAD));
-        SmartDashboard.putNumber("Preload Deg", indexer.getRelDeg(Motors.PRELOAD));
-        SmartDashboard.putNumber("Load Pos", indexer.getRelPos(Motors.LOAD));
-        SmartDashboard.putNumber("Load Abs", indexer.getAbsPos(Motors.LOAD));
+        // SmartDashboard.putNumber("Preload Pos", indexer.getRelPos(Motors.PRELOAD));
+        // SmartDashboard.putNumber("Preload Abs", indexer.getAbsPos(Motors.PRELOAD));
+        // SmartDashboard.putNumber("Preload Deg", indexer.getRelDeg(Motors.PRELOAD));
+        // SmartDashboard.putNumber("Load Pos", indexer.getRelPos(Motors.LOAD));
+        // SmartDashboard.putNumber("Load Abs", indexer.getAbsPos(Motors.LOAD));
        
-        indexer.getOccupied();
+        //indexer.getOccupied();
     }
 
     private void joystickControls() {
@@ -116,7 +115,7 @@ class Testbench extends TimedRobot {
             indexer.toggleRunning(Motors.PRELOAD);
         }
         if (driver.isAPushed()) {
-            indexer.shoot();
+            indexer.unloadBall5();
         }
         driver.clearButtons();
     }
