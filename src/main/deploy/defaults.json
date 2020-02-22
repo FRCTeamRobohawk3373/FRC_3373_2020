@@ -9,5 +9,8 @@
     "advancePreloadDuration": 2.1,
     "advanceLoadDuration": 1.1,
     "loadingMotorLockOffset": 15.0,
-    "intakeMotorSpeed": 1.0
+    "intakeMotorSpeed": 0.6,
+    "advanceIntakeDuration": 1.33,
+    "advanceConveyorDuration": 1.55,
+    "conveyorMotorSpeed": 0.7
 }
