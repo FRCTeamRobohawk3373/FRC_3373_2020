@@ -51,7 +51,7 @@ public class Indexer {
         timedBool1 = new DelayTrueBoolean();
         timedBool2 = new DelayTrueBoolean();
         timedBool4 = new DelayTrueBoolean();
-        //tboolConveyor = new DelayTrueBoolean();
+        // tboolConveyor = new DelayTrueBoolean();
         pos1 = false;
         pos2 = false;
         pos4 = false;
@@ -64,13 +64,15 @@ public class Indexer {
         preload.config_kI(0, 0);
         preload.config_kD(0, 0);
         preload.configClosedLoopPeakOutput(0, Config.getNumber("maxPreloadSpeed", 0.7));
-        preload.configAllowableClosedloopError(0, (int)(Config.getNumber("pidError", 0.1)*(int)Config.getNumber("encoderScale", 1992)));
+        preload.configAllowableClosedloopError(0,
+                (int) (Config.getNumber("pidError", 0.1) * (int) Config.getNumber("encoderScale", 1992)));
 
         load.config_kP(0, Config.getNumber("preload_P", 5));
         load.config_kI(0, 0);
         load.config_kD(0, 0);
         load.configClosedLoopPeakOutput(0, Config.getNumber("maxLoadSpeed", 0.7));
-        load.configAllowableClosedloopError(0, (int)(Config.getNumber("pidError", 0.1)*(int)Config.getNumber("encoderScale", 1992)));
+        load.configAllowableClosedloopError(0,
+                (int) (Config.getNumber("pidError", 0.1) * (int) Config.getNumber("encoderScale", 1992)));
     }
 
     private boolean isState(int index, State val) {
@@ -101,10 +103,9 @@ public class Indexer {
      */
     public void unloadBall5() {
         loadPos++;
-        preload.set(ControlMode.Position, loadPos
-                * Config.getNumber("encoderScale", 1992));
+        preload.set(ControlMode.Position, loadPos * Config.getNumber("encoderScale", 1992));
         setState(5, State.MOVING);
-        ballCount --;// Decrement ball counter
+        ballCount--;// Decrement ball counter
         // ! move motor
     }
 
@@ -139,76 +140,47 @@ public class Indexer {
 
     public void updatePos1() {
         switch (getState(1)) {
-            case AVAILABLE:// Ready to receive a ball
-                if (pos1) {// If color sensor detects a new cal
-                    setState(1, State.OCCUPIED);// Set position 1 state to OCCUPIED
-                    ballCount ++;// Increment ball counter
-                }
-                break;
-                
-            case OCCUPIED:// Ball is just above the sensor
-                switch (getState(2)) {// Get the state of the motor above
-                    case AVAILABLE:// Move ball to position 2 if it's empty
-                        setState(1, State.MOVING);
-                        setState(2, State.MOVING);
-                        moveConveyor();
-                        startIntake();
-                        break;
+        case AVAILABLE:// Ready to receive a ball
+            if (pos1) {// If color sensor detects a new cal
+                setState(1, State.OCCUPIED);// Set position 1 state to OCCUPIED
+                ballCount++;// Increment ball counter
+            }
+            break;
 
-                    case MOVING:// If position 2 is moving, 
-                        setState(1, State.MOVING);
-                        break;
-
-                    case OCCUPIED:
-                        if (ballCount >= 5) {// If robot is completely full of balls
-                            stopIntake();
-                        }
-                        break;
-
-                    case REVERSE:// To prevent 2 ball collisions (extrusions) with intake and conveyor belts moving towards each together
-                        stopIntake();
-                }
-
-            case MOVING:// If ball is being pushed to ball position 2
-                if (!pos1) {// If position 1 is empty...
-                    setState(1, State.AVAILABLE);// Reset position 1 back to the original state of being ready to recieve a ball
-                }
+        case OCCUPIED:// Ball is just above the sensor
+            switch (getState(2)) {// Get the state of the motor above
+            case AVAILABLE:// Move ball to position 2 if it's empty
+                setState(1, State.MOVING);
+                setState(2, State.MOVING);
+                moveConveyor();
+                startIntake();
                 break;
 
-            default:
+            case MOVING:// If position 2 is moving,
+                setState(1, State.MOVING);
                 break;
-        }
-            
-
-        // if (isState(1, State.OCCUPIED) && )
-        
-
-        // if(isState(1, State.OCCUPIED) && isState(2, State.AVAILABLE)){
-        //     //*turn on conveyor
-        //     setState(1, State.MOVING);
-        //     setState(2, State.MOVING);
-        // }
-            
-        /**
-        switch (getState(1)) {
-            case AVAILABLE:
-                if (timedBool1.update(intakeSensor.get(), Config.getNumber("...", 0.5))) {
-                    startIntake();
-                }
-                // Intentionally no break statement
 
             case OCCUPIED:
-                if (isState(2, State.OCCUPIED) && isState(2, State.OCCUPIED)) {
+                if (ballCount >= 5) {// If robot is completely full of balls
                     stopIntake();
                 }
                 break;
 
-            case MOVING:
-                if (tboolConveyor.update(true, Config.getNumber("advanceConveyorDuration"))) {
-                    reloadIntake();
-                }
-                break;
-        }*/ //TODO Delete?
+            case REVERSE:// To prevent 2 ball collisions (extrusions) with intake and conveyor belts
+                         // moving towards each together
+                stopIntake();
+            }
+
+        case MOVING:// If ball is being pushed to ball position 2
+            if (!pos1) {// If position 1 is empty...
+                setState(1, State.AVAILABLE);// Reset position 1 back to the original state of being ready to recieve a
+                                             // ball
+            }
+            break;
+
+        default:
+            break;
+        }
     }
 
     public void updatePos2() {
@@ -216,28 +188,43 @@ public class Indexer {
             case AVAILABLE:
                 if (pos2) {
                     setState(2, State.OCCUPIED);
+                    conveyor.stopMotor();
                 }
                 break;
      
             case OCCUPIED:
-                if (!pos1) {
-                    if (isState(3, State.OCCUPIED) /*|| isState(3, State.MOVING)  */) {
-                        if (!pos4) {
+                if (isState(1, State.OCCUPIED)) {//
+                    switch(getState(3)){
+                        case AVAILABLE:
                             setState(2, State.MOVING);
                             setState(3, State.MOVING);
                             conveyor.set(Config.getNumber("conveyorMotorSpeed"));
-                        }
-                    } else {
-                        setState(2, State.MOVING);
-                        setState(3, State.MOVING);
-                        conveyor.set(Config.getNumber("conveyorMotorSpeed"));
+                            break;
+                        
+                        case OCCUPIED:
+                            if (isState(4, State.AVAILABLE)) {
+                                setState(2, State.MOVING);
+                                setState(3, State.MOVING);
+                                conveyor.set(Config.getNumber("conveyorMotorSpeed"));
+                            }
+                            break;
+                        
+                        default:
+                            break;
                     }
                 }
                 break;
 
             case MOVING:
                 if (!pos2) {
-                    setState(3, State.AVAILABLE);//!
+                    setState(2, State.AVAILABLE);//! look at later
+                }
+                break;
+            
+            case REVERSE:
+                if (timedBool2.update(conveyorSensor.get(), Config.getNumber("reverseConveyorDelay"))) {
+                    setState(2, State.OCCUPIED);//! look at later
+                    conveyor.stopMotor();
                 }
                 break;
 
@@ -248,97 +235,102 @@ public class Indexer {
 
     public void updatePos3() {
         switch (getState(3)) {
+        case OCCUPIED:
+            if (isState(2, State.AVAILABLE)) {
+                setState(2, State.REVERSE);
+                setState(3, State.REVERSE);
+                conveyor.set(-Config.getNumber("conveyorMotorSpeed"));
+            }
+            break;
 
-            case OCCUPIED:
-                if (!pos2) {
-                    setState(2, State.REVERSE);
-                    setState(3, State.REVERSE);
-                    conveyor.set(-Config.getNumber("conveyorMotorSpeed"));
-                }
-                break;
-            
-            case REVERSE:
-                if (pos2) {
-                    setState(3, State.AVAILABLE);
-                }
-                break;
+        case REVERSE:
+            if (isState(2, State.OCCUPIED)) {
+                setState(3, State.AVAILABLE);
+            }
+            break;
 
-            default:
-                break;
+        default:
+            break;
         }
     }
 
     public void updatePos4() {
         switch (getState(4)) {
-            case AVAILABLE:
-                if (preloadSensor.get()) {
-                    setState(4, State.OCCUPIED);
-                }
-                break;
+        case AVAILABLE:
+            if (pos4) {
+                setState(4, State.OCCUPIED);
+            }
+            break;
 
-            case OCCUPIED:
-                if (getState(5) == State.AVAILABLE) {
-                    setState(4, State.MOVING);
-                    preloadPos++;
-                    preload.set(ControlMode.Position, preloadPos
-                        * Config.getNumber("encoderScale", 1992));
-                } else if (!is4Locked) {
-                    preload.set(ControlMode.Position, preload.getClosedLoopTarget(0)
-                        - Config.getNumber("lockOffsetRotations", 0.1));
-                }
-                break;
+        case OCCUPIED:
+            if (isState(5,  State.AVAILABLE)) {
+                setState(4, State.MOVING);
+                is4Locked=false;
+                preloadPos += Config.getNumber("preloadRotations", 3);
+                preload.set(ControlMode.Position, preloadPos * Config.getNumber("encoderScale", 1992));
+            } else if (!is4Locked) {
+                preload.set(ControlMode.Position,
+                        preload.getSensorCollection().getQuadraturePosition() - Config.getNumber("lockOffsetRotations", 0.1)*Config.getNumber("encoderScale", 1992));
+                is4Locked=true;
+            }
+            break;
 
-            case MOVING:
-                if (Math.abs(preload.getClosedLoopError(0)) < Config.getNumber("pidError", 0.1) * Config.getNumber("encoderScale", 1992)) {
-                    preload.stopMotor();
-                    setState(4, State.AVAILABLE);
-                    setState(5, State.OCCUPIED);
-                }
-                break;
+        case MOVING:
+            if (Math.abs(preload.getClosedLoopError(0)) < Config.getNumber("pidError", 0.1)
+                    * Config.getNumber("encoderScale", 1992)) {
+                preload.stopMotor();
+                setState(4, State.AVAILABLE);
+                setState(5, State.OCCUPIED);
+            }
+            break;
 
-            default:
-                break;
+        default:
+            break;
         }
     }
 
     public void updatePos5() {
 
         switch (getState(5)) {
-            case OCCUPIED:
-                if (!is5Locked) {
-                    load.set(ControlMode.Position, load.getClosedLoopTarget(0)
-                        - Config.getNumber("lockOffsetRotations", 0.1));
-                }
-        
-            case MOVING:
-                if (Math.abs(load.getClosedLoopError(0)) < Config.getNumber("pidError", 0.1) * Config.getNumber("encoderScale", 1992)) {
-                    load.stopMotor();
-                    setState(5, State.AVAILABLE);
-                }
-                break;
-                
-            default:
-                break;
+        case OCCUPIED:
+            if (!is5Locked) {
+                load.set(ControlMode.Position,
+                        load.getClosedLoopTarget(0) - Config.getNumber("lockOffsetRotations", 0.1));
+                is5Locked = true;
+            }
+
+        case MOVING:
+            is5Locked = false;
+            if (Math.abs(load.getClosedLoopError(0)) < Config.getNumber("pidError", 0.1)
+                    * Config.getNumber("encoderScale", 1992)) {
+                load.stopMotor();
+                setState(5, State.AVAILABLE);
+            }
+            break;
+
+        default:
+            break;
         }
     }
 
     public void zeroMotor() {
-        
+
     }
 
     /**
      * Updates status of all 5 positions and real sensor booleans
      */
     public void update() {
-            pos1 = timedBool1.update(intakeSensor.get(), 0.5);
-            pos2 = timedBool2.update(conveyorSensor.get(), 0.5);
-            pos4 = timedBool4.update(preloadSensor.get(), 0.5);
-            updatePos1();
-            updatePos2();
-            if (!false) {// TODO If not shooting
-                updatePos3();
-            }
-            updatePos4();
-            updatePos5();
+        pos1 = timedBool1.update(intakeSensor.get(), Config.getNumber("intakeSensorDelay", 0.5));
+        pos2 = timedBool2.update(conveyorSensor.get(), Config.getNumber("conveyorDelay"));
+        pos4 = timedBool4.update(preloadSensor.get(), Config.getNumber("preloadDelay"));
+
+        updatePos1();
+        updatePos2();
+        if (!false) {// TODO If not shooting
+            updatePos3();
+        }
+        updatePos4();
+        updatePos5();
     }
 }

@@ -11,9 +11,6 @@ class Testbench extends TimedRobot {
     private SuperJoystick driver;
     private Indexer indexer;
 
-    double INTAKE_MOTOR_SPEED = 0.2; // TODO put in Constants.java
-    double CONVEYOR_MOTOR_SPEED = 0.4;
-
     @Override
     public void robotInit() {
         try {
@@ -29,8 +26,7 @@ class Testbench extends TimedRobot {
             }
         }
         driver = new SuperJoystick(0);
-        indexer = new Indexer();
-        intake = new Intake(1, 4, 8, 9);
+        indexer = Indexer.getInstance();
 
         SmartDashboard.putBoolean("Save Config", false);
         SmartDashboard.putBoolean("Restore Backup", false);
@@ -105,6 +101,8 @@ class Testbench extends TimedRobot {
         //indexer.getOccupied();
     }
 
+    //! = code that was causing errors
+
     private void joystickControls() {
         //* double intakePower = (1 - driver.getRawAxis(2)*2);
         //* indexer.getMotor(Motors.INTAKE).set(intakePower * INTAKE_MOTOR_SPEED);
@@ -112,7 +110,7 @@ class Testbench extends TimedRobot {
 
         
         if (driver.isYPushed()) {
-            indexer.toggleRunning(Motors.PRELOAD);
+            //!indexer.toggleRunning(Motors.PRELOAD);
         }
         if (driver.isAPushed()) {
             indexer.unloadBall5();
@@ -120,22 +118,24 @@ class Testbench extends TimedRobot {
         driver.clearButtons();
     }
 
+    
+
     private void calibControls() {
         if (driver.isAPushed()) {
-            indexer.zero();
+            //!indexer.zero();
         }
         // if (driver.isBPushed()) {
         // indexer.toggleControl();
         // }
         if (Math.abs(driver.getRawAxis(1)) > 0.05) {
-            indexer.rotate(Motors.PRELOAD, Math.pow(driver.getRawAxis(1), 3) / 1.5);
+            //!indexer.rotate(Motors.PRELOAD, Math.pow(driver.getRawAxis(1), 3) / 1.5);
         } else {
-            indexer.rotate(Motors.PRELOAD, 0);
+            //!indexer.rotate(Motors.PRELOAD, 0);
         }
         if (Math.abs(driver.getRawAxis(5)) > 0.05) {
-            indexer.rotate(Motors.LOAD, Math.pow(driver.getRawAxis(5), 3) / 1.5);
+            //!indexer.rotate(Motors.LOAD, Math.pow(driver.getRawAxis(5), 3) / 1.5);
         } else {
-            indexer.rotate(Motors.LOAD, 0);
+            //!indexer.rotate(Motors.LOAD, 0);
         }
         driver.clearButtons();
     }
