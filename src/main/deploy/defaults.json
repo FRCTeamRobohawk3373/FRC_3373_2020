@@ -1,7 +1,6 @@
 {
     "encoderScale": 1992,
     "indexerSpeed": 1.0,
-    
     "maxPreloadSpeed": 0.7,
     "maxLoadSpeed": 0.8,
     "loadingMotorLockOffset": 15.0,
@@ -9,7 +8,7 @@
     "conveyorMotorSpeed": 0.7,
     "preload_P": 5,
     "preloadRotations": 3,
-    "pidError": 0.1,
+    "pidError": 0.045,
     "lockOffsetRotations": 0.1,
     "intakeSensorDelay": 0.5,
     "conveyorSensorDelay": 0.5,

@@ -104,16 +104,19 @@ class Testbench extends TimedRobot {
     //! = code that was causing errors
 
     private void joystickControls() {
-        //* double intakePower = (1 - driver.getRawAxis(2)*2);
-        //* indexer.getMotor(Motors.INTAKE).set(intakePower * INTAKE_MOTOR_SPEED);
-        // indexer.rotate(Motors.CONVEYOR, intakePower*CONVEYOR_MOTOR_SPEED);
-
-        
+        if (driver.isXPushed()) {
+            indexer.stopIntake();
+        }
         if (driver.isYPushed()) {
-            //!indexer.toggleRunning(Motors.PRELOAD);
+            indexer.startIntake();
         }
         if (driver.isAPushed()) {
             indexer.unloadBall5();
+        }
+        if (driver.getRawAxis(3) > 0.5) {
+            indexer.startShooting();
+        } else {
+            indexer.stopShooting();
         }
         driver.clearButtons();
     }
