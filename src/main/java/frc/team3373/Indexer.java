@@ -21,6 +21,8 @@ public class Indexer {
     private int preloadPos, loadPos;
     private boolean isShooting = false;
 
+    //TODO for debugging, remove later
+
     public enum State {
         AVAILABLE, OCCUPIED, MOVING, REVERSE
     }
@@ -111,7 +113,7 @@ public class Indexer {
         ballCount = 0;
         for (State b: ballStates) {
             if (b == State.OCCUPIED) {
-                ballCount++;
+                addBall();
             } 
         }
         return true;
@@ -129,7 +131,7 @@ public class Indexer {
      * Called by Shooter.java to remove the 5th ball position.
      */
     public void unloadBall5() {
-        if(isState(5, State.OCCUPIED)){
+        if(isState(5, State.OCCUPIED) && isShooting){
             loadPos++;
             load.set(ControlMode.Position, loadPos * Config.getNumber("encoderScale", 1992));
             setState(5, State.MOVING);
@@ -159,7 +161,7 @@ public class Indexer {
         case AVAILABLE:// Ready to receive a ball
             if (pos1) {// If color sensor detects a new cal
                 setState(1, State.OCCUPIED);// Set position 1 state to OCCUPIED
-                ballCount++;// Increment ball counter
+                addBall();// Increment ball counter
             }
             break;
 
@@ -197,6 +199,121 @@ public class Indexer {
         default:
             break;
         }
+    }
+
+    private void updateConveyor() {
+        if (isShooting) { //? Can assume at least one ball?
+            if (isState(2, State.OCCUPIED) && isState(3, State.AVAILABLE)) { // If ball in 2 and not 3, move 2 -> 3
+                setState(2, State.MOVING);
+            }
+
+            if (isState(4, State.AVAILABLE)) { // If 4 is available, ball needs to be moved
+                if (isState(3, State.OCCUPIED)) { // If 3 has a ball, can commence moving
+                    
+                } else if (isState(2, State.OCCUPIED)) {
+
+                }
+            }
+        } else {
+            return;
+        }
+
+        //! Remove
+        switch (getState(2)) {
+            case AVAILABLE:
+                if (pos2) {
+                    setState(2, State.OCCUPIED);
+                    conveyor.set(0);
+                    if (isState(3, State.MOVING)) {
+                        setState(3, State.OCCUPIED);
+                    }
+                }
+                break;
+
+            case OCCUPIED:
+                if (isShooting) {
+                    if (isState(4, State.AVAILABLE)) {
+                        setState(2, State.MOVING);
+                        setState(3, State.MOVING); 
+                        conveyor.set(Config.getNumber("conveyorMotorSpeed"));
+                    }               
+                } else {
+                    if (isState(1, State.OCCUPIED)) {//
+                        switch (getState(3)) {
+                            case AVAILABLE:
+                                setState(2, State.MOVING);
+                                setState(3, State.MOVING);
+                                conveyor.set(Config.getNumber("conveyorMotorSpeed"));
+                                break;
+
+                            case OCCUPIED:
+                                if (isState(4, State.AVAILABLE)) {
+                                    setState(2, State.MOVING);
+                                    setState(3, State.MOVING);
+                                    conveyor.set(Config.getNumber("conveyorMotorSpeed"));
+                                }
+                                break;
+
+                            default:
+                                break;
+                        }
+                    }
+                }
+                break;
+
+            case MOVING:
+                if (isShooting && isState(1, State.AVAILABLE) && !pos2) {// If position 1 is available
+                    setState(2, State.AVAILABLE);
+                    setState(3, State.OCCUPIED);
+                    conveyor.set(0);
+                } else {
+                    if (!pos2) {
+                        setState(2, State.AVAILABLE);// ! look at later
+                    }
+                }
+                break;
+
+            case REVERSE:
+                if (timedBool2.update(!conveyorSensor.get(), Config.getNumber("reverseConveyorDelay"))) {// TODO REMOVE ! ?
+                    setState(2, State.OCCUPIED);// ! look at later
+                    setState(3, State.AVAILABLE);
+                    conveyor.set(0);
+                }
+                break;
+
+            default:
+                break;
+        }
+        
+        switch (getState(3)) {
+            case OCCUPIED:
+                if (isShooting) {
+                    if (isState(4, State.AVAILABLE)) {
+                        conveyor.set(Config.getNumber("conveyorMotorSpeed"));
+                        setState(3, State.MOVING);
+                    }
+                } else {
+                    if (isState(2, State.AVAILABLE)) {
+                        setState(2, State.REVERSE);
+                        setState(3, State.REVERSE);
+                        conveyor.set(-Config.getNumber("conveyorMotorSpeed"));
+                    }
+                }
+                break;
+    
+            case MOVING:
+                if (isShooting) {
+                    if (isState(4, State.OCCUPIED) || isState(4, State.MOVING)) {
+                        conveyor.set(0);
+                        setState(3, State.AVAILABLE);
+                    }
+                }
+                break;
+    
+            default:
+                break;
+            }
+        //! Remove
     }
 
     private void updatePos2() {
@@ -286,7 +403,7 @@ public class Indexer {
 
         case MOVING:
             if (isShooting) {
-                if (isState(4, State.OCCUPIED) || isState(4, State.MOVING)) {
+                if (isState(4, State.OCCUPIED)) {
                     conveyor.set(0);
                     setState(3, State.AVAILABLE);
                 }
@@ -309,19 +426,11 @@ public class Indexer {
 
         case OCCUPIED:
             if (isState(5, State.AVAILABLE)) {
-       
                 setState(4, State.MOVING);
                 preloadPos += Config.getNumber("preloadRotations", 3);
 
-                System.out.print("5 available, Moving 4 -> 5. ");
-                System.out.println("going to "+(preloadPos * Config.getNumber("encoderScale", 1992))+" from "+ preload.getSensorCollection().getQuadraturePosition());
-
                 preload.set(ControlMode.Position, preloadPos * Config.getNumber("encoderScale", 1992));
-                
             } else if (!is4Locked) {
-                System.out.print("5 occupied, locking 4. ");
-                System.out.println("going to "+((preloadPos - Config.getNumber("lockOffsetRotations", 0.1)) * Config.getNumber("encoderScale", 1992))+" from "+ preload.getSensorCollection().getQuadraturePosition());
-
                 preload.set(ControlMode.Position, (preloadPos - Config.getNumber("lockOffsetRotations", 0.1)) * Config.getNumber("encoderScale", 1992));
                 is4Locked = true;
             }
@@ -329,13 +438,8 @@ public class Indexer {
 
         case MOVING:
             double posError = preloadPos*Config.getNumber("encoderScale", 1992) - Math.abs(preload.getSensorCollection().getQuadraturePosition());
-            SmartDashboard.putNumber("position 4 error", posError);
-            SmartDashboard.putNumber("4 position", preload.getSensorCollection().getQuadraturePosition());
 
             if (Math.abs(posError) < Config.getNumber("pidError", 0.05) * Config.getNumber("encoderScale", 1992)) {
-                System.out.print("4 finished Moving 4 -> 5. ");
-                System.out.println("Currently at "+ preload.getSensorCollection().getQuadraturePosition());
-                
                 preload.set(0);
                 setState(4, State.AVAILABLE);
                 setState(5, State.OCCUPIED);
@@ -352,9 +456,6 @@ public class Indexer {
         switch (getState(5)) {
         case OCCUPIED:
             if (!is5Locked) {
-                System.out.print("5 occupied, locking 5. ");
-                System.out.println("going to "+((loadPos - Config.getNumber("lockOffsetRotations", 0.1)) * Config.getNumber("encoderScale", 1992))+" from "+ load.getSensorCollection().getQuadraturePosition());
-
                 load.set(ControlMode.Position, (loadPos - Config.getNumber("lockOffsetRotations", 0.1)) * Config.getNumber("encoderScale", 1992));
                 is5Locked = true;
             }
@@ -362,15 +463,9 @@ public class Indexer {
 
         case MOVING:
             double posError = loadPos*Config.getNumber("encoderScale", 1992) - Math.abs(load.getSensorCollection().getQuadraturePosition());
-            SmartDashboard.putNumber("position 5 error", posError);
-            SmartDashboard.putNumber("5 position", load.getSensorCollection().getQuadraturePosition());
             
             if (Math.abs(posError) < Config.getNumber("pidError", 0.05)
                     * Config.getNumber("encoderScale", 1992)) {
-
-                System.out.print("5 finished Moving. ");
-                System.out.println("Currently at "+ preload.getSensorCollection().getQuadraturePosition());
-
 
                 is5Locked = false;
                 load.set(0);
@@ -387,6 +482,12 @@ public class Indexer {
 
     }
 
+    private void addBall() {
+        if (ballCount != 5) {
+            ballCount++;
+        }
+    }
+
     /**
      * Updates status of all 5 positions and real sensor booleans
      */
@@ -396,10 +497,14 @@ public class Indexer {
         pos4 = timedBool4.update(!preloadSensor.get(), Config.getNumber("preloadSensorDelay", 0.5));
 
         updatePos1();
+
+        //if (isShooting) {
+        //    updateConveyor();
+        //} else {
         updatePos2();
-        if (!false) {// TODO If not shooting
-            updatePos3();
-        }
+        updatePos3();
+        //}
+        
         updatePos4();
         updatePos5();
 
@@ -420,12 +525,9 @@ public class Indexer {
         SmartDashboard.putNumber("Ball count", ballCount);
         SmartDashboard.putNumber("Preload Pos", preloadPos);
         SmartDashboard.putNumber("Preload Pos Encoder Units", preloadPos * Config.getNumber("encoderScale", 1992));
-        //SmartDashboard.putNumber("Preload Target", preload.getClosedLoopTarget(0));
-        //SmartDashboard.putNumber("Preload Error", preload.getClosedLoopError(0));
-
         SmartDashboard.putBoolean("4 Locked", is4Locked);
         SmartDashboard.putBoolean("5 Locked", is5Locked);
 
-        SmartDashboard.putBoolean("is shooting", isShooting);
+        SmartDashboard.putBoolean("isShooting", isShooting);
     }
 }
