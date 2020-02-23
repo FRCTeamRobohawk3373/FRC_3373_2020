@@ -108,6 +108,12 @@ public class Indexer {
             return false;
         }
         ballStates = newStates;
+        ballCount = 0;
+        for (State b: ballStates) {
+            if (b == State.OCCUPIED) {
+                ballCount++;
+            } 
+        }
         return true;
     }
 

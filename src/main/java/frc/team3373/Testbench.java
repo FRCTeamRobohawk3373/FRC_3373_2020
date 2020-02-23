@@ -6,6 +6,7 @@ import org.json.JSONException;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.team3373.Indexer.State;
 
 class Testbench extends TimedRobot {
     private SuperJoystick driver;
@@ -117,6 +118,10 @@ class Testbench extends TimedRobot {
             indexer.startShooting();
         } else {
             indexer.stopShooting();
+        }
+
+        if (driver.isStartPushed()) {
+            indexer.setInitialBallStates(new State[]{State.OCCUPIED,State.OCCUPIED,State.OCCUPIED,State.OCCUPIED,State.OCCUPIED});
         }
         driver.clearButtons();
     }
