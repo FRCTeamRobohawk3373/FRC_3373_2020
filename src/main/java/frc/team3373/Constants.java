@@ -15,18 +15,17 @@ public class Constants{
     public static final double ROTATIONAL_CORRECTION_FACTOR = 4; 
 
 
-
-    public static final int FLDriveMotorID = 7;
-    public static final int FLRotateMotorID = 8;
-
-    public static final int FRDriveMotorID = 5;
-    public static final int FRRotateMotorID = 6;
-
     public static final int BLDriveMotorID = 1;
     public static final int BLRotateMotorID = 2;
 
     public static final int BRDriveMotorID = 3;
     public static final int BRRotateMotorID = 4;
+
+    public static final int FRDriveMotorID = 5;
+    public static final int FRRotateMotorID = 6;
+
+    public static final int FLDriveMotorID = 7;
+    public static final int FLRotateMotorID = 8;
 
     public static final byte numberOfControlSegments = 8;
 
@@ -64,10 +63,11 @@ public class Constants{
     public static final double FREncHome = 1.402344;
 
     // Indexer constructor values
-    public static final int INTAKE_INDEX = 4;
-    public static final int CONVEYOR_INDEX = 1;
-    public static final int PRELOAD_INDEX = 2;
-    public static final int LOAD_INDEX = 3;
+    public static final int INTAKE_INDEX = 13; // Testbench: 4
+    public static final int CONVEYOR_INDEX = 14; // 1
+    public static final int PRELOAD_INDEX = 15; // 2
+    public static final int LOAD_INDEX = 16; // 3
+    
     public static final int INTAKE_BALL_SENSOR_INDEX = 7;
     public static final int CONVEYOR_BALL_SENSOR_INDEX = 8; // TODO Change to actual indexes
     public static final int PRELOAD_BALL_SENSOR_INDEX = 9;
@@ -83,15 +83,15 @@ public class Constants{
     public static final double C_WI=0;
     public static final double C_WD=0;
 
-    public static final int POLE_MOTOR_ID = 1;
-    public static final int WINCH_MOTOR_ID = 4;
-    public static final int PCM_ID = 10;
+    public static final int POLE_MOTOR_ID = 10;
+    public static final int WINCH_MOTOR_ID = 9;
+    public static final int PCM_ID = 19;
     public static final int POLE_SOLENOID_ID = 0;
     public static final int WINCH_SOLENOID_ID = 1;
     public static final int INCLINE_MOTOR_ID = -1;
 
     // Shooter constants
-    public static final int SHOOTER_MOTOR_ID = 1;
+    public static final int SHOOTER_MOTOR_ID = 12;
     public static final double SHOOTER_BUMP_AMOUNT = 0.02;
     public static final double[][] SHOOT_TABLE = new double[][] {
         {24.000000, 0.071515},
