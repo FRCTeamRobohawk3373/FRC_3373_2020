@@ -5,6 +5,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 
+@SuppressWarnings("all")
 public class Intake {
     private static Intake instance;
     private WPI_TalonSRX intake, conveyor;
