@@ -1,5 +1,7 @@
 {
     "encoderScale": 1992.0,
+    "preloadEncoderScale":4096,
+    "loadEncoderScale":3421,
     "maxPreloadSpeed": 0.7,
     "maxLoadSpeed": 0.8,
     "loadingMotorLockOffset": 15.0,

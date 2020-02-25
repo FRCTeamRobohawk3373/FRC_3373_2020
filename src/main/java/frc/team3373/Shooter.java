@@ -26,7 +26,8 @@ public class Shooter {
         motor = new CANSparkMax(Constants.SHOOTER_MOTOR_ID, MotorType.kBrushless);
         motor.setInverted(false);
         motor.setIdleMode(IdleMode.kCoast);
-        motor.disableVoltageCompensation();
+        motor.setClosedLoopRampRate(Constants.SHOOTER_RAMP_RATE);
+        motor.setOpenLoopRampRate(Constants.SHOOTER_RAMP_RATE);
         powerTable = Constants.SHOOT_TABLE;
 
         if (RobotState.isTest()) {
@@ -50,19 +51,32 @@ public class Shooter {
     }
 
     public void setSpeedFromDistance(double inches) {
-        double val = 0;
-        for (int i = 0; i < powerTable.length; i ++) {
-            double distLow = powerTable[i][0];
-            double powLow = powerTable[i][1];
-            if (i == powerTable.length-1) {
-                val = powLow;
-            } else {
-                double distHigh = powerTable[i+1][0];
-                double powHigh = powerTable[i+1][1];
-                val = MathUtil.lerp(powLow, powHigh, inches/(distHigh-distLow));
+        double val = -1;
+        double distLow = powerTable[0][0];
+        double distHigh = powerTable[0][0];
+        double powLow = powerTable[0][1];
+        double powHigh = powerTable[0][1];
+        for (int i = 0; i > powerTable.length; i++) {
+            distHigh = powerTable[i][0];
+            if (distHigh > inches) {// if matching inches 
+                if (i == 0) {// If largest table value
+                    distLow = 0;
+                    powLow = 0;
+                } else {
+                    distLow = powerTable[i-1][0];
+                    powLow = powerTable[i-1][1];
+                }
+                powHigh = powerTable[i][1];
+
+                val = MathUtil.lerp(powLow, powHigh, (inches-distLow)/(distHigh-distLow));
+                break;
             }
         }
-        setSpeed(val);
+
+        if(val<0)
+            val=powerTable[powerTable.length-1][1];// Set to max shooter speed if distance is greater than max shoot table value
+
+        setSpeed(MathUtil.clamp(val, 0, Constants.SHOOTER_MAX_SPEED));// 70% is max speed
     }
 
     public void bumpUpSpeed() {
@@ -76,9 +90,9 @@ public class Shooter {
     }
 
     public void updateTeleOp() {
-   
         String motorInfo;
         String positiveSignPrefix = "";
+
         if (liveSpeedDisplay >= 0) {
             positiveSignPrefix = "+";
         }
@@ -110,9 +124,10 @@ public class Shooter {
         currentPower -= Math.pow(lTrigger*0.12, 3);
         currentPower += Math.pow(rTrigger*0.12, 3);
         currentPower = MathUtil.clamp(currentPower, 0, 1);
+        SmartDashboard.putNumber("Shooter speed", currentPower);
     }
 
-    public void nextCalibrationInterval() {
+    public Boolean nextCalibrationInterval() {
         if (isCalibrationDone) {
             currentPower = 0;
         } else {
@@ -125,6 +140,7 @@ public class Shooter {
                 isCalibrationDone = true;
             }
         }
+        return isCalibrationDone;
     }
 
     private void printTable(double[][] table) {

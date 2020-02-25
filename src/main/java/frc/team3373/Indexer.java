@@ -63,8 +63,13 @@ public class Indexer {
 
         ballCount = 0;
 
+        //!
+        preload.configFactoryDefault();
+        load.configFactoryDefault();
+        //!
+
         preload.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
-        preload.setSensorPhase(false); // TODO Change?
+        preload.setSensorPhase(false); // (was set to true) TODO Change?
         preload.setInverted(false);
         preload.config_kP(0, Config.getNumber("preload_P", 5));
         preload.config_kI(0, 0);
@@ -77,7 +82,7 @@ public class Indexer {
         preload.set(ControlMode.Position, 0);
 
         load.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
-        load.setSensorPhase(true); // TODO Change?
+        load.setSensorPhase(false); // TODO Change?
         load.setInverted(false);
         load.config_kP(0, Config.getNumber("preload_P", 5));
         load.config_kI(0, 0);
@@ -134,7 +139,7 @@ public class Indexer {
     public void unloadBall5() {
         if (isState(5, State.OCCUPIED) && isShooting) {
             loadPos += Config.getNumber("loadRotations", 2);
-            load.set(ControlMode.Position, loadPos * Config.getNumber("encoderScale", 1992));
+            load.set(ControlMode.Position, loadPos * Config.getNumber("loadEncoderScale", 1992));
             setState(5, State.MOVING);
             ballCount--;// Decrement ball counter
         }
@@ -393,19 +398,19 @@ public class Indexer {
                     setState(4, State.MOVING);
                     preloadPos += Config.getNumber("preloadRotations", 3);
 
-                    preload.set(ControlMode.Position, preloadPos * Config.getNumber("encoderScale", 1992));
+                    preload.set(ControlMode.Position, preloadPos * Config.getNumber("preloadEncoderScale", 1992));
                 } else if (!is4Locked) {
                     preload.set(ControlMode.Position, (preloadPos - Config.getNumber("lockOffsetRotations", 0.1))
-                            * Config.getNumber("encoderScale", 1992));
+                            * Config.getNumber("preloadEncoderScale", 1992));
                     is4Locked = true;
                 }
                 break;
 
             case MOVING:
-                double posError = preloadPos * Config.getNumber("encoderScale", 1992)
+                double posError = preloadPos * Config.getNumber("preloadEncoderScale", 1992)
                         - Math.abs(preload.getSensorCollection().getQuadraturePosition());
 
-                if (Math.abs(posError) < Config.getNumber("pidError", 0.05) * Config.getNumber("encoderScale", 1992)) {
+                if (Math.abs(posError) < Config.getNumber("pidError", 0.05) * Config.getNumber("preloadEncoderScale", 1992)) {
                     preload.set(0);
                     setState(4, State.AVAILABLE);
                     setState(5, State.OCCUPIED);
@@ -423,16 +428,16 @@ public class Indexer {
             case OCCUPIED:
                 if (!is5Locked) {
                     load.set(ControlMode.Position, (loadPos - Config.getNumber("lockOffsetRotations", 0.1))
-                            * Config.getNumber("encoderScale", 1992));
+                            * Config.getNumber("loadEncoderScale", 1992));
                     is5Locked = true;
                 }
                 break;
 
             case MOVING:
-                double posError = loadPos * Config.getNumber("encoderScale", 1992)
+                double posError = loadPos * Config.getNumber("loadEncoderScale", 1992)
                         - Math.abs(load.getSensorCollection().getQuadraturePosition());
 
-                if (Math.abs(posError) < Config.getNumber("pidError", 0.05) * Config.getNumber("encoderScale", 1992)) {
+                if (Math.abs(posError) < Config.getNumber("pidError", 0.05) * Config.getNumber("loadEncoderScale", 1992)) {
 
                     is5Locked = false;
                     load.set(0);
@@ -504,8 +509,7 @@ public class Indexer {
         SmartDashboard.putBoolean("Preload Sensor", pos4);
         SmartDashboard.putNumber("Intake Speed", intake.get());
         SmartDashboard.putNumber("Conveyor Speed", conveyor.get());
-        SmartDashboard.putNumber("Preload Speed", preload.get());
-        SmartDashboard.putNumber("Load Speed", load.get());
+        
         String states = "[";
         for (int i = 0; i < ballStates.length - 1; i++) {
             states += ballStates[i] + ", ";
@@ -519,6 +523,10 @@ public class Indexer {
         SmartDashboard.putBoolean("5 Locked", is5Locked);
 
         SmartDashboard.putBoolean("isShooting", isShooting);
+
+
+        SmartDashboard.putNumber("Preload Speed", preload.get());
+        SmartDashboard.putNumber("Load Speed", load.get());
 
         SmartDashboard.putNumber("Preload Quad", preload.getSensorCollection().getQuadraturePosition());
         SmartDashboard.putNumber("Load Quad", load.getSensorCollection().getQuadraturePosition());

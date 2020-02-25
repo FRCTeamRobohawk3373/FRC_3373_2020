@@ -102,6 +102,8 @@ public class Robot extends TimedRobot {
         driver = new SuperJoystick(0);
         shooter = new SuperJoystick(1);
 
+        launcher = new Shooter();
+
         ahrs = SuperAHRS.getInstance();
         indexer = Indexer.getInstance();
 
@@ -113,6 +115,8 @@ public class Robot extends TimedRobot {
         SmartDashboard.putBoolean("Restore Backup", false);
         SmartDashboard.putBoolean("Update Config", false);
         SmartDashboard.putBoolean("Restore Defaults", false);
+
+        SmartDashboard.putNumber("Shoot Distance", 0);
 
         /*
          * double rotAngle = Math.toDegrees(Math.atan((Constants.robotWidth / 2) /
@@ -281,6 +285,7 @@ public class Robot extends TimedRobot {
     public void teleopPeriodic() {
         joystickControls();
         indexer.update();
+        launcher.updateTeleOp();
         /*
          * try { Thread.sleep(1000); } catch (InterruptedException e) {
          * e.printStackTrace(); }
@@ -366,6 +371,9 @@ public class Robot extends TimedRobot {
         }
         if (shooter.getRawAxis(3) > 0.5) {
             indexer.startShooting();
+
+            double launcher_inches = SmartDashboard.getNumber("Shoot Distance", 0);
+            launcher.setSpeedFromDistance(launcher_inches);
         } else {
             indexer.stopShooting();
         }
@@ -375,8 +383,19 @@ public class Robot extends TimedRobot {
                     new State[] { State.OCCUPIED, State.OCCUPIED, State.OCCUPIED, State.OCCUPIED, State.OCCUPIED });
         }
 
+        if (shooter.isLBPushed()) {
+            launcher.bumpDownSpeed();
+        }
+        if (shooter.isRBPushed()) {
+            launcher.bumpUpSpeed();
+        }
+
+        launcher.updateTeleOp();
+
         driver.clearButtons();
+        driver.clearDPad();
         shooter.clearButtons();
+        shooter.clearDPad();
     }
 
     /**
@@ -401,8 +420,21 @@ public class Robot extends TimedRobot {
         } else {
             indexer.moveMotor("load", 0);
         }
+
+        launcher.setSpeed(Math.pow(shooter.getRawAxis(3), 2)/2);
+        if (shooter.isLBPushed()) {
+            launcher.bumpDownSpeed();
+        }
+        if (shooter.isRBPushed()) {
+            launcher.bumpUpSpeed();
+        }
+        launcher.updateTeleOp();
+
         driver.clearButtons();
         driver.clearDPad();
+        shooter.clearButtons();
+        shooter.clearDPad();
+        
     }
 
 }

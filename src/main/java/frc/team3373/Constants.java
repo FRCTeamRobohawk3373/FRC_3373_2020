@@ -4,8 +4,8 @@ import frc.team3373.util.PIDConstant;
 public class Constants{
     //* Robot Config
     //TODO change robot dimensions to match this years robot
-    public static final double robotLength = 29.9375; //The larger dimension
-    public static final double robotWidth = 29.875;
+    public static final double robotLength = 26.25; //The larger dimension, measure from center of wheels
+    public static final double robotWidth = 20.3125;
 
 
     public static final double wheelCircumference = 18.8495559215387594307759; //TODO measure this value
@@ -92,7 +92,10 @@ public class Constants{
 
     // Shooter constants
     public static final int SHOOTER_MOTOR_ID = 12;
+    public static final double SHOOTER_RAMP_RATE = 5;
     public static final double SHOOTER_BUMP_AMOUNT = 0.02;
+    public static final double SHOOTER_MAX_SPEED = 0.7;
+
     public static final double[][] SHOOT_TABLE = new double[][] {
         {24.000000, 0.071515},
         {36.000000, 0.087067},
