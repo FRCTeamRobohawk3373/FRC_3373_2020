@@ -245,9 +245,15 @@ public class Config {
     public static void updateValues() {
         NetworkTable table = NetworkTableInstance.getDefault().getTable("Constants");
         String[] keys = JSONObject.getNames(configObject);
+        double value;
         for (String key : keys) {
             if (!(configObject.get(key) instanceof JSONArray)) {
-                configObject.put(key, table.getEntry(key).getDouble(-1));
+                value=table.getEntry(key).getDouble(Double.MAX_VALUE);
+                if(value == Double.MAX_VALUE){
+                    System.out.println("WARNING: Unable to get \"" + key + "\"");
+                    continue;
+                }
+                configObject.put(key, value);
             } // else {
             //     if (!(constantsObject.getJSONArray(key).get(0) instanceof JSONArray)) {
             //         JSONArray array = constantsObject.getJSONArray(key);
