@@ -4,50 +4,58 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
-import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team3373.util.MathUtil;
 import frc.team3373.Constants;
 
-public class Shooter {
+public class Launcher {
 
-    CANSparkMax motor;
-    double[][] powerTable;
-    int liveSpeedDisplay = 0;
-    double liveSpeedAdjustment = 0;
+    private CANSparkMax motor;
+    private double[][] powerTable;
+    private int liveSpeedDisplay = 0;
+    private double liveSpeedAdjustment = 0;
 
     // For calibration
-    private boolean isCalibrationDone = false;
+    private boolean isFirstTime;
+    private boolean isCalibrationDone;
     private int calibrationTimes;
-    private double currentInches, startInches, endInches, inchesInterval, currentPower;
+    private double currentInches, startInches, stopInches, inchesInterval, currentPower;
     private double[][] calibratingTable;
 
-    public Shooter() {
+    private static Launcher instance;
+
+    public static Launcher getInstance() {
+        if (instance == null) {
+            instance = new Launcher();
+        }
+        return instance;
+    }
+
+    public Launcher() {
         motor = new CANSparkMax(Constants.SHOOTER_MOTOR_ID, MotorType.kBrushless);
         motor.setInverted(false);
         motor.setIdleMode(IdleMode.kCoast);
         motor.setClosedLoopRampRate(Constants.SHOOTER_RAMP_RATE);
         motor.setOpenLoopRampRate(Constants.SHOOTER_RAMP_RATE);
         powerTable = Constants.SHOOT_TABLE;
+        isFirstTime = true;
+        isCalibrationDone = false;
+    }
 
-        if (RobotState.isTest()) {
-            currentPower = 0;
-            calibrationTimes = 0;
-            currentInches = startInches = 24;
-            endInches = 140;
-            inchesInterval = 12;
-            int numberOfIntervals = (int)((endInches-startInches)/inchesInterval+1);
-            calibratingTable = new double[numberOfIntervals][2];
-        }
+    public void setFirstTime(boolean val) {
+        isFirstTime = val;
     }
 
     public void setRawSpeed(double speed) {
         motor.set(speed);
     }
 
+    public void stop(){
+        motor.set(0);
+    }
+
     public void setSpeed(double speed) {
-        System.out.println(speed);
-        motor.set(MathUtil.clamp(speed+liveSpeedAdjustment, 0.0, 1.0));
+        motor.set(MathUtil.clamp(speed+liveSpeedAdjustment, 0.0, Config.getNumber("launcherMaxSpeed", 0.7)));
     }
 
     public void setSpeedFromDistance(double inches) {
@@ -103,10 +111,29 @@ public class Shooter {
             motorInfo = "";
         }
         SmartDashboard.putString("Shooter", positiveSignPrefix+liveSpeedDisplay+motorInfo);
-
     }
 
-    public void updateTestMode() {
+    private void setupCalibration() {
+        isFirstTime = false;
+        isCalibrationDone = false;
+        SmartDashboard.putNumber("Start Inches", startInches);
+        SmartDashboard.putNumber("Interval in Inches", inchesInterval);
+        SmartDashboard.putNumber("Stop Inches", stopInches);
+        SmartDashboard.putBoolean("Launch Calibrating", true);
+        int numberOfIntervals = (int)((stopInches-startInches)/inchesInterval+1);
+        calibratingTable = new double[numberOfIntervals][2];// Create an empty table
+        currentInches = startInches;// Set current inches to minimum
+        currentPower = 0;// Set power to 0
+        calibrationTimes = 0;
+    }
+
+    public boolean updateCalibration() {
+        if (isFirstTime) {
+            startInches = 24;// Deafult values of calibration
+            stopInches = 140;
+            inchesInterval = 12;
+            setupCalibration();
+        }
         if (isCalibrationDone) {
             SmartDashboard.putString("Shooter Calibration", "Done");
         } else {
@@ -116,6 +143,29 @@ public class Shooter {
         SmartDashboard.putNumber("Shooter (get)", motor.get());
 
         motor.set(currentPower);
+
+        // Set start, stop, interval on shuffleboard
+        double val;
+        val = SmartDashboard.getNumber("Start Inches", -1);
+        if (val != startInches && val != -1) {
+            startInches = val;
+            setupCalibration();
+        }
+        val = SmartDashboard.getNumber("Stop Inches", -1);
+        if (val != stopInches && val != -1) {
+            stopInches = val;
+            setupCalibration();
+        }
+        val = SmartDashboard.getNumber("Interval in Inches", -1);
+        if (val != inchesInterval && val != -1) {
+            inchesInterval = val;
+            setupCalibration();
+        }       
+
+        if (isCalibrationDone) {
+            isFirstTime = true;
+        }
+        return isCalibrationDone;
     }
 
     public void calibrationMotorSpeed(boolean isBLPushed, boolean isBRPushed, double lTrigger, double rTrigger) {
@@ -127,20 +177,19 @@ public class Shooter {
         SmartDashboard.putNumber("Shooter speed", currentPower);
     }
 
-    public Boolean nextCalibrationInterval() {
+    public void nextCalibrationStep() {
         if (isCalibrationDone) {
             currentPower = 0;
         } else {
             calibratingTable[calibrationTimes] = new double[]{currentInches, currentPower};
             calibrationTimes ++;
             currentInches += inchesInterval;
-            if (currentInches > endInches) {
+            if (currentInches > stopInches) {
                 currentPower = 0;
                 printTable(calibratingTable);
                 isCalibrationDone = true;
             }
         }
-        return isCalibrationDone;
     }
 
     private void printTable(double[][] table) {

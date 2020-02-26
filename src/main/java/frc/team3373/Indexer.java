@@ -6,6 +6,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team3373.util.DelayTrueBoolean;
 
@@ -20,6 +21,14 @@ public class Indexer {
     private int ballCount;
     private int preloadPos, loadPos;
     private boolean isShooting = false;
+
+    // Calibration variables
+    private Timer calTimer = new Timer();
+    private boolean startedCal = false;
+    private boolean intakeCal = false;
+    private boolean conveyorCal = false;
+    private boolean preloadCal = false;
+    private boolean loadCal = false;
 
     public enum State {
         AVAILABLE, OCCUPIED, MOVING, REVERSE
@@ -63,10 +72,10 @@ public class Indexer {
 
         ballCount = 0;
 
-        //!
+        // !
         preload.configFactoryDefault();
         load.configFactoryDefault();
-        //!
+        // !
 
         preload.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
         preload.setSensorPhase(false); // (was set to true) TODO Change?
@@ -76,8 +85,7 @@ public class Indexer {
         preload.config_kD(0, 0);
         preload.configClosedLoopPeakOutput(0, Config.getNumber("maxPreloadSpeed", 0.7));
         preload.configAllowableClosedloopError(0,
-                (int) (Config.getNumber("pidError", 0.1) * Config.getNumber("encoderScale", 1992)));
-        preload.setNeutralMode(NeutralMode.Brake);
+                (int) (Config.getNumber("pidError", 0.1) * Config.getNumber("preloadEncoderScale", 1992)));
         preload.getSensorCollection().setQuadraturePosition(0, 100);
         preload.set(ControlMode.Position, 0);
 
@@ -89,8 +97,7 @@ public class Indexer {
         load.config_kD(0, 0);
         load.configClosedLoopPeakOutput(0, Config.getNumber("maxLoadSpeed", 0.7));
         load.configAllowableClosedloopError(0,
-                (int) (Config.getNumber("pidError", 0.05) * Config.getNumber("encoderScale", 1992)));
-        load.setNeutralMode(NeutralMode.Brake);
+                (int) (Config.getNumber("pidError", 0.05) * Config.getNumber("loadEncoderScale", 1992)));
         load.getSensorCollection().setQuadraturePosition(0, 100);
         load.set(ControlMode.Position, 0);
     }
@@ -121,7 +128,23 @@ public class Indexer {
                 addBall();
             }
         }
+        isShooting = false;
+
         return true;
+    }
+
+    public void stop(){
+        for (State b : ballStates) {
+            if (b == State.MOVING) {
+                b = State.OCCUPIED;
+            }
+        }
+
+        intake.set(0);
+        conveyor.set(0);
+        preload.set(0);
+        load.set(0);
+
     }
 
     public void startShooting() {
@@ -158,54 +181,31 @@ public class Indexer {
 
     private void updatePos1() {
         switch (getState(1)) {
-            case AVAILABLE: // Ready to receive a ball
-                if (pos1) { // If color sensor detects a new cal
-                    setState(1, State.OCCUPIED);// Set position 1 state to OCCUPIED
-                    addBall(); // Increment ball counter
-                }
-                break;
+        case AVAILABLE: // Ready to receive a ball
+            if (pos1) { // If color sensor detects a new cal
+                setState(1, State.OCCUPIED);// Set position 1 state to OCCUPIED
+                addBall(); // Increment ball counter
+            }
+            break;
 
-            case OCCUPIED: // Ball is just above the sensor
-                // switch (getState(2)) { // Get the state of the motor above
-                // case AVAILABLE: // Move ball to position 2 if it's empty
-                // setState(1, State.MOVING);
-                // setState(2, State.MOVING);
-                // conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.7));
-                // startIntake();
-                // break;
+        case OCCUPIED:
+            if (ballCount >= 5) {
+                stopIntake();
+            }
+            if (isState(2, State.REVERSE)) {
+                stopIntake();
+            }
 
-                // case MOVING: // If position 2 is moving,
-                // setState(1, State.MOVING);
-                // break;
+        case MOVING: // If ball is being pushed to ball position 2
+            startIntake();
+            if (!pos1) { // If position 1 is empty...
+                setState(1, State.AVAILABLE); // Reset position 1 back to the original state of being ready to
+                                              // recieve a ball
+            }
+            break;
 
-                // case OCCUPIED:
-                // if (ballCount >= 5) { // If robot is completely full of balls
-                // stopIntake();
-                // }
-                // break;
-
-                // case REVERSE: // To prevent 2 ball collisions (extrusions) with intake and
-                // conveyor belts
-                // // moving towards each together
-                // stopIntake();
-                // }
-                if (ballCount >= 5) {
-                    stopIntake();
-                }
-                if (isState(2, State.REVERSE)) {
-                    stopIntake();
-                }
-
-            case MOVING: // If ball is being pushed to ball position 2
-                startIntake();
-                if (!pos1) { // If position 1 is empty...
-                    setState(1, State.AVAILABLE); // Reset position 1 back to the original state of being ready to
-                                                  // recieve a ball
-                }
-                break;
-
-            default:
-                break;
+        default:
+            break;
         }
     }
 
@@ -230,7 +230,7 @@ public class Indexer {
                     setState(2, State.AVAILABLE);
                     setState(3, State.OCCUPIED);
                     conveyor.set(0);
-                } else if (!isState(4, State.AVAILABLE) && !pos2) {
+                } else if (!isState(4, State.AVAILABLE)) {
                     setState(2, State.AVAILABLE);
                     setState(3, State.OCCUPIED);
                 }
@@ -269,184 +269,185 @@ public class Indexer {
                     setState(2, State.AVAILABLE);
                     setState(3, State.OCCUPIED);
                 }
-            } else if (isState(2, State.AVAILABLE) && isState(3, State.OCCUPIED)) { // When conveyor is messed up by shooting
+            } /*else if (isState(2, State.AVAILABLE) && isState(3, State.OCCUPIED) && isState(1, State.AVAILABLE)) { // When conveyor is messed up by
+                                                                                    // shooting
                 // ? 1 can't be occupied after shooting
                 setState(3, State.REVERSE);
                 conveyor.set(-Config.getNumber("conveyorMotorSpeed", 0.7));
             } else if (isState(3, State.REVERSE)) {
-                if (pos2) {
+                if (timedBool2.update(conveyorSensor.get(), Config.getNumber("reverseConveyorDelay"))) {
                     setState(2, State.OCCUPIED);
                     setState(3, State.AVAILABLE);
                     conveyor.set(0);
                 }
-            }
+            }*/
         }
     }
 
     @SuppressWarnings("unused")
     private void updatePos2() {
         switch (getState(2)) {
-            case AVAILABLE:
-                if (pos2) {
-                    setState(2, State.OCCUPIED);
-                    conveyor.set(0);
-                    if (isState(3, State.MOVING)) {
-                        setState(3, State.OCCUPIED);
-                    }
+        case AVAILABLE:
+            if (pos2) {
+                setState(2, State.OCCUPIED);
+                conveyor.set(0);
+                if (isState(3, State.MOVING)) {
+                    setState(3, State.OCCUPIED);
                 }
-                break;
+            }
+            break;
 
-            case OCCUPIED:
-                if (isShooting) {
-                    if (isState(4, State.AVAILABLE)) {
+        case OCCUPIED:
+            if (isShooting) {
+                if (isState(4, State.AVAILABLE)) {
+                    setState(2, State.MOVING);
+                    setState(3, State.MOVING);
+                    conveyor.set(Config.getNumber("conveyorMotorSpeed"));
+                }
+            } else {
+                if (isState(1, State.OCCUPIED)) {
+                    switch (getState(3)) {
+                    case AVAILABLE:
                         setState(2, State.MOVING);
                         setState(3, State.MOVING);
                         conveyor.set(Config.getNumber("conveyorMotorSpeed"));
-                    }
-                } else {
-                    if (isState(1, State.OCCUPIED)) {
-                        switch (getState(3)) {
-                            case AVAILABLE:
-                                setState(2, State.MOVING);
-                                setState(3, State.MOVING);
-                                conveyor.set(Config.getNumber("conveyorMotorSpeed"));
-                                break;
+                        break;
 
-                            case OCCUPIED:
-                                if (isState(4, State.AVAILABLE)) {
-                                    setState(2, State.MOVING);
-                                    setState(3, State.MOVING);
-                                    conveyor.set(Config.getNumber("conveyorMotorSpeed"));
-                                }
-                                break;
-
-                            default:
-                                break;
+                    case OCCUPIED:
+                        if (isState(4, State.AVAILABLE)) {
+                            setState(2, State.MOVING);
+                            setState(3, State.MOVING);
+                            conveyor.set(Config.getNumber("conveyorMotorSpeed"));
                         }
+                        break;
+
+                    default:
+                        break;
                     }
                 }
-                break;
+            }
+            break;
 
-            case MOVING:
-                if (isShooting && isState(1, State.AVAILABLE) && !pos2) {// If position 1 is available
-                    setState(2, State.AVAILABLE);
-                    setState(3, State.OCCUPIED);
-                    conveyor.set(0);
-                } else {
-                    if (!pos2) {
-                        setState(2, State.AVAILABLE);// ! look at later
-                    }
+        case MOVING:
+            if (isShooting && isState(1, State.AVAILABLE) && !pos2) {// If position 1 is available
+                setState(2, State.AVAILABLE);
+                setState(3, State.OCCUPIED);
+                conveyor.set(0);
+            } else {
+                if (!pos2) {
+                    setState(2, State.AVAILABLE);// ! look at later
                 }
-                break;
+            }
+            break;
 
-            case REVERSE:
-                if (timedBool2.update(!conveyorSensor.get(), Config.getNumber("reverseConveyorDelay"))) {// TODO REMOVE
-                    setState(2, State.OCCUPIED);// ! look at later
-                    setState(3, State.AVAILABLE);
-                    conveyor.set(0);
-                }
-                break;
+        case REVERSE:
+            if (timedBool2.update(!conveyorSensor.get(), Config.getNumber("reverseConveyorDelay"))) {// TODO REMOVE
+                setState(2, State.OCCUPIED);// ! look at later
+                setState(3, State.AVAILABLE);
+                conveyor.set(0);
+            }
+            break;
 
-            default:
-                break;
+        default:
+            break;
         }
     }
 
     @SuppressWarnings("unused")
     private void updatePos3() {
         switch (getState(3)) {
-            case OCCUPIED:
-                if (isShooting) {
-                    if (isState(4, State.AVAILABLE)) {
-                        conveyor.set(Config.getNumber("conveyorMotorSpeed"));
-                        setState(3, State.MOVING);
-                    }
-                } else {
-                    if (isState(2, State.AVAILABLE)) {
-                        setState(2, State.REVERSE);
-                        setState(3, State.REVERSE);
-                        conveyor.set(-Config.getNumber("conveyorMotorSpeed"));
-                    }
+        case OCCUPIED:
+            if (isShooting) {
+                if (isState(4, State.AVAILABLE)) {
+                    conveyor.set(Config.getNumber("conveyorMotorSpeed"));
+                    setState(3, State.MOVING);
                 }
-                break;
-
-            case MOVING:
-                if (isShooting) {
-                    if (isState(4, State.OCCUPIED)) {
-                        conveyor.set(0);
-                        setState(3, State.AVAILABLE);
-                    }
+            } else {
+                if (isState(2, State.AVAILABLE)) {
+                    setState(2, State.REVERSE);
+                    setState(3, State.REVERSE);
+                    conveyor.set(-Config.getNumber("conveyorMotorSpeed"));
                 }
-                break;
+            }
+            break;
 
-            default:
-                break;
+        case MOVING:
+            if (isShooting) {
+                if (isState(4, State.OCCUPIED)) {
+                    conveyor.set(0);
+                    setState(3, State.AVAILABLE);
+                }
+            }
+            break;
+
+        default:
+            break;
         }
     }
 
     private void updatePos4() {
         switch (getState(4)) {
-            case AVAILABLE:
-                is4Locked = false;
-                if (pos4) {
-                    setState(4, State.OCCUPIED);
-                }
-                break;
+        case AVAILABLE:
+            is4Locked = false;
+            if (pos4) {
+                setState(4, State.OCCUPIED);
+            }
+            break;
 
-            case OCCUPIED:
-                if (isState(5, State.AVAILABLE)) {
-                    setState(4, State.MOVING);
-                    preloadPos += Config.getNumber("preloadRotations", 3);
+        case OCCUPIED:
+            if (isState(5, State.AVAILABLE)) {
+                setState(4, State.MOVING);
+                preloadPos += Config.getNumber("preloadRotations", 3);
 
-                    preload.set(ControlMode.Position, preloadPos * Config.getNumber("preloadEncoderScale", 1992));
-                } else if (!is4Locked) {
-                    preload.set(ControlMode.Position, (preloadPos - Config.getNumber("lockOffsetRotations", 0.1))
-                            * Config.getNumber("preloadEncoderScale", 1992));
-                    is4Locked = true;
-                }
-                break;
+                preload.set(ControlMode.Position, preloadPos * Config.getNumber("preloadEncoderScale", 1992));
+            } else if (!is4Locked) {
+                preload.set(ControlMode.Position, (preloadPos - Config.getNumber("lockOffsetRotations", 0.1))
+                        * Config.getNumber("preloadEncoderScale", 1992));
+                is4Locked = true;
+            }
+            break;
 
-            case MOVING:
-                double posError = preloadPos * Config.getNumber("preloadEncoderScale", 1992)
-                        - Math.abs(preload.getSensorCollection().getQuadraturePosition());
+        case MOVING:
+            double posError = Math.abs(preloadPos) * Config.getNumber("preloadEncoderScale", 1992)
+                    - Math.abs(preload.getSensorCollection().getQuadraturePosition());
 
-                if (Math.abs(posError) < Config.getNumber("pidError", 0.05) * Config.getNumber("preloadEncoderScale", 1992)) {
-                    preload.set(0);
-                    setState(4, State.AVAILABLE);
-                    setState(5, State.OCCUPIED);
-                }
-                break;
+            if (Math.abs(posError) < Config.getNumber("pidError", 0.05)
+                    * Config.getNumber("preloadEncoderScale", 1992)) {
+                preload.set(0);
+                setState(4, State.AVAILABLE);
+                setState(5, State.OCCUPIED);
+            }
+            break;
 
-            default:
-                break;
+        default:
+            break;
         }
     }
 
     private void updatePos5() {
-
         switch (getState(5)) {
-            case OCCUPIED:
-                if (!is5Locked) {
-                    load.set(ControlMode.Position, (loadPos - Config.getNumber("lockOffsetRotations", 0.1))
-                            * Config.getNumber("loadEncoderScale", 1992));
-                    is5Locked = true;
-                }
-                break;
+        case OCCUPIED:
+            if (!is5Locked) {
+                load.set(ControlMode.Position, (loadPos - Config.getNumber("lockOffsetRotations", 0.1))
+                        * Config.getNumber("loadEncoderScale", 1992));
+                is5Locked = true;
+            }
+            break;
 
-            case MOVING:
-                double posError = loadPos * Config.getNumber("loadEncoderScale", 1992)
-                        - Math.abs(load.getSensorCollection().getQuadraturePosition());
+        case MOVING:
+            double posError = Math.abs(loadPos) * Config.getNumber("loadEncoderScale", 1992)
+                    - Math.abs(load.getSensorCollection().getQuadraturePosition());
 
-                if (Math.abs(posError) < Config.getNumber("pidError", 0.05) * Config.getNumber("loadEncoderScale", 1992)) {
+            if (Math.abs(posError) < Config.getNumber("pidError", 0.05) * Config.getNumber("loadEncoderScale", 1992)) {
 
-                    is5Locked = false;
-                    load.set(0);
-                    setState(5, State.AVAILABLE);
-                }
-                break;
+                is5Locked = false;
+                load.set(0);
+                setState(5, State.AVAILABLE);
+            }
+            break;
 
-            default:
-                break;
+        default:
+            break;
         }
     }
 
@@ -462,20 +463,83 @@ public class Indexer {
         }
     }
 
+    public void configTiming(String sensor) {
+        switch (sensor) {
+        case "indexer":
+            intake.set(Config.getNumber("intakeMotorSpeed", -0.6));
+            intakeCal = !intakeCal;
+            if (!intakeCal) {
+                calTimer.stop();
+                System.out.println("Indexer timing: " + calTimer.get());
+                intake.set(0);
+                startedCal = false;
+            }
+            break;
+        case "conveyor":
+            intake.set(Config.getNumber("intakeMotorSpeed", -0.6));
+            conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.7));
+            conveyorCal = !conveyorCal;
+            if (!conveyorCal) {
+                calTimer.stop();
+                System.out.println("Conveyor timing: " + calTimer.get());
+                intake.set(0);
+                conveyor.set(0);
+                startedCal = false;
+            }
+            break;
+        case "preload":
+            intake.set(Config.getNumber("intakeMotorSpeed", -0.6));
+            conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.7));
+            preloadCal = !preloadCal;
+            if (!preloadCal) {
+                calTimer.stop();
+                System.out.println("Preload timing: " + calTimer.get());
+                intake.set(0);
+                conveyor.set(0);
+                startedCal = false;
+            }
+            break;
+        default:
+            return;
+        }
+    }
+
     public void updateTest() {
+        if (intakeCal && !startedCal) {
+            if (intakeSensor.get()) {
+                System.out.println("Starting indexer timing");
+                calTimer.reset();
+                calTimer.start();
+                startedCal = true;
+            }
+        } else if (conveyorCal && !startedCal) {
+            if (conveyorSensor.get()) {
+                System.out.println("Starting conveyor timing");
+                calTimer.reset();
+                calTimer.start();
+                startedCal = true;
+            }
+        } else if (preloadCal && !startedCal) {
+            if (preloadSensor.get()) {
+                System.out.println("Starting preload timing");
+                calTimer.reset();
+                calTimer.start();
+                startedCal = true;
+            }
+        }
         displayData();
     }
 
     public void moveMotor(String name, double speed) {
         switch (name) {
-            case "preload":
-                preload.set(speed);
-                break;
-            case "load":
-                load.set(speed);
-                break;
-            default:
-                break;
+        case "preload":
+            preload.set(speed);
+            break;
+        case "load":
+            load.set(speed);
+            break;
+        default:
+            break;
         }
     }
 
@@ -488,14 +552,7 @@ public class Indexer {
         pos4 = timedBool4.update(preloadSensor.get(), Config.getNumber("preloadSensorDelay", 0.5));
 
         updatePos1();
-
-        // if (isShooting) {
         updateConveyor();
-        // } else {
-        //updatePos2();
-        //updatePos3();
-        // }
-
         updatePos4();
         updatePos5();
 
@@ -504,12 +561,12 @@ public class Indexer {
     }
 
     public void displayData() {
-        SmartDashboard.putBoolean("Intake Sensor", pos1);//? Do we need this code after debugging?
+        SmartDashboard.putBoolean("Intake Sensor", pos1);// ? Do we need this code after debugging?
         SmartDashboard.putBoolean("Conveyor Sensor", pos2);
         SmartDashboard.putBoolean("Preload Sensor", pos4);
         SmartDashboard.putNumber("Intake Speed", intake.get());
         SmartDashboard.putNumber("Conveyor Speed", conveyor.get());
-        
+
         String states = "[";
         for (int i = 0; i < ballStates.length - 1; i++) {
             states += ballStates[i] + ", ";
@@ -518,20 +575,22 @@ public class Indexer {
         SmartDashboard.putString("States", states);
         SmartDashboard.putNumber("Ball count", ballCount);
         SmartDashboard.putNumber("Preload Pos", preloadPos);
-        SmartDashboard.putNumber("Preload Pos Encoder Units", preloadPos * Config.getNumber("encoderScale", 1992));
+        SmartDashboard.putNumber("Preload Pos Encoder Units",
+                preloadPos * Config.getNumber("preloadEncoderScale", 1992));
         SmartDashboard.putBoolean("4 Locked", is4Locked);
         SmartDashboard.putBoolean("5 Locked", is5Locked);
 
         SmartDashboard.putBoolean("isShooting", isShooting);
-
 
         SmartDashboard.putNumber("Preload Speed", preload.get());
         SmartDashboard.putNumber("Load Speed", load.get());
 
         SmartDashboard.putNumber("Preload Quad", preload.getSensorCollection().getQuadraturePosition());
         SmartDashboard.putNumber("Load Quad", load.getSensorCollection().getQuadraturePosition());
-        // SmartDashboard.putNumber("Preload Pulse", preload.getSensorCollection().getPulseWidthPosition());
-        // SmartDashboard.putNumber("Load Pulse", load.getSensorCollection().getPulseWidthPosition());
+        // SmartDashboard.putNumber("Preload Pulse",
+        // preload.getSensorCollection().getPulseWidthPosition());
+        // SmartDashboard.putNumber("Load Pulse",
+        // load.getSensorCollection().getPulseWidthPosition());
 
     }
 }

@@ -38,40 +38,27 @@ public class Robot extends TimedRobot {
     private String m_autoSelected;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
-    /*
-     * int FRdriveMotorID = 2; int FRrotateMotorID = 1; int FREncHome = 367; // Zero
-     * values (value when wheel is turned to default zero- bolt hole facing //
-     * front.) int FREncMin = 11; int FREncMax = 870;
-     * 
-     * int BLdriveMotorID = 4; int BLrotateMotorID = 3; int BLEncHome = 264; int
-     * BLEncMin = 12; int BLEncMax = 902;
-     * 
-     * int FLdriveMotorID = 8; int FLrotateMotorID = 7; int FLEncHome = 426; int
-     * FLEncMin = 11; int FLEncMax = 903;
-     * 
-     * int BRdriveMotorID = 6; int BRrotateMotorID = 5; int BREncHome = 102; int
-     * BREncMin = 11; int BREncMax = 904;
-     */
-
     private SuperJoystick driver;
     private SuperJoystick shooter;
 
     private SwerveControl swerve;
     private SuperAHRS ahrs;
-    private Shooter launcher;
+    private Launcher launcher;
     private Indexer indexer;
     private Climber climber;
     // TODO add ManualInput.java?
+    
+    private int calibrationMode = -1;
 
-    private double target = 0.0;
+    // private double target = 0.0;
 
-    private int index = 0;
+    // private int index = 0;
 
-    private double min = Double.MAX_VALUE;
-    private double max = Double.MIN_VALUE;
+    // private double min = Double.MAX_VALUE;
+    // private double max = Double.MIN_VALUE;
 
-    private int mode = 0;
-    private double endtime = System.currentTimeMillis();
+    // private int mode = 0;
+    // private double endtime = System.currentTimeMillis();
 
     /**
      * This function is run when the robot is first started up and should be used
@@ -102,7 +89,7 @@ public class Robot extends TimedRobot {
         driver = new SuperJoystick(0);
         shooter = new SuperJoystick(1);
 
-        launcher = new Shooter();
+        launcher = Launcher.getInstance();
 
         ahrs = SuperAHRS.getInstance();
         indexer = Indexer.getInstance();
@@ -113,49 +100,10 @@ public class Robot extends TimedRobot {
 
         SmartDashboard.putBoolean("Save Config", false);
         SmartDashboard.putBoolean("Restore Backup", false);
-        SmartDashboard.putBoolean("Update Config", false);
+        SmartDashboard.putBoolean("Update Values", false);
         SmartDashboard.putBoolean("Restore Defaults", false);
 
         SmartDashboard.putNumber("Shoot Distance", 0);
-
-        /*
-         * double rotAngle = Math.toDegrees(Math.atan((Constants.robotWidth / 2) /
-         * (Constants.robotLength / 2)));
-         * 
-         * FLWheel = new SwerveWheel("FrontLeft", Constants.FLRotateMotorID,
-         * Constants.FLDriveMotorID, Constants.FLEncMin, Constants.FLEncMax,
-         * Constants.FLEncHome, Constants.relativeEncoderRatio, 270 - rotAngle); FRWheel
-         * = new SwerveWheel("FrontRight", Constants.FRRotateMotorID,
-         * Constants.FRDriveMotorID, Constants.FREncMin, Constants.FREncMax,
-         * Constants.FREncHome, Constants.relativeEncoderRatio, rotAngle + 90); BLWheel
-         * = new SwerveWheel("BackLeft", Constants.BLRotateMotorID,
-         * Constants.BLDriveMotorID, Constants.BLEncMin, Constants.BLEncMax,
-         * Constants.BLEncHome, Constants.relativeEncoderRatio, rotAngle + 270); BRWheel
-         * = new SwerveWheel("BackRight", Constants.BRRotateMotorID,
-         * Constants.BRDriveMotorID, Constants.BREncMin, Constants.BREncMax,
-         * Constants.BREncHome, Constants.relativeEncoderRatio, rotAngle);
-         * 
-         * System.out.println(Constants.ROTATE_FL_PID);
-         * 
-         * FLWheel.setPIDController(Constants.ROTATE_FL_PID);
-         * FRWheel.setPIDController(Constants.ROTATE_FR_PID);
-         * BLWheel.setPIDController(Constants.ROTATE_BL_PID);
-         * BRWheel.setPIDController(Constants.ROTATE_BR_PID);
-         * 
-         * wheels = new SwerveWheel[] { FLWheel, BLWheel, BRWheel, FRWheel};
-         */
-
-        /*
-         * SmartDashboard.putNumber("P Gain", 1); SmartDashboard.putNumber("I Gain",
-         * 1e-6); SmartDashboard.putNumber("D Gain", 0);
-         * SmartDashboard.putNumber("I Zone", 0);
-         * SmartDashboard.putNumber("Feed Forward", 1.56e-4);
-         * SmartDashboard.putNumber("Max Output", 1);
-         * SmartDashboard.putNumber("Min Output", -1);
-         * SmartDashboard.putNumber("Set Rotations", 0);
-         * 
-         * SmartDashboard.putNumber("Current target", 0);
-         */
     }
 
     /**
@@ -169,14 +117,6 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
-        /*
-         * for (SwerveWheel wheel : wheels) { SmartDashboard.putNumber(wheel.name +
-         * " Position", wheel.getRawRotation()); double pos =
-         * wheel.getRawAnalogRotation(); SmartDashboard.putNumber(wheel.name +
-         * " Analog Position", pos); //SmartDashboard.putNumber(wheel.name +
-         * " Analog Raw Position", pos / 0.00080566406); }
-         */
-
         if (SmartDashboard.getBoolean("Update Values", false)) {
             System.out.println("Updating Values!");
             Config.updateValues();
@@ -215,6 +155,11 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("orientationRadians", orientationOffset);
         SmartDashboard.putBoolean("isNavxCalibrating", ahrs.isCalibrating());
         swerve.showPositions();
+
+        if (shooter.isStartPushed()) {
+            indexer.setInitialBallStates(
+                new State[] { State.OCCUPIED, State.OCCUPIED, State.OCCUPIED, State.OCCUPIED, State.OCCUPIED });
+        }
         // swerve.getRotationalCorrection();
 
         /*
@@ -294,24 +239,10 @@ public class Robot extends TimedRobot {
 
     private void joystickControls() {
         /*
-         * ###################### ## Driver Controls ## ######################
+         * ######################## Driver Controls ########################
          */
-        /*
-         * if(driver.isAHeld() ){ if(driver.isAPushed()){
-         * endtime=System.currentTimeMillis()+4000; mode=1; }
-         * swerve.calculateSwerveControl(0, -1, 0);
-         * 
-         * if(System.currentTimeMillis()>endtime){
-         * endtime=System.currentTimeMillis()+4000; mode++; }
-         * 
-         * switch(mode) { case 1: swerve.changeFront(Side.NORTH); break; case 2:
-         * swerve.changeFront(Side.WEST); break; case 3: swerve.changeFront(Side.SOUTH);
-         * break; case 4: swerve.changeFront(Side.EAST); break; default: mode=1; break;
-         * 
-         * } }else{
-         */
+
         swerve.calculateSwerveControl(driver.getRawAxis(0), driver.getRawAxis(1), driver.getRawAxis(4) * 0.75);
-        // }
 
         if (driver.isBPushed()) {
             swerve.changeControllerLimiter();
@@ -358,7 +289,7 @@ public class Robot extends TimedRobot {
         }
 
         /*
-         * ####################### ## Shooter Controls ## #######################
+         * ######################### Shooter Controls #########################
          */
         if (shooter.isXPushed()) {
             indexer.stopIntake();
@@ -366,21 +297,17 @@ public class Robot extends TimedRobot {
         if (shooter.isYPushed()) {
             indexer.startIntake();
         }
-        if (shooter.isAPushed()) {
+        if (shooter.isAHeld()) {
             indexer.unloadBall5();
         }
         if (shooter.getRawAxis(3) > 0.5) {
             indexer.startShooting();
 
             double launcher_inches = SmartDashboard.getNumber("Shoot Distance", 0);
-            launcher.setSpeedFromDistance(launcher_inches);
+            //launcher.setSpeedFromDistance(launcher_inches);
         } else {
+            launcher.stop();
             indexer.stopShooting();
-        }
-
-        if (shooter.isStartPushed()) {
-            indexer.setInitialBallStates(
-                    new State[] { State.OCCUPIED, State.OCCUPIED, State.OCCUPIED, State.OCCUPIED, State.OCCUPIED });
         }
 
         if (shooter.isLBPushed()) {
@@ -389,8 +316,6 @@ public class Robot extends TimedRobot {
         if (shooter.isRBPushed()) {
             launcher.bumpUpSpeed();
         }
-
-        launcher.updateTeleOp();
 
         driver.clearButtons();
         driver.clearDPad();
@@ -403,38 +328,104 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void testPeriodic() {
-        indexer.updateTest();
+
         if (driver.isStartPushed()) {
-            swerve.calibrateHome();
+            calibrationMode = 0;
         }
-        if (driver.isBackPushed()) {
-            swerve.calibrateMinMax();
-        }
-        if (Math.abs(shooter.getRawAxis(1)) > 0.05) {
-            indexer.moveMotor("preload", shooter.getRawAxis(1) * 0.2);
-        } else {
-            indexer.moveMotor("preload", 0);
-        }
-        if (Math.abs(shooter.getRawAxis(5)) > 0.05) {
-            indexer.moveMotor("load", shooter.getRawAxis(5) * 0.2);
-        } else {
-            indexer.moveMotor("load", 0);
-        }
+        if(calibrationMode >= 0) {
+            if (driver.isXPushed()){
+                calibrationMode = -1;// Abort
+                launcher.setFirstTime(true);// Rewind launcher for second calibration if necessary 
+                SmartDashboard.putString("Calibrate", "None");
+            }
+            
+            switch (calibrationMode) {
+                case 0:
+                    SmartDashboard.putString("Calibrate", "Menu Select");
 
-        launcher.setSpeed(Math.pow(shooter.getRawAxis(3), 2)/2);
-        if (shooter.isLBPushed()) {
-            launcher.bumpDownSpeed();
-        }
-        if (shooter.isRBPushed()) {
-            launcher.bumpUpSpeed();
-        }
-        launcher.updateTeleOp();
+                    if (driver.isDPadUpPushed()) calibrationMode = 1;// Climber
+                    if (driver.isDPadRightPushed()) calibrationMode = 2;// Calibrate launcher
+                    if (driver.isDPadDownPushed()) calibrationMode = 3; // Calibrate indexer
+                    if (driver.isDPadLeftPushed()) calibrationMode = 4; // calabrate swerve
 
+                    break;
+
+                case 1:// Calibrate launcher
+                    SmartDashboard.putString("Calibrate", "Climber");
+                    
+                    break;
+
+                case 2:
+                    SmartDashboard.putString("Calibrate", "Launcher");
+
+                    if (driver.isAPushed()) {
+                        launcher.nextCalibrationStep();
+                    }
+                    launcher.calibrationMotorSpeed(driver.isLBPushed(), driver.isRBPushed(), driver.getRawAxis(2), driver.getRawAxis(3));
+                    if (launcher.updateCalibration()) {
+                        calibrationMode = -1;
+                    }
+                    break;
+                    
+                case 3: 
+                    SmartDashboard.putString("Calibrate", "Indexer");
+
+                    if (driver.isDPadUpPushed()) {
+                        indexer.configTiming("indexer");
+                    } else if (driver.isDPadDownPushed()) {
+                        indexer.configTiming("conveyor");
+                    } else if (driver.isDPadLeftPushed()) {
+                        indexer.configTiming("preload");
+                    }
+                    break;
+                    
+                case 4:
+                    SmartDashboard.putString("Calibrate", "Swerve");
+
+                    if (driver.isAPushed()) {//TODO button conflict
+                        swerve.calibrateHome();
+                    }
+                    if (driver.isBPushed()) {
+                        swerve.calibrateMinMax();
+                    }
+                    
+                    swerve.calculateSwerveControl(driver.getRawAxis(0), driver.getRawAxis(1), driver.getRawAxis(4) * 0.75);
+                    break;
+                
+                default:
+                    SmartDashboard.putString("Calibrate", "broken robot mode");
+                    break; //Don Nothing if invalid mode
+            }
+        } else {
+            SmartDashboard.putString("Calibrate", "None");
+
+            //* Shooter controls
+            if (Math.abs(shooter.getRawAxis(1)) > 0.05) {
+                indexer.moveMotor("preload", shooter.getRawAxis(1) * 0.2);
+            } else {
+                indexer.moveMotor("preload", 0);
+            }
+            if (Math.abs(shooter.getRawAxis(5)) > 0.05) {
+                indexer.moveMotor("load", shooter.getRawAxis(5) * 0.2);
+            } else {
+                indexer.moveMotor("load", 0);
+            }        
+            launcher.setSpeed(Math.pow(shooter.getRawAxis(3), 2) / 2);
+            if (shooter.isLBPushed()) {
+                launcher.bumpDownSpeed();
+            }
+            if (shooter.isRBPushed()) {
+                launcher.bumpUpSpeed();
+            }
+            launcher.updateTeleOp();
+        }
+        indexer.updateTest();
+
+        // Reset joysticks
         driver.clearButtons();
         driver.clearDPad();
         shooter.clearButtons();
         shooter.clearDPad();
-        
-    }
 
+    }
 }
