@@ -304,7 +304,7 @@ public class Robot extends TimedRobot {
             indexer.startShooting();
 
             double launcher_inches = SmartDashboard.getNumber("Shoot Distance", 0);
-            //launcher.setSpeedFromDistance(launcher_inches);
+            launcher.setSpeedFromDistance(launcher_inches);
         } else {
             launcher.stop();
             indexer.stopShooting();
@@ -315,6 +315,9 @@ public class Robot extends TimedRobot {
         }
         if (shooter.isRBPushed()) {
             launcher.bumpUpSpeed();
+        }
+        if (shooter.isBackPushed()) {
+            indexer.zeroMotors();
         }
 
         driver.clearButtons();
@@ -376,6 +379,8 @@ public class Robot extends TimedRobot {
                         indexer.configTiming("conveyor");
                     } else if (driver.isDPadLeftPushed()) {
                         indexer.configTiming("preload");
+                    } else if (driver.isDPadRightPushed()) {
+                        indexer.configTiming("load");
                     }
                     break;
                     
@@ -401,12 +406,12 @@ public class Robot extends TimedRobot {
 
             //* Shooter controls
             if (Math.abs(shooter.getRawAxis(1)) > 0.05) {
-                indexer.moveMotor("preload", shooter.getRawAxis(1) * 0.2);
+                indexer.moveMotor("preload", Math.pow(shooter.getRawAxis(1), 3) * 0.3);
             } else {
                 indexer.moveMotor("preload", 0);
             }
             if (Math.abs(shooter.getRawAxis(5)) > 0.05) {
-                indexer.moveMotor("load", shooter.getRawAxis(5) * 0.2);
+                indexer.moveMotor("load", Math.pow(shooter.getRawAxis(5), 3) * 0.3);
             } else {
                 indexer.moveMotor("load", 0);
             }        
