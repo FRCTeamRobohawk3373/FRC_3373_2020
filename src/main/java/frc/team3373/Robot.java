@@ -220,7 +220,6 @@ public class Robot extends TimedRobot {
     }
 
     public void teleopInit() {
-        indexer.init();
         swerve.resetOrentation();
     }
 
@@ -295,9 +294,9 @@ public class Robot extends TimedRobot {
         if (shooter.isXPushed()) {
             indexer.stopIntake();
         }
-        /* if (shooter.isYPushed()) {
+        if (shooter.isYPushed()) {
             indexer.startIntake();
-        } */
+        }
         if (shooter.isAPushed()) { // ? Change?
             indexer.unloadBall5();
         }
@@ -391,14 +390,23 @@ public class Robot extends TimedRobot {
                 case 4:
                     SmartDashboard.putString("Calibrate", "Swerve");
 
-                    if (driver.isAPushed()) {//TODO button conflict
+                    if (driver.isYPushed()) {
+                        swerve.recalculateWheelPosition();
+                    }
+
+                    if (driver.isAPushed()) {
                         swerve.calibrateHome();
                     }
                     if (driver.isBPushed()) {
                         swerve.calibrateMinMax();
                     }
+
+                    swerve.showPositions();
                     
-                    swerve.calculateSwerveControl(driver.getRawAxis(0), driver.getRawAxis(1), driver.getRawAxis(4) * 0.75);
+                    if(driver.isRBHeld()){
+                        swerve.setDriveSpeed(0.15);
+                        swerve.calculateSwerveControl(driver.getRawAxis(0), driver.getRawAxis(1), driver.getRawAxis(4) * 0.75);
+                    }
                     break;
                 
                 default:

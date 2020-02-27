@@ -43,9 +43,9 @@ public class Constants{
 
     //* Encoder Positions 
     // Front left
-    public static final double FLEncMin = 0.015625;
+    public static final double FLEncMin = 0.0078125; //0.015625;
     public static final double FLEncMax = 3.3125;
-    public static final double FLEncHome = 1.519531;
+    public static final double FLEncHome = 0.464844; //1.519531;
 
     // Back left
     public static final double BLEncMin = 0.4453125;
@@ -60,7 +60,7 @@ public class Constants{
     // Front right
     public static final double FREncMin = 0.45703125;
     public static final double FREncMax = 3.26953125;
-    public static final double FREncHome = 1.402344;
+    public static final double FREncHome = 1.414063;
 
     // Indexer constructor values
     public static final int INTAKE_INDEX = 13; // Testbench: 4

@@ -156,12 +156,10 @@ public class Indexer {
     public void startShooting() {
         //intake.set(0);
         if (ballCount > 0)
-            System.out.println("Starting to shoot");
             isShooting = true;
     }
 
     public void stopShooting() {
-        System.out.println("stopping shooting");
         isShooting = false;
     }
 
@@ -182,7 +180,7 @@ public class Indexer {
         }
     }
 
-    private void startIntake() {
+    public void startIntake() {
         if (!isState(1, State.OCCUPIED)) {
             //setState(1, State.MOVING);
             intake.set(Config.getNumber("intakeMotorSpeed", -0.6));
@@ -212,6 +210,7 @@ public class Indexer {
             if (isState(2, State.REVERSE)) {
                 stopIntake();
             }
+            break;
 
         case MOVING: // If ball is being pushed to ball position 2
             if (ballCount < 5) {
@@ -294,7 +293,7 @@ public class Indexer {
                 setState(3, State.MOVING);
                 conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.7));
             } else if (isState(2, State.MOVING) && isState(3, State.MOVING)) { // Has to come from previous state
-                if (!pos2) { // ? Can assume ball from 1
+                if (!pos2 || !isState(4, State.AVAILABLE)) { // ? Can assume ball from 1
                     setState(2, State.AVAILABLE);
                     setState(3, State.OCCUPIED);
                 }

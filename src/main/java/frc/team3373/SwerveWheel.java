@@ -306,7 +306,6 @@ public class SwerveWheel {
 				SmartDashboard.putNumber("Min", EMin);
 				SmartDashboard.putNumber("Max", EMax);
 
-				
 				if (current > EMax)
 					EMax = current;
 				if (current < EMin)
