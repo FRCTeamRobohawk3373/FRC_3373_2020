@@ -109,7 +109,7 @@ class Testbench extends TimedRobot {
             indexer.stopIntake();
         }
         if (driver.isYPushed()) {
-            indexer.startIntake();
+            //indexer.startIntake();
         }
         if (driver.isAPushed()) {
             indexer.unloadBall5();

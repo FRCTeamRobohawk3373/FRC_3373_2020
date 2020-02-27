@@ -37,7 +37,7 @@ public class Indexer {
         AVAILABLE, OCCUPIED, MOVING, REVERSE
     }
 
-    State[] ballStates = new State[] { State.AVAILABLE, State.AVAILABLE, State.AVAILABLE, State.AVAILABLE,
+    private State[] ballStates = new State[] { State.AVAILABLE, State.AVAILABLE, State.AVAILABLE, State.AVAILABLE,
             State.AVAILABLE };
 
     public static Indexer getInstance() {
@@ -48,16 +48,6 @@ public class Indexer {
     }
 
     public Indexer() {
-        intake = new WPI_TalonSRX(Constants.INTAKE_INDEX);
-        conveyor = new WPI_TalonSRX(Constants.CONVEYOR_INDEX);
-        preload = new WPI_TalonSRX(Constants.PRELOAD_INDEX);
-        load = new WPI_TalonSRX(Constants.LOAD_INDEX);
-
-        intake.setNeutralMode(NeutralMode.Brake);
-        conveyor.setNeutralMode(NeutralMode.Brake);
-        preload.setNeutralMode(NeutralMode.Brake);
-        load.setNeutralMode(NeutralMode.Brake);
-
         intakeSensor = new DigitalInput(Constants.INTAKE_BALL_SENSOR_INDEX);
         conveyorSensor = new DigitalInput(Constants.CONVEYOR_BALL_SENSOR_INDEX);
         preloadSensor = new DigitalInput(Constants.PRELOAD_BALL_SENSOR_INDEX);
@@ -77,10 +67,22 @@ public class Indexer {
 
         ballCount = 0;
 
+        intake = new WPI_TalonSRX(Constants.INTAKE_INDEX);
+        conveyor = new WPI_TalonSRX(Constants.CONVEYOR_INDEX);
+        preload = new WPI_TalonSRX(Constants.PRELOAD_INDEX);
+        load = new WPI_TalonSRX(Constants.LOAD_INDEX);
+
         // !
+        intake.configFactoryDefault();
+        conveyor.configFactoryDefault();
         preload.configFactoryDefault();
         load.configFactoryDefault();
         // !
+
+        intake.setNeutralMode(NeutralMode.Brake);
+        conveyor.setNeutralMode(NeutralMode.Brake);
+        preload.setNeutralMode(NeutralMode.Brake);
+        load.setNeutralMode(NeutralMode.Brake);
 
         preload.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
         preload.setSensorPhase(false); // (was set to true) TODO Change?
@@ -152,12 +154,14 @@ public class Indexer {
     }
 
     public void startShooting() {
-        intake.set(0);
+        //intake.set(0);
         if (ballCount > 0)
+            System.out.println("Starting to shoot");
             isShooting = true;
     }
 
     public void stopShooting() {
+        System.out.println("stopping shooting");
         isShooting = false;
     }
 
@@ -178,9 +182,9 @@ public class Indexer {
         }
     }
 
-    public void startIntake() {
+    private void startIntake() {
         if (!isState(1, State.OCCUPIED)) {
-            setState(1, State.MOVING);
+            //setState(1, State.MOVING);
             intake.set(Config.getNumber("intakeMotorSpeed", -0.6));
         }
     }
@@ -193,6 +197,7 @@ public class Indexer {
         switch (getState(1)) {
         case AVAILABLE: // Ready to receive a ball
             if (pos1) { // If color sensor detects a new cal
+                System.out.println("1 is occupied with "+ballCount+" balls");
                 setState(1, State.OCCUPIED);// Set position 1 state to OCCUPIED
                 addBall(); // Increment ball counter
             }
@@ -209,8 +214,11 @@ public class Indexer {
             }
 
         case MOVING: // If ball is being pushed to ball position 2
-            startIntake();
-            //System.out.println("Starting intake");
+            if (ballCount < 5) {
+                // System.out.println("Intake moving line 214");
+                intake.set(Config.getNumber("intakeMotorSpeed", -0.6));
+            }
+            // startIntake();
             if (!pos1) { // If position 1 is empty...
                 setState(1, State.AVAILABLE); // Reset position 1 back to the original state of being ready to
                                               // recieve a ball
@@ -231,8 +239,10 @@ public class Indexer {
         if (isShooting) { // ? Can assume at least one ball?
             if (isState(2, State.OCCUPIED) && isState(3, State.OCCUPIED)) {
                 if (isState(4, State.AVAILABLE)) { // Move 2 -> 3 & 3 -> 4
-                    if (isState(1, State.OCCUPIED))
+                    if (isState(1, State.OCCUPIED)) {
+                        System.out.println("1 to moving line 239");
                         setState(1, State.MOVING);
+                    }
                     System.out.println("O, O: 2 -> 3 && 3 -> 4");
                     setState(2, State.MOVING);
                     setState(3, State.MOVING);
@@ -478,6 +488,84 @@ public class Indexer {
         }
     }
 
+    public void init() {
+        startIntake();
+    }
+
+    /**
+     * Updates status of all 5 positions and real sensor booleans
+     */
+    public void update() {
+        if (timedLock5) { // When 4 -> 5 and timer on boolean has ended, set 5 to occupied
+            occupy5 = false;
+            setState(5, State.OCCUPIED);
+        }
+        pos1 = timedBool1.update(intakeSensor.get(), Config.getNumber("intakeSensorDelay", 0.3));
+        pos2 = timedBool2.update(conveyorSensor.get(), Config.getNumber("conveyorSensorDelay", 0.2));
+        pos4 = timedBool4.update(preloadSensor.get(), Config.getNumber("preloadSensorDelay", 0.5));
+        timedLock5 = timedBool5.update(occupy5, Config.getNumber("lockLoadDelay", 0.84));
+
+        updatePos1();
+        updateConveyor();
+        updatePos4();
+        updatePos5();
+
+        // ! testing code
+        displayData();
+    }
+
+    public void zeroMotors() {
+        preload.set(ControlMode.Position, preloadPos);
+        load.set(ControlMode.Position, loadPos);
+    }
+
+    public void displayData() {
+        SmartDashboard.putBoolean("Intake Sensor", pos1);// ? Do we need this code after debugging?
+        SmartDashboard.putBoolean("Conveyor Sensor", pos2);
+        SmartDashboard.putBoolean("Preload Sensor", pos4);
+        SmartDashboard.putNumber("Intake Speed", intake.get());
+        SmartDashboard.putNumber("Conveyor Speed", conveyor.get());
+
+        String states = "[";
+        for (int i = 0; i < ballStates.length - 1; i++) {
+            states += ballStates[i] + ", ";
+        }
+        states += ballStates[ballStates.length - 1] + "]";
+        SmartDashboard.putString("States", states);
+        SmartDashboard.putNumber("Ball count", ballCount);
+        SmartDashboard.putNumber("Preload Pos", preloadPos);
+        SmartDashboard.putNumber("Preload Pos Encoder Units",
+                preloadPos * Config.getNumber("preloadEncoderScale", 1992));
+        SmartDashboard.putBoolean("4 Locked", is4Locked);
+        SmartDashboard.putBoolean("5 Locked", is5Locked);
+
+        SmartDashboard.putBoolean("isShooting", isShooting);
+
+        SmartDashboard.putNumber("Preload Speed", preload.get());
+        SmartDashboard.putNumber("Load Speed", load.get());
+
+        SmartDashboard.putNumber("Preload Quad", preload.getSensorCollection().getQuadraturePosition());
+        SmartDashboard.putNumber("Load Quad", load.getSensorCollection().getQuadraturePosition());
+        // SmartDashboard.putNumber("Preload Pulse",
+        // preload.getSensorCollection().getPulseWidthPosition());
+        // SmartDashboard.putNumber("Load Pulse",
+        // load.getSensorCollection().getPulseWidthPosition());
+
+    }
+
+    public void moveMotor(String name, double speed) {
+        switch (name) {
+        case "preload":
+            preload.set(speed);
+            break;
+        case "load":
+            load.set(speed);
+            break;
+        default:
+            break;
+        }
+    }
+
     public void configTiming(String sensor) {
         switch (sensor) {
         case "indexer":
@@ -557,77 +645,4 @@ public class Indexer {
         displayData();
     }
 
-    public void moveMotor(String name, double speed) {
-        switch (name) {
-        case "preload":
-            preload.set(speed);
-            break;
-        case "load":
-            load.set(speed);
-            break;
-        default:
-            break;
-        }
-    }
-
-    /**
-     * Updates status of all 5 positions and real sensor booleans
-     */
-    public void update() {
-        if (timedLock5) { // When 4 -> 5 and timer on boolean has ended, set 5 to occupied
-            occupy5 = false;
-            setState(5, State.OCCUPIED);
-        }
-        pos1 = timedBool1.update(intakeSensor.get(), Config.getNumber("intakeSensorDelay", 0.3));
-        pos2 = timedBool2.update(conveyorSensor.get(), Config.getNumber("conveyorSensorDelay", 0.2));
-        pos4 = timedBool4.update(preloadSensor.get(), Config.getNumber("preloadSensorDelay", 0.5));
-        timedLock5 = timedBool5.update(occupy5, Config.getNumber("lockLoadDelay", 0.84));
-
-        updatePos1();
-        updateConveyor();
-        updatePos4();
-        updatePos5();
-
-        // ! testing code
-        displayData();
-    }
-
-    public void zeroMotors() {
-        preload.set(ControlMode.Position, preloadPos);
-        load.set(ControlMode.Position, loadPos);
-    }
-
-    public void displayData() {
-        SmartDashboard.putBoolean("Intake Sensor", pos1);// ? Do we need this code after debugging?
-        SmartDashboard.putBoolean("Conveyor Sensor", pos2);
-        SmartDashboard.putBoolean("Preload Sensor", pos4);
-        SmartDashboard.putNumber("Intake Speed", intake.get());
-        SmartDashboard.putNumber("Conveyor Speed", conveyor.get());
-
-        String states = "[";
-        for (int i = 0; i < ballStates.length - 1; i++) {
-            states += ballStates[i] + ", ";
-        }
-        states += ballStates[ballStates.length - 1] + "]";
-        SmartDashboard.putString("States", states);
-        SmartDashboard.putNumber("Ball count", ballCount);
-        SmartDashboard.putNumber("Preload Pos", preloadPos);
-        SmartDashboard.putNumber("Preload Pos Encoder Units",
-                preloadPos * Config.getNumber("preloadEncoderScale", 1992));
-        SmartDashboard.putBoolean("4 Locked", is4Locked);
-        SmartDashboard.putBoolean("5 Locked", is5Locked);
-
-        SmartDashboard.putBoolean("isShooting", isShooting);
-
-        SmartDashboard.putNumber("Preload Speed", preload.get());
-        SmartDashboard.putNumber("Load Speed", load.get());
-
-        SmartDashboard.putNumber("Preload Quad", preload.getSensorCollection().getQuadraturePosition());
-        SmartDashboard.putNumber("Load Quad", load.getSensorCollection().getQuadraturePosition());
-        // SmartDashboard.putNumber("Preload Pulse",
-        // preload.getSensorCollection().getPulseWidthPosition());
-        // SmartDashboard.putNumber("Load Pulse",
-        // load.getSensorCollection().getPulseWidthPosition());
-
-    }
 }

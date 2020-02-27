@@ -220,6 +220,7 @@ public class Robot extends TimedRobot {
     }
 
     public void teleopInit() {
+        indexer.init();
         swerve.resetOrentation();
     }
 
@@ -294,10 +295,10 @@ public class Robot extends TimedRobot {
         if (shooter.isXPushed()) {
             indexer.stopIntake();
         }
-        if (shooter.isYPushed()) {
+        /* if (shooter.isYPushed()) {
             indexer.startIntake();
-        }
-        if (shooter.isAHeld()) {
+        } */
+        if (shooter.isAPushed()) { // ? Change?
             indexer.unloadBall5();
         }
         if (shooter.getRawAxis(3) > 0.5) {
@@ -309,9 +310,9 @@ public class Robot extends TimedRobot {
             launcher.stop();
             indexer.stopShooting();
         }
-        if (shooter.isBackPushed()) {
+        /* if (shooter.isBackPushed()) {
             indexer.reverseConveyor();
-        }
+        } */
 
         if (shooter.isLBPushed()) {
             launcher.bumpDownSpeed();
