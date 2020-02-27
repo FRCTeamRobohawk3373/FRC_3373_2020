@@ -309,6 +309,9 @@ public class Robot extends TimedRobot {
             launcher.stop();
             indexer.stopShooting();
         }
+        if (shooter.isBackPushed()) {
+            indexer.reverseConveyor();
+        }
 
         if (shooter.isLBPushed()) {
             launcher.bumpDownSpeed();

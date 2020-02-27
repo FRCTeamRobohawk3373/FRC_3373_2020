@@ -3,7 +3,6 @@ package frc.team3373;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-import com.ctre.phoenix.sensors.PigeonIMU.CalibrationMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -23,6 +22,8 @@ public class Indexer {
     private int ballCount;
     private int preloadPos, loadPos;
     private boolean isShooting = false;
+
+    private int numTimes = 0; // TODO Remove
 
     // Calibration variables
     private Timer calTimer = new Timer();
@@ -148,7 +149,6 @@ public class Indexer {
         conveyor.set(0);
         preload.set(0);
         load.set(0);
-
     }
 
     public void startShooting() {
@@ -159,6 +159,11 @@ public class Indexer {
 
     public void stopShooting() {
         isShooting = false;
+    }
+
+    public void reverseConveyor() {
+        setState(3, State.REVERSE);
+        conveyor.set(-Config.getNumber("conveyorMotorSpeed", 0.7));
     }
 
     /**
@@ -195,6 +200,8 @@ public class Indexer {
 
         case OCCUPIED:
             if (ballCount >= 5) {
+                //System.out.println("Stopping intake: balls >= 5 ballCount = " + ballCount);
+                SmartDashboard.putNumber("Stopping intake", numTimes++);
                 stopIntake();
             }
             if (isState(2, State.REVERSE)) {
@@ -203,9 +210,11 @@ public class Indexer {
 
         case MOVING: // If ball is being pushed to ball position 2
             startIntake();
+            //System.out.println("Starting intake");
             if (!pos1) { // If position 1 is empty...
                 setState(1, State.AVAILABLE); // Reset position 1 back to the original state of being ready to
                                               // recieve a ball
+                System.out.println("Set 1 to available");
             }
             break;
 
@@ -224,6 +233,7 @@ public class Indexer {
                 if (isState(4, State.AVAILABLE)) { // Move 2 -> 3 & 3 -> 4
                     if (isState(1, State.OCCUPIED))
                         setState(1, State.MOVING);
+                    System.out.println("O, O: 2 -> 3 && 3 -> 4");
                     setState(2, State.MOVING);
                     setState(3, State.MOVING);
                     conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.7));
@@ -232,20 +242,24 @@ public class Indexer {
                 if (!isState(1, State.MOVING) && !isState(4, State.AVAILABLE) && !pos2) {
                     // ! Check if timing is off: 3 -> 4 before pos2 turns off || 2 -> 3 before pos4
                     // ! turns on
+                    System.out.println("M, M: 1 ! moving, 4 ! available");
                     setState(2, State.AVAILABLE);
                     setState(3, State.OCCUPIED);
                     conveyor.set(0);
                 } else if (!isState(4, State.AVAILABLE)) {
+                    System.out.println("M, M: 1 moving, 4 ! available");
                     setState(2, State.AVAILABLE);
                     setState(3, State.OCCUPIED);
                 }
             } else if (isState(2, State.AVAILABLE) && isState(3, State.OCCUPIED)) {
                 if (isState(4, State.AVAILABLE)) {
+                    System.out.println("A, O: 4 available");
                     setState(3, State.MOVING);
                     conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.7));
                 }
             } else if (isState(2, State.AVAILABLE) && isState(3, State.MOVING)) {
                 if (!isState(4, State.AVAILABLE)) {
+                    System.out.println("A, M: 4 ! available");
                     setState(3, State.AVAILABLE);
                     conveyor.set(0);
                 }
@@ -457,7 +471,7 @@ public class Indexer {
     }
 
     private void addBall() {
-        if (ballCount <= 5) {
+        if (ballCount < 5) {
             ballCount++;
         } else {
             ballCount = 5;
