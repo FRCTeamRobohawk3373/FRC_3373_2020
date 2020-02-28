@@ -39,6 +39,8 @@ public class Robot extends TimedRobot {
     private String m_autoSelected;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
+    private AutonomousControl autoControl;
+
     private SuperJoystick driver;
     private SuperJoystick shooter;
 
@@ -192,6 +194,8 @@ public class Robot extends TimedRobot {
         indexer.setInitialBallStates(new State[]{State.AVAILABLE,State.OCCUPIED,State.OCCUPIED,State.OCCUPIED}); 
         System.out.println("Auto selected: " + m_autoSelected);
         indexer.startInit();
+
+        autoControl.init(0);
     }
 
     /**
@@ -199,7 +203,11 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousPeriodic() {
-        m_autoSelected = m_chooser.getSelected();
+        try {
+            autoControl.start();
+        } catch (Exception e) {
+            autoControl.stop();
+        }
     }
 
     public void teleopInit() {

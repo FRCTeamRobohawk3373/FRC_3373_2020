@@ -90,10 +90,10 @@ public class SwerveControl {
 	}
 
 	// ######################################################
-	// ########### 			  Autonomus 	     ############
+	// ########### 			  Autonomous 	     ############
 	// ######################################################
 
-	public void initPIDController() {
+	private void initPIDController() {
 		rotationPID.reset();
 		rotationPID.enableContinuousInput(-180, 180);
 		rotationPID.setTolerance(0.5);
@@ -116,6 +116,11 @@ public class SwerveControl {
 		}
 		calculateSwerveControl(0, 0, 0);
 		setDriveSpeed(oldSpeed);
+	}
+
+	public void stop() {
+		calculateSwerveControl(0, 0, 0);
+		setDriveSpeed(maxTargetSpeed);
 	}
 
 	/**
