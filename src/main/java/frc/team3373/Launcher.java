@@ -14,6 +14,7 @@ public class Launcher {
     private double[][] powerTable;
     private int liveSpeedDisplay = 0;
     private double liveSpeedAdjustment = 0;
+    private double targetSpeed = 0;
 
     // For calibration
     private boolean isFirstTime;
@@ -50,7 +51,16 @@ public class Launcher {
         motor.set(speed);
     }
 
+    public boolean isUpToSpeed(){
+        double speed = motor.get();
+        if(speed >= targetSpeed-Config.getNumber("shooterSpinUpDeadband",0.02) && speed <= targetSpeed+Config.getNumber("shooterSpinUpDeadband",0.02)){
+            return true;
+        }
+        return false;
+    }
+
     public void stop(){
+        targetSpeed = 0;
         motor.set(0);
     }
 
@@ -83,8 +93,8 @@ public class Launcher {
 
         if(val<0)
             val=powerTable[powerTable.length-1][1];// Set to max shooter speed if distance is greater than max shoot table value
-
-        setSpeed(MathUtil.clamp(val, 0, Constants.SHOOTER_MAX_SPEED));// 70% is max speed
+        targetSpeed = MathUtil.clamp(val, 0, Constants.SHOOTER_MAX_SPEED);
+        setSpeed(targetSpeed);// 70% is max speed
     }
 
     public void bumpUpSpeed() {
@@ -110,7 +120,7 @@ public class Launcher {
         } else {
             motorInfo = "";
         }
-        SmartDashboard.putString("Shooter", positiveSignPrefix+liveSpeedDisplay+motorInfo);
+        SmartDashboard.putString("Shooter", positiveSignPrefix+liveSpeedDisplay+motorInfo+"~"+targetSpeed);
     }
 
     private void setupCalibration() {

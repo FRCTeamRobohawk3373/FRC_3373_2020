@@ -166,6 +166,7 @@ public class Indexer4 {
     public void startShooting() {
         //intake.set(0);
         if (ballCount > 0)
+            isRunningIntake = false;
             isShooting = true;
     }
 
@@ -176,7 +177,7 @@ public class Indexer4 {
     /**
      * Called by Shooter.java to remove the 5th ball position.
      */
-    public void unloadBall5() {
+    public void unloadBall() {
         if (isState(4, State.OCCUPIED) && isShooting) {
             loadPos += Config.getNumber("loadRotations", -2);
             load.set(ControlMode.Position, loadPos * Config.getNumber("loadEncoderScale", 3413));
@@ -185,16 +186,24 @@ public class Indexer4 {
         }
     }
 
-    public void unloadBall4() {
+    /* public void unloadBall4() {
         unloadBall5();
+    } */
+
+    public boolean isBallUnloading(){
+        return isState(4, State.MOVING);
     }
 
     public void startIntake() {
         if (!isState(1, State.OCCUPIED)) {
             isRunningIntake = true;
-            //setState(1, State.MOVING);
             intake.set(Config.getNumber("intakeMotorSpeed", -0.6));
         }
+    }
+    
+    public void reverseIntake(double reverseSpeed){
+        intake.set(-reverseSpeed);
+        setState(1, State.AVAILABLE);
     }
 
     public void stopIntake() {
@@ -209,7 +218,10 @@ public class Indexer4 {
                 System.out.println("1 is occupied with "+ballCount+" balls");
                 setState(1, State.OCCUPIED);// Set position 1 state to OCCUPIED
                 addBall(); // Increment ball counter
+            }else if (!isRunningIntake && pos2) {//have to use pos2 because 2 has alot of states
+                intake.set(0);
             }
+
             break;
 
         case OCCUPIED:
@@ -229,9 +241,6 @@ public class Indexer4 {
                 setState(1, State.AVAILABLE); // Reset position 1 back to the original state of being ready to
                                               // recieve a ball
                 System.out.println("Set 1 to available");
-                if (!isRunningIntake) {
-                    intake.set(0);
-                }
             }
             break;
 
@@ -362,10 +371,6 @@ public class Indexer4 {
         } else {
             ballCount = 4;
         }
-    }
-
-    public void init() {
-        startIntake();
     }
 
     public void enterPanicMode() {

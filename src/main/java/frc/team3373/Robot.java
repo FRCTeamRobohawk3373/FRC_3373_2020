@@ -11,6 +11,7 @@ import java.io.IOException;
 
 import org.json.JSONException;
 
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -20,7 +21,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team3373.SwerveControl.DriveMode;
 import frc.team3373.SwerveControl.Side;
 
-import frc.team3373.Indexer.State;
+import frc.team3373.Indexer4.State;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -96,7 +97,7 @@ public class Robot extends TimedRobot {
 
         swerve = SwerveControl.getInstance();
         swerve.setDriveSpeed(0.25);
-        swerve.changeControllerLimiter(0);
+        swerve.changeControllerLimiter(3);
 
         SmartDashboard.putBoolean("Save Config", false);
         SmartDashboard.putBoolean("Restore Backup", false);
@@ -123,17 +124,21 @@ public class Robot extends TimedRobot {
             SmartDashboard.putBoolean("Update Values", false);
         } else if (SmartDashboard.getBoolean("Save Config", false)) {
             try {
-                System.out.println("Saving Config!");
-                Config.saveConfig();
-                SmartDashboard.putBoolean("Save Config", false);
+                if(RobotState.isTest()){
+                    System.out.println("Saving Config!");
+                    Config.saveConfig();
+                    SmartDashboard.putBoolean("Save Config", false);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else if (SmartDashboard.getBoolean("Restore Backup", false)) {
             try {
-                System.out.println("Restore Config!");
-                Config.restoreBackup();
-                SmartDashboard.putBoolean("Restore Backup", false);
+                if(RobotState.isTest()){
+                    System.out.println("Restore Config!");
+                    Config.restoreBackup();
+                    SmartDashboard.putBoolean("Restore Backup", false);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -182,7 +187,9 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         m_autoSelected = m_chooser.getSelected();
-        // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
+        m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
+        //TODO Needs more testing with balls
+        indexer.setInitialBallStates(new State[]{State.AVAILABLE,State.OCCUPIED,State.OCCUPIED,State.OCCUPIED}); 
         System.out.println("Auto selected: " + m_autoSelected);
     }
 
@@ -261,7 +268,7 @@ public class Robot extends TimedRobot {
          */
 
         if (driver.isYPushed()) {
-            swerve.resetOrentation();
+            swerve.recalculateWheelPosition();
         }
 
         if (driver.getRawAxis(2) > 0.8)
@@ -285,29 +292,42 @@ public class Robot extends TimedRobot {
         }
 
         if (driver.isBackPushed()) {
-            swerve.recalculateWheelPosition();
+            swerve.resetOrentation();
         }
 
         /*
          * ######################### Shooter Controls #########################
          */
-        if (shooter.isXPushed()) {
+
+        
+        if(shooter.getRawAxis(5) < -0.5){
+            indexer.startIntake();
+        }else if(shooter.getRawAxis(5) > 0.5){
+            indexer.reverseIntake(Config.getNumber("intakeMotorSpeed", -0.6));
+        }else {
+            indexer.stopIntake();
+        }
+
+        /* if (shooter.isXPushed()) {
             indexer.stopIntake();
         }
         if (shooter.isYPushed()) {
             indexer.startIntake();
-        }
-        if (shooter.isAHeld()) { // ? Change?
-            indexer.unloadBall5();
-        }
+        } */
+        
         if (shooter.getRawAxis(3) > 0.5) {
             indexer.startShooting();
-
             double launcher_inches = SmartDashboard.getNumber("Shoot Distance", 0);
             launcher.setSpeedFromDistance(launcher_inches);
+            if(launcher.isUpToSpeed() && shooter.isAHeld()) { // ? Change?
+                indexer.unloadBall();
+            }
+
         } else {
-            launcher.stop();
-            indexer.stopShooting();
+            if(!indexer.isBallUnloading()){
+                launcher.stop();
+                indexer.stopShooting();
+            }
         }
         /* if (shooter.isBackPushed()) {
             indexer.reverseConveyor();
@@ -319,9 +339,11 @@ public class Robot extends TimedRobot {
         if (shooter.isRBPushed()) {
             launcher.bumpUpSpeed();
         }
-        if (shooter.getRawAxis(2) > 0.5) {
+
+        if (shooter.isBHeld()) {
             indexer.enterPanicMode();
         }
+
         if (shooter.isBackPushed()) {
             indexer.zeroMotors();
         }
