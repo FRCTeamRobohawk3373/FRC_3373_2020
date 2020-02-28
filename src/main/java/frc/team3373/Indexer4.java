@@ -6,6 +6,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team3373.util.DelayTrueBoolean;
@@ -24,8 +25,11 @@ public class Indexer4 {
     private boolean isShooting = false;
     private boolean isRunningIntake = false;
 
+    private boolean init = true;
+    private Timer iniTimer;
+
     private boolean isPanicMode = false;
-    private Timer panicTimer = new Timer();
+    private Timer panicTimer;
     private Timer delayPos2 = new Timer();
 
     private int numTimes = 0; //TODO Remove
@@ -76,6 +80,10 @@ public class Indexer4 {
         isPanicMode = false;
         panicTimer = new Timer();
         panicTimer.stop();
+
+        iniTimer = new Timer();
+        iniTimer.start();
+        iniTimer.reset();
 
         intake = new WPI_TalonSRX(Constants.INTAKE_INDEX);
         conveyor = new WPI_TalonSRX(Constants.CONVEYOR_INDEX);
@@ -166,7 +174,7 @@ public class Indexer4 {
     public void startShooting() {
         //intake.set(0);
         if (ballCount > 0)
-            isRunningIntake = false;
+            //isRunningIntake = false;
             isShooting = true;
     }
 
@@ -219,6 +227,7 @@ public class Indexer4 {
                 setState(1, State.OCCUPIED);// Set position 1 state to OCCUPIED
                 addBall(); // Increment ball counter
             }else if (!isRunningIntake && pos2) {//have to use pos2 because 2 has alot of states
+                System.out.println("1 is stopping ");
                 intake.set(0);
             }
 
@@ -234,6 +243,7 @@ public class Indexer4 {
             } else {
                 intake.set(0);
             }
+
             break;
 
         case MOVING: // If ball is being pushed to ball position 2
@@ -390,12 +400,25 @@ public class Indexer4 {
         panicTimer.stop();
     }
 
+    public void startInit(){
+        iniTimer.start();
+        iniTimer.reset();
+    }
+
     /**
      * Updates status of all 5 positions and real sensor booleans
      */
     public void update() {
-        
-        if (isPanicMode) {
+        if(init){
+            SmartDashboard.putNumber("init time", iniTimer.get());
+            //iniTimer.start();
+            intake.set(Config.getNumber("intakeReleaseSpeed"));
+            if(iniTimer.get() > Config.getNumber("intakeReleaseTime")){
+                iniTimer.stop();
+                intake.set(0);
+                init=false;
+            }
+        }else if (isPanicMode) {
             intake.set(-Config.getNumber("intakeMotorSpeed", 0.6));// Inverse intake motor
             conveyor.set(-Config.getNumber("conveyorMotorSpeed", 0.6));// Inverse conveyor motor
             if (panicTimer.get() > 1) {
@@ -403,7 +426,8 @@ public class Indexer4 {
             }
 
         } else {
-            if (timedLock4) { // When 4 -> 5 and timer on boolean has ended, set 5 to occupied
+            // When 4 -> 5 and timer on boolean has ended, set 5 to occupied
+            if (timedLock4) {//TODO move to better place 
                 occupy4 = false;
                 setState(4, State.OCCUPIED);
             }

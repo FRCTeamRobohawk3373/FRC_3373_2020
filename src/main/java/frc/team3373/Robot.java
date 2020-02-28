@@ -191,6 +191,7 @@ public class Robot extends TimedRobot {
         //TODO Needs more testing with balls
         indexer.setInitialBallStates(new State[]{State.AVAILABLE,State.OCCUPIED,State.OCCUPIED,State.OCCUPIED}); 
         System.out.println("Auto selected: " + m_autoSelected);
+        indexer.startInit();
     }
 
     /**
@@ -199,35 +200,11 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic() {
         m_autoSelected = m_chooser.getSelected();
-        switch (m_autoSelected) {
-        case kCustomAuto:
-            // Put custom auto code here
-            break;
-        case kDriveAuto:
-            swerve.relativeMoveRobot(0, .15, 1);
-            break;
-        case kRelRotAuto:
-            swerve.setDriveSpeed(0.45);
-            swerve.relativeRotateRobot(90);
-            break;
-        case kAbsRotAuto:
-            swerve.absoluteRotateRobot(270);
-            break;
-        case kDefaultAuto:
-        default:
-            // Put default auto code here
-            break;
-        }
-
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     public void teleopInit() {
-        swerve.resetOrentation();
+        //swerve.resetOrentation();
+        indexer.startInit();
     }
 
     /**

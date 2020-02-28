@@ -18,5 +18,7 @@
     "launcherMaxSpeed": 0.7,
     "lockLoadDelay": 0.84,
     "conveyorMoveDelay": 0.247,
-    "shooterSpinUpDeadband":0.02
+    "shooterSpinUpDeadband":0.02,
+    "intakeReleaseSpeed":0.2,
+    "intakeReleaseTime":4
 }
