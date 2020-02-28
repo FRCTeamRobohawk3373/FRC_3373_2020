@@ -73,6 +73,14 @@ public class Climber {
     private double p_zeroInchesPos;
     private double w_zeroInchesPos;
 
+    private static Climber instance;
+
+    public static Climber getInstance() {
+        if (instance == null) {
+            instance = new Climber();
+        }
+        return instance;
+    }
 
     public Climber() {    
         

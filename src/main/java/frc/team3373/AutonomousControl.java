@@ -9,9 +9,9 @@ public class AutonomousControl {
 	private ArrayList<AutoScript> autoList;
 	private AutoScript auto;
 
-	private AutonomousControl instance;
+	private static AutonomousControl instance;
 
-	public AutonomousControl getInstance() {
+	public static AutonomousControl getInstance() {
 		if (instance == null) {
 			instance = new AutonomousControl();
 		}

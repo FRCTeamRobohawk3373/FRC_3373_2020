@@ -89,10 +89,14 @@ public class Robot extends TimedRobot {
             }
         }
 
+        autoControl = AutonomousControl.getInstance();
+
         driver = new SuperJoystick(0);
         shooter = new SuperJoystick(1);
 
         launcher = Launcher.getInstance();
+
+        climber = Climber.getInstance();
 
         ahrs = SuperAHRS.getInstance();
         indexer = Indexer4.getInstance();

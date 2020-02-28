@@ -40,6 +40,7 @@ public class DriveandShoot implements AutoScript {
 
     @Override
     public void stop() {
+        swerve.stop();
         swerve = null;
         launcher = null;
         indexer = null;
