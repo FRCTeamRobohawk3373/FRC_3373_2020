@@ -504,7 +504,7 @@ public class Indexer4 {
             if (conveyorCenterCal == 0) {
                 calTimer.reset();
                 calTimer.start();
-                
+                SmartDashboard.putString("Calibrate", "Premove");
             }
             conveyorCenterCal++;
             if (conveyorCenterCal == 2) {

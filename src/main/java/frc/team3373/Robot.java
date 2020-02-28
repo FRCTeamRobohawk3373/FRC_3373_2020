@@ -372,7 +372,7 @@ public class Robot extends TimedRobot {
             
             switch (calibrationMode) {
                 case 0:
-                    SmartDashboard.putString("Calibrate", "Menu Select");
+                    SmartDashboard.putString("Calibrate", "Menu");
 
                     if (driver.isDPadUpPushed()) calibrationMode = 1;// Climber
                     if (driver.isDPadRightPushed()) calibrationMode = 2;// Calibrate launcher
@@ -383,7 +383,10 @@ public class Robot extends TimedRobot {
 
                 case 1:// Calibrate launcher
                     SmartDashboard.putString("Calibrate", "Climber");
-                    
+                    /*if (driver.isAPushed()) {
+                        climber.calibrateHeights();
+                    }
+                    climber.calibrateInches();*///! uncomment and fix first-time logic
                     break;
 
                 case 2:
