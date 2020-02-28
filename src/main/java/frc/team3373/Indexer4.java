@@ -16,7 +16,7 @@ public class Indexer4 {
     private DigitalInput intakeSensor, conveyorSensor, preloadSensor;
 
     private DelayTrueBoolean timedBool1, timedBool2, timedBool3, timedBool4;
-    private boolean pos1, pos2, pos3, timedLock4;// Timed booleans controled by respective DelayTrueBoolean values
+    private boolean pos1, pos2, realPos2, pos3, timedLock4;// Timed booleans controled by respective DelayTrueBoolean values
     private boolean occupy4; // Is ball moving from 4 -> 5
     private boolean is3Locked, is4Locked;
     private int ballCount;
@@ -63,6 +63,7 @@ public class Indexer4 {
         // tboolConveyor = new DelayTrueBoolean();
         pos1 = false;
         pos2 = false;
+        realPos2 = false;
         pos3 = false;
         timedLock4 = false;
         is3Locked = false;
@@ -233,25 +234,49 @@ public class Indexer4 {
     }
 
     private void updateConveyor() {
+  
         switch (getState(2)) {
         case AVAILABLE:
             if (pos2) {
                 setState(2, State.OCCUPIED);
                 conveyor.set(0);
-                
             }
             break;
 
         case OCCUPIED:
             if (isShooting) {
                 if (isState(3, State.AVAILABLE)) {
+                    setState(2, State.MOVING);
                     conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.6));
+                } else {// If state 3 is occupied or moving
+
                 }
-            } 
+            } else {
+                if (isState(1, State.OCCUPIED)) {//!always true for our purposes
+                    switch (getState(3)) {
+                    case AVAILABLE:
+                        setState(2, State.MOVING);
+                        setState(3, State.MOVING);
+                        conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.6));
+                        break;
+
+                    case OCCUPIED:
+                        if (isState(4, State.AVAILABLE)) {
+                            setState(2, State.MOVING);
+                            setState(3, State.MOVING);
+                            conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.6));
+                        }
+                        break;
+
+                    default:
+                        break;
+                    }
+                }
+            }
             break;
 
         case MOVING:
-            if (isShooting && isState(1, State.AVAILABLE) && !pos2) {// If position 1 is available
+            if (isState(1, State.AVAILABLE) && !pos2) {// If position 1 is available
                 setState(2, State.AVAILABLE);
                 conveyor.set(0);
             } else {
@@ -260,7 +285,6 @@ public class Indexer4 {
                 }
             }
             break;
-
         default:
             break;
         }
@@ -375,7 +399,9 @@ public class Indexer4 {
                 setState(4, State.OCCUPIED);
             }
             pos1 = timedBool1.update(intakeSensor.get(), Config.getNumber("intakeSensorDelay", 0.3));
+
             pos2 = timedBool2.update(conveyorSensor.get(), Config.getNumber("conveyorSensorDelay", 0.2));
+        
             pos3 = timedBool3.update(preloadSensor.get(), Config.getNumber("preloadSensorDelay", 0.5));
             timedLock4 = timedBool4.update(occupy4, Config.getNumber("lockLoadDelay", 0.84));
 
