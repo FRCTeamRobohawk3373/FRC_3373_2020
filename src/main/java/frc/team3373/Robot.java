@@ -155,11 +155,11 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("orientationRadians", orientationOffset);
         SmartDashboard.putBoolean("isNavxCalibrating", ahrs.isCalibrating());
         swerve.showPositions();
-
-        if (shooter.isStartPushed()) {
+        
+        /*if (shooter.isStartPushed()) {
             indexer.setInitialBallStates(
                 new State[] { State.OCCUPIED, State.OCCUPIED, State.OCCUPIED, State.OCCUPIED, State.OCCUPIED });
-        }
+        }*/
         // swerve.getRotationalCorrection();
 
         /*
@@ -319,6 +319,9 @@ public class Robot extends TimedRobot {
         if (shooter.isRBPushed()) {
             launcher.bumpUpSpeed();
         }
+        if (shooter.getRawAxis(2) > 0.5) {
+            indexer.enterPanicMode();
+        }
         if (shooter.isBackPushed()) {
             indexer.zeroMotors();
         }
@@ -385,6 +388,9 @@ public class Robot extends TimedRobot {
                     } else if (driver.isDPadRightPushed()) {
                         indexer.configTiming("load");
                     }
+                    if (shooter.getRawAxis(2) > 0.5) {
+                        indexer.enterPanicMode();
+                    }
                     break;
                     
                 case 4:
@@ -433,6 +439,9 @@ public class Robot extends TimedRobot {
             }
             if (shooter.isRBPushed()) {
                 launcher.bumpUpSpeed();
+            }
+            if (shooter.getRawAxis(2) > 0.5) {
+                indexer.enterPanicMode();
             }
             launcher.updateTeleOp();
         }

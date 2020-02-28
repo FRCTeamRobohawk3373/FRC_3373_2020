@@ -23,6 +23,11 @@ public class Indexer {
     private int preloadPos, loadPos;
     private boolean isShooting = false;
 
+    private boolean isPanicMode = false;
+
+    //private Timer moveTimer = new Timer();
+    private Timer panicTimer = new Timer();
+
     private int numTimes = 0; // TODO Remove
 
     // Calibration variables
@@ -66,6 +71,9 @@ public class Indexer {
         is5Locked = false;
 
         ballCount = 0;
+        isPanicMode = false;
+        panicTimer = new Timer();
+        panicTimer.stop();
 
         intake = new WPI_TalonSRX(Constants.INTAKE_INDEX);
         conveyor = new WPI_TalonSRX(Constants.CONVEYOR_INDEX);
@@ -233,6 +241,7 @@ public class Indexer {
     private void updateConveyor() {
         if (pos2 && isState(2, State.AVAILABLE)) {
             setState(2, State.OCCUPIED);
+            System.out.println("Stopping conveyor");
             conveyor.set(0);
         }
         if (isShooting) { // ? Can assume at least one ball?
@@ -277,6 +286,7 @@ public class Indexer {
             if ((isState(2, State.AVAILABLE) || isState(2, State.OCCUPIED)) && isState(3, State.AVAILABLE)) {
                 // Can start moving conveyor along if 3 is available and there is a ball in 1
                 if (isState(1, State.OCCUPIED)) {
+                    System.out.println("O, ? A: 1 -> 2 && 2 -> 3");
                     setState(1, State.MOVING);
                     if (isState(2, State.OCCUPIED)) // Ball 2 -> 3 if ball in 2
                         setState(2, State.MOVING);
@@ -284,18 +294,27 @@ public class Indexer {
                 } // ? Finishes moving when first 'if' triggers?
             } else if (isState(2, State.MOVING) && isState(3, State.AVAILABLE)) {
                 if (!pos2) { // Wait for 2 to get to 3 and change states
+                    System.out.println("M, A O: 2 untrigered, still moving");
                     setState(2, State.AVAILABLE);
                     setState(3, State.OCCUPIED);
                 }
             } else if (isState(2, State.OCCUPIED) && isState(3, State.OCCUPIED) && isState(1, State.OCCUPIED)
                     && isState(4, State.AVAILABLE)) {
+                System.out.println("O, O O, A: 1 -> 2 && 2 -> 3 && 3 -> 4");
+                setState(1, State.MOVING);
                 setState(2, State.MOVING);
                 setState(3, State.MOVING);
                 conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.7));
             } else if (isState(2, State.MOVING) && isState(3, State.MOVING)) { // Has to come from previous state
-                if (!pos2 || !isState(4, State.AVAILABLE)) { // ? Can assume ball from 1
+                if (!pos2) { // ? Can assume ball from 1
+                    System.out.println("O, M M, A: 2 untrigered, still moving, maybe in 4");
                     setState(2, State.AVAILABLE);
                     setState(3, State.OCCUPIED);
+                }else if(!isState(4, State.AVAILABLE)){
+                    System.out.println("O, M M, A: 2 maybe untrigered, stop moving, in 4");
+                    setState(2, State.AVAILABLE);
+                    setState(3, State.OCCUPIED);
+                    conveyor.set(0);
                 }
             } /*else if (isState(2, State.AVAILABLE) && isState(3, State.OCCUPIED) && isState(1, State.AVAILABLE)) { // When conveyor is messed up by
                                                                                     // shooting
@@ -491,23 +510,46 @@ public class Indexer {
         startIntake();
     }
 
+    public void enterPanicMode() {
+        if (!isPanicMode) {
+            isPanicMode = true;
+            panicTimer.start();
+        }
+    }
+
+    public void exitPanicMode() {
+        isPanicMode = false;
+        panicTimer.reset();
+        panicTimer.stop();
+    }
+
     /**
      * Updates status of all 5 positions and real sensor booleans
      */
     public void update() {
-        if (timedLock5) { // When 4 -> 5 and timer on boolean has ended, set 5 to occupied
-            occupy5 = false;
-            setState(5, State.OCCUPIED);
-        }
-        pos1 = timedBool1.update(intakeSensor.get(), Config.getNumber("intakeSensorDelay", 0.3));
-        pos2 = timedBool2.update(conveyorSensor.get(), Config.getNumber("conveyorSensorDelay", 0.2));
-        pos4 = timedBool4.update(preloadSensor.get(), Config.getNumber("preloadSensorDelay", 0.5));
-        timedLock5 = timedBool5.update(occupy5, Config.getNumber("lockLoadDelay", 0.84));
+        
+        if (isPanicMode) {
+            intake.set(-Config.getNumber("intakeMotorSpeed", 0.6));// Inverse intake motor
+            conveyor.set(-Config.getNumber("conveyorMotorSpeed", 0.6));// Inverse conveyor motor
+            if (panicTimer.get() > 1) {
+                exitPanicMode(); 
+            }
 
-        updatePos1();
-        updateConveyor();
-        updatePos4();
-        updatePos5();
+        } else {
+            if (timedLock5) { // When 4 -> 5 and timer on boolean has ended, set 5 to occupied
+                occupy5 = false;
+                setState(5, State.OCCUPIED);
+            }
+            pos1 = timedBool1.update(intakeSensor.get(), Config.getNumber("intakeSensorDelay", 0.3));
+            pos2 = timedBool2.update(conveyorSensor.get(), Config.getNumber("conveyorSensorDelay", 0.2));
+            pos4 = timedBool4.update(preloadSensor.get(), Config.getNumber("preloadSensorDelay", 0.5));
+            timedLock5 = timedBool5.update(occupy5, Config.getNumber("lockLoadDelay", 0.84));
+
+            updatePos1();
+            updateConveyor();
+            updatePos4();
+            updatePos5();
+        }
 
         // ! testing code
         displayData();

@@ -1,0 +1,20 @@
+{
+    "preloadEncoderScale": 4096,
+    "loadEncoderScale": 3413,
+    "maxPreloadSpeed": 0.7,
+    "maxLoadSpeed": 0.8,
+    "intakeMotorSpeed": -0.6,
+    "conveyorMotorSpeed": 0.6,
+    "preload_P": 5,
+    "preloadRotations": -3,
+    "loadRotations": -2,
+    "pidError": 0.045,
+    "preloadLockOffset": -0.2,
+    "loadLockOffset": -0.1,
+    "intakeSensorDelay": 0.279819,
+    "conveyorSensorDelay": 0.2,
+    "reverseConveyorDelay": 0.05,
+    "preloadSensorDelay": 0.35,
+    "launcherMaxSpeed": 0.7,
+    "lockLoadDelay": 0.84
+}
