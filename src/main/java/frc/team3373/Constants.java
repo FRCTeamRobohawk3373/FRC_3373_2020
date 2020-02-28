@@ -69,7 +69,7 @@ public class Constants{
     public static final int LOAD_INDEX = 16; // 3
     
     public static final int INTAKE_BALL_SENSOR_INDEX = 2;
-    public static final int CONVEYOR_BALL_SENSOR_INDEX = 1; // TODO Change to actual indexes
+    public static final int CONVEYOR_BALL_SENSOR_INDEX = 1;
     public static final int PRELOAD_BALL_SENSOR_INDEX = 0;
 
     public static final double INTAKE_SPEED = -1;

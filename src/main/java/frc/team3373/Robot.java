@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 //import frc.team3373.util.MathUtil;
 import frc.team3373.SwerveControl.DriveMode;
-import frc.team3373.SwerveControl.Side;
+// import frc.team3373.SwerveControl.Side;
 
 import frc.team3373.Indexer4.State;
 
@@ -96,7 +96,7 @@ public class Robot extends TimedRobot {
 
         launcher = Launcher.getInstance();
 
-        climber = Climber.getInstance();
+        //climber = Climber.getInstance();//TODO uncomment
 
         ahrs = SuperAHRS.getInstance();
         indexer = Indexer4.getInstance();
@@ -336,6 +336,27 @@ public class Robot extends TimedRobot {
         if (shooter.isBackPushed()) {
             indexer.zeroMotors();
         }
+
+        
+        /* Climber
+        double lStickx = shooter.getRawAxis(0);
+        if (Math.abs(lStickx) > 0.05) {
+        climber.xStickManual(lStickx);
+        }
+        double lSticky = -shooter.getRawAxis(1);
+        if (Math.abs(lSticky) > 0.05) {
+        climber.yStickManual(lSticky);
+        } else if (shooter.isDPadDownPushed()) {
+        climber.gotoLowPosition();
+        } else if (shooter.isDPadLeftPushed() || shooter.isDPadRightPushed()) {
+        climber.gotoMiddlePosition();
+        } else if (shooter.isDPadUpPushed()) {
+        climber.gotoHighPosition();
+        } else if (shooter.isYPushed()) {
+        climber.initiateClimbMode();
+        }
+        climber.update();
+        //*/
 
         driver.clearButtons();
         driver.clearDPad();

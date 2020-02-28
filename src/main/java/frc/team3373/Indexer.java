@@ -28,7 +28,7 @@ public class Indexer {
     //private Timer moveTimer = new Timer();
     private Timer panicTimer = new Timer();
 
-    private int numTimes = 0; // TODO Remove
+    private int numTimes = 0;
 
     // Calibration variables
     private Timer calTimer = new Timer();
@@ -93,7 +93,7 @@ public class Indexer {
         load.setNeutralMode(NeutralMode.Brake);
 
         preload.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
-        preload.setSensorPhase(false); // (was set to true) TODO Change?
+        preload.setSensorPhase(false); // (was set to true)
         preload.setInverted(false);
         preload.config_kP(0, Config.getNumber("preload_P", 5));
         preload.config_kI(0, 0);
@@ -105,7 +105,7 @@ public class Indexer {
         preload.set(ControlMode.Position, 0);
 
         load.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
-        load.setSensorPhase(false); // TODO Change?
+        load.setSensorPhase(false);
         load.setInverted(false);
         load.config_kP(0, Config.getNumber("preload_P", 5));
         load.config_kI(0, 0);
@@ -388,7 +388,7 @@ public class Indexer {
             break;
 
         case REVERSE:
-            if (timedBool2.update(!conveyorSensor.get(), Config.getNumber("reverseConveyorDelay", 0.05))) {// TODO REMOVE
+            if (timedBool2.update(!conveyorSensor.get(), Config.getNumber("reverseConveyorDelay", 0.05))) {
                 setState(2, State.OCCUPIED);// ! look at later
                 setState(3, State.AVAILABLE);
                 conveyor.set(0);

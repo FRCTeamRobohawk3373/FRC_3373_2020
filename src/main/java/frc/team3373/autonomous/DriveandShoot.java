@@ -20,6 +20,7 @@ public class DriveandShoot implements AutoScript {
     public void start() {
         swerve.relativeMoveRobot(0, 0.5, 5);
         launcher.setSpeedFromDistance(6 * 12);
+        indexer.startShooting();
         while (!launcher.isUpToSpeed()) {
             sleep(20);
         }
@@ -28,6 +29,8 @@ public class DriveandShoot implements AutoScript {
         indexer.unloadBall();
         sleep(1000);
         indexer.unloadBall();
+        indexer.stopShooting();
+        launcher.stop();
     }
 
     private void sleep(int millis) {
@@ -41,6 +44,7 @@ public class DriveandShoot implements AutoScript {
     @Override
     public void stop() {
         swerve.stop();
+        launcher.stop();
         swerve = null;
         launcher = null;
         indexer = null;
