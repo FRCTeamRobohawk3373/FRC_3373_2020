@@ -297,7 +297,7 @@ public class Robot extends TimedRobot {
         if (shooter.isYPushed()) {
             indexer.startIntake();
         }
-        if (shooter.isAPushed()) { // ? Change?
+        if (shooter.isAHeld()) { // ? Change?
             indexer.unloadBall5();
         }
         if (shooter.getRawAxis(3) > 0.5) {

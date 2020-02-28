@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team3373.util.DelayTrueBoolean;
 
 public class Indexer4 {
-    private static Indexer instance;
+    private static Indexer4 instance;
     private WPI_TalonSRX intake, conveyor, preload, load;
     private DigitalInput intakeSensor, conveyorSensor, preloadSensor;
 
@@ -377,6 +377,10 @@ public class Indexer4 {
 
     public void exitPanicMode() {
         isPanicMode = false;
+        intake.set(0);
+        conveyor.set(0);
+        setState(1, State.AVAILABLE);
+        setState(2, State.AVAILABLE);
         panicTimer.reset();
         panicTimer.stop();
     }
