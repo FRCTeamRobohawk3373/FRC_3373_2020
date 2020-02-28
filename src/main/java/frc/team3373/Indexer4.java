@@ -1,5 +1,5 @@
 package frc.team3373;
-
+//TODO maybe delete ballCount from code?
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
@@ -22,9 +22,11 @@ public class Indexer4 {
     private int ballCount;
     private int preloadPos, loadPos;
     private boolean isShooting = false;
+    private boolean isRunningIntake = false;
 
     private boolean isPanicMode = false;
     private Timer panicTimer = new Timer();
+    private Timer delayPos2 = new Timer();
 
     private int numTimes = 0; //TODO Remove
 
@@ -35,17 +37,18 @@ public class Indexer4 {
     private boolean conveyorCal = false;
     private boolean preloadCal = false;
     private boolean loadCal = false;
+    private int conveyorCenterCal = 0;
 
     public enum State {
-        AVAILABLE, OCCUPIED, MOVING
+        AVAILABLE, OCCUPIED, PREMOVING, MOVING, POSTMOVING
     }
 
     private State[] ballStates = new State[] { State.AVAILABLE, State.AVAILABLE, State.AVAILABLE,
             State.AVAILABLE };
 
-    public static Indexer getInstance() {
+    public static Indexer4 getInstance() {
         if (instance == null) {
-            instance = new Indexer();
+            instance = new Indexer4();
         }
         return instance;
     }
@@ -188,12 +191,14 @@ public class Indexer4 {
 
     public void startIntake() {
         if (!isState(1, State.OCCUPIED)) {
+            isRunningIntake = true;
             //setState(1, State.MOVING);
             intake.set(Config.getNumber("intakeMotorSpeed", -0.6));
         }
     }
 
     public void stopIntake() {
+        isRunningIntake = false;
         intake.set(0);
     }
 
@@ -209,22 +214,24 @@ public class Indexer4 {
 
         case OCCUPIED:
             if (ballCount >= 4) {
-                //System.out.println("Stopping intake: balls >= 5 ballCount = " + ballCount);
-                SmartDashboard.putNumber("Stopping intake", numTimes++);
-                stopIntake();
+                intake.set(0);
+            }
+            if (isState(2, State.AVAILABLE)) {
+                intake.set(Config.getNumber("intakeMotorSpeed", -0.6));
+                setState(1, State.MOVING);
+            } else {
+                intake.set(0);
             }
             break;
 
         case MOVING: // If ball is being pushed to ball position 2
-            if (ballCount < 4) {
-                // System.out.println("Intake moving line 214");
-                intake.set(Config.getNumber("intakeMotorSpeed", -0.6));
-            }
-            // startIntake();
             if (!pos1) { // If position 1 is empty...
                 setState(1, State.AVAILABLE); // Reset position 1 back to the original state of being ready to
                                               // recieve a ball
                 System.out.println("Set 1 to available");
+                if (!isRunningIntake) {
+                    intake.set(0);
+                }
             }
             break;
 
@@ -236,57 +243,50 @@ public class Indexer4 {
     private void updateConveyor() {
   
         switch (getState(2)) {
-        case AVAILABLE:
-            if (pos2) {
-                setState(2, State.OCCUPIED);
-                conveyor.set(0);
-            }
-            break;
-
-        case OCCUPIED:
-            if (isShooting) {
-                if (isState(3, State.AVAILABLE)) {
-                    setState(2, State.MOVING);
+            case AVAILABLE:
+                if (isState(1, State.MOVING)) {
+                    setState(2, State.PREMOVING);
                     conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.6));
-                } else {// If state 3 is occupied or moving
-
                 }
-            } else {
-                if (isState(1, State.OCCUPIED)) {//!always true for our purposes
-                    switch (getState(3)) {
-                    case AVAILABLE:
-                        setState(2, State.MOVING);
-                        setState(3, State.MOVING);
-                        conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.6));
-                        break;
+                break;
 
-                    case OCCUPIED:
-                        if (isState(4, State.AVAILABLE)) {
-                            setState(2, State.MOVING);
-                            setState(3, State.MOVING);
-                            conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.6));
-                        }
-                        break;
-
-                    default:
-                        break;
-                    }
+            case PREMOVING:
+                if (pos2) {
+                    delayPos2.reset();
+                    delayPos2.start();
+                    setState(2, State.MOVING);
                 }
-            }
-            break;
+                break;   
+                
+            case MOVING:
+                if (isState(3, State.AVAILABLE)) {
+                    setState(2, State.POSTMOVING);
+                    delayPos2.stop();
+                    conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.6));
 
-        case MOVING:
-            if (isState(1, State.AVAILABLE) && !pos2) {// If position 1 is available
-                setState(2, State.AVAILABLE);
-                conveyor.set(0);
-            } else {
-                if (!pos2) {
-                    setState(2, State.AVAILABLE);// ! look at later
+                }else if (delayPos2.get() > Config.getNumber("conveyorMoveDelay", 0.777)) {//TODO put in config
+                    delayPos2.stop();
+                    setState(2, State.OCCUPIED);
+                    conveyor.set(0);
+                }            
+                break;
+
+            case OCCUPIED:
+                if (isState(3, State.AVAILABLE)) {
+                    setState(2, State.POSTMOVING);
+                    conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.6));
                 }
-            }
-            break;
-        default:
-            break;
+                break;
+
+            case POSTMOVING:
+                if (!isState(3, State.AVAILABLE)) {
+                    setState(2, State.AVAILABLE);
+                    conveyor.set(0);
+                }
+                break;
+
+            default:
+                break;
         }
     }
 
@@ -399,9 +399,7 @@ public class Indexer4 {
                 setState(4, State.OCCUPIED);
             }
             pos1 = timedBool1.update(intakeSensor.get(), Config.getNumber("intakeSensorDelay", 0.3));
-
-            pos2 = timedBool2.update(conveyorSensor.get(), Config.getNumber("conveyorSensorDelay", 0.2));
-        
+            pos2 = timedBool2.update(conveyorSensor.get(), Config.getNumber("conveyorSensorDelay", 0.2));        
             pos3 = timedBool3.update(preloadSensor.get(), Config.getNumber("preloadSensorDelay", 0.5));
             timedLock4 = timedBool4.update(occupy4, Config.getNumber("lockLoadDelay", 0.84));
 
@@ -485,10 +483,28 @@ public class Indexer4 {
             conveyorCal = !conveyorCal;
             if (!conveyorCal) {
                 calTimer.stop();
-                System.out.println("Conveyor timing: " + calTimer.get());
+                System.out.println("Conveyor center timing: " + calTimer.get());
                 intake.set(0);
                 conveyor.set(0);
                 startedCal = false;
+            }
+            break;
+        case "conveyor_center":
+            intake.set(Config.getNumber("intakeMotorSpeed", -0.6));
+            conveyor.set(Config.getNumber("conveyorMotorSpeed", 0.7));
+            if (conveyorCenterCal == 0) {
+                calTimer.reset();
+                calTimer.start();
+                
+            }
+            conveyorCenterCal++;
+            if (conveyorCenterCal == 2) {
+                calTimer.stop();
+                System.out.println("Conveyor center timing: " + calTimer.get());
+                intake.set(0);
+                conveyor.set(0);
+                startedCal = false;
+                conveyorCenterCal = 0;
             }
             break;
         case "preload":

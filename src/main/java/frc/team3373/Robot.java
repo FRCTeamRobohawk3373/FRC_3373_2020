@@ -44,7 +44,7 @@ public class Robot extends TimedRobot {
     private SwerveControl swerve;
     private SuperAHRS ahrs;
     private Launcher launcher;
-    private Indexer indexer;
+    private Indexer4 indexer;
     private Climber climber;
     // TODO add ManualInput.java?
     
@@ -92,7 +92,7 @@ public class Robot extends TimedRobot {
         launcher = Launcher.getInstance();
 
         ahrs = SuperAHRS.getInstance();
-        indexer = Indexer.getInstance();
+        indexer = Indexer4.getInstance();
 
         swerve = SwerveControl.getInstance();
         swerve.setDriveSpeed(0.25);
@@ -387,8 +387,10 @@ public class Robot extends TimedRobot {
                         indexer.configTiming("preload");
                     } else if (driver.isDPadRightPushed()) {
                         indexer.configTiming("load");
+                    } else if (driver.isAPushed()) {
+                        indexer.configTiming("conveyor_center");
                     }
-                    if (shooter.getRawAxis(2) > 0.5) {
+                    if (driver.getRawAxis(2) > 0.5) {
                         indexer.enterPanicMode();
                     }
                     break;
