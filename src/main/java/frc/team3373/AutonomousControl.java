@@ -2,20 +2,31 @@ package frc.team3373;
 
 import java.util.ArrayList;
 
-import edu.wpi.first.wpilibj.RobotState;
+import frc.team3373.autonomous.AutoScript;
+import frc.team3373.autonomous.DriveandShoot;
 
 public class AutonomousControl {
 	private ArrayList<AutoScript> autoList;
 	private AutoScript auto;
 
+	private static AutonomousControl instance;
+
+	public static AutonomousControl getInstance() {
+		if (instance == null) {
+			instance = new AutonomousControl();
+		}
+		return instance;
+	}
+
 	/**
 	 * Initializes self and defines AHRS, swerve, and ultrasonic sensor
 	 */
-	public AutonomousControl(int autoId) {
+	public AutonomousControl() {
 		autoList = new ArrayList<AutoScript>();
+		autoList.add(new DriveandShoot());
 	}
 
-	// Initializes auto by file name and passes in itself as a parameter
+	// Initializes auto
 	public void init(int id) {
 		auto = autoList.get(id);
 		auto.init();
@@ -23,10 +34,10 @@ public class AutonomousControl {
 
 	// Starts the autonomous running
 	public void start() {
-		if (RobotState.isAutonomous()) {
-			auto.update();
-		} else {
-			auto.stop();
-		}
+		auto.start();
+	}
+
+	public void stop() {
+		auto.stop();
 	}
 }
