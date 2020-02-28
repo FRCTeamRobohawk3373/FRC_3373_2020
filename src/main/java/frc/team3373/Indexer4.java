@@ -174,7 +174,7 @@ public class Indexer4 {
     public void startShooting() {
         //intake.set(0);
         if (ballCount > 0)
-            //isRunningIntake = false;
+            isRunningIntake = false;
             isShooting = true;
     }
 
@@ -215,8 +215,10 @@ public class Indexer4 {
     }
 
     public void stopIntake() {
-        isRunningIntake = false;
-        intake.set(0);
+        if(isRunningIntake){
+            isRunningIntake = false;
+            intake.set(0);
+        }
     }
 
     private void updatePos1() {
@@ -226,11 +228,9 @@ public class Indexer4 {
                 System.out.println("1 is occupied with "+ballCount+" balls");
                 setState(1, State.OCCUPIED);// Set position 1 state to OCCUPIED
                 addBall(); // Increment ball counter
-            }else if (!isRunningIntake && pos2) {//have to use pos2 because 2 has alot of states
-                System.out.println("1 is stopping ");
+            } else if (!isRunningIntake && pos2) {//have to use pos2 because 2 has alot of states
                 intake.set(0);
             }
-
             break;
 
         case OCCUPIED:
@@ -240,6 +240,7 @@ public class Indexer4 {
             if (isState(2, State.AVAILABLE)) {
                 intake.set(Config.getNumber("intakeMotorSpeed", -0.6));
                 setState(1, State.MOVING);
+                System.out.println("1 occupied, moving");
             } else {
                 intake.set(0);
             }
@@ -252,6 +253,11 @@ public class Indexer4 {
                                               // recieve a ball
                 System.out.println("Set 1 to available");
             }
+
+            /*if (!isRunningIntake) {//have to use pos2 because 2 has alot of states
+                System.out.println("1 is stopping after shooing");
+                intake.set(0);
+            }*/
             break;
 
         default:
