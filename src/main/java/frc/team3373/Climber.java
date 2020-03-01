@@ -13,8 +13,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Climber {
     final double START_POLE_ZERO_POSITION = 0;
     final double START_WINCH_ZERO_POSITION = 0;
-    final double START_POLE_TICKS_PER_INCH = 0.278;
-    final double START_WINCH_TICKS_PER_INCH = 0.153;
+    final double START_POLE_TICKS_PER_INCH = 6.952898157527673;
+    final double START_WINCH_TICKS_PER_INCH = 17.6308339958545;
 
     final double ALL_MODES_MAX_SPEED = 0.9;
     final double MAX_MANUAL_CONTROL_SPEED = 0.9;
