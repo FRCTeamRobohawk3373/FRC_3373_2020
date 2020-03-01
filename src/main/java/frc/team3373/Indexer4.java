@@ -154,6 +154,8 @@ public class Indexer4 {
             }
         }
         isShooting = false;
+        is3Locked = false;
+        is4Locked = false;
 
         return true;
     }

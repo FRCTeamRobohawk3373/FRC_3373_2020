@@ -11,8 +11,18 @@ import edu.wpi.first.wpilibj.Timer;
 public class DelayTrueBoolean {
     private Timer t = new Timer();
     private boolean m_old = false;
+    private boolean override = false;
 
     public boolean update(boolean value, double timeout) {
+        // if(override){
+        //     if(t.get() >= timeout){
+        //         override=false;
+        //         return value;
+        //     }
+
+        //     return true;
+        // }
+
         if (!m_old && value) {
             t.reset();
             t.start();
@@ -22,5 +32,9 @@ public class DelayTrueBoolean {
             return false;
         }
         return value && t.get() >= timeout;
+    }
+
+    public void setImediate(boolean value){
+        override=value;
     }
 }

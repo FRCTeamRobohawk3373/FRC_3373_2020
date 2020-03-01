@@ -8,6 +8,7 @@ import frc.team3373.autonomous.DriveandShoot;
 public class AutonomousControl {
 	private ArrayList<AutoScript> autoList;
 	private AutoScript auto;
+	private boolean hasRun = false;
 
 	private static AutonomousControl instance;
 
@@ -24,6 +25,7 @@ public class AutonomousControl {
 	public AutonomousControl() {
 		autoList = new ArrayList<AutoScript>();
 		autoList.add(new DriveandShoot());
+		hasRun=false;
 	}
 
 	// Initializes auto
@@ -34,7 +36,10 @@ public class AutonomousControl {
 
 	// Starts the autonomous running
 	public void start() {
-		auto.start();
+		if(!hasRun){
+			auto.start();
+			hasRun=true;
+		}
 	}
 
 	public void stop() {

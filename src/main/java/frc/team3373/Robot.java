@@ -53,6 +53,8 @@ public class Robot extends TimedRobot {
     
     private int calibrationMode = -1;
 
+    boolean firstTimeC;
+
     // private double target = 0.0;
 
     // private int index = 0;
@@ -96,7 +98,7 @@ public class Robot extends TimedRobot {
 
         launcher = Launcher.getInstance();
 
-        //climber = Climber.getInstance();//TODO uncomment
+        climber = Climber.getInstance();//TODO uncomment
 
         ahrs = SuperAHRS.getInstance();
         indexer = Indexer4.getInstance();
@@ -104,6 +106,8 @@ public class Robot extends TimedRobot {
         swerve = SwerveControl.getInstance();
         swerve.setDriveSpeed(0.25);
         swerve.changeControllerLimiter(3);
+
+        firstTimeC = true;
 
         SmartDashboard.putBoolean("Save Config", false);
         SmartDashboard.putBoolean("Restore Backup", false);
@@ -195,10 +199,11 @@ public class Robot extends TimedRobot {
         m_autoSelected = m_chooser.getSelected();
         m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
         //TODO Needs more testing with balls
-        indexer.setInitialBallStates(new State[]{State.AVAILABLE,State.OCCUPIED,State.OCCUPIED,State.OCCUPIED}); 
+        indexer.setInitialBallStates(new State[]{State.AVAILABLE,State.AVAILABLE,State.AVAILABLE,State.AVAILABLE}); 
         System.out.println("Auto selected: " + m_autoSelected);
         indexer.startInit();
-
+        swerve.recalculateWheelPosition();
+        swerve.resetOrentation();
         autoControl.init(0);
     }
 
@@ -216,6 +221,8 @@ public class Robot extends TimedRobot {
 
     public void teleopInit() {
         //swerve.resetOrentation();
+        swerve.setControlMode(DriveMode.ROBOTCENTRIC);
+        swerve.recalculateWheelPosition();
         indexer.startInit();
     }
 
@@ -296,13 +303,6 @@ public class Robot extends TimedRobot {
         }else {
             indexer.stopIntake();
         }
-
-        /* if (shooter.isXPushed()) {
-            indexer.stopIntake();
-        }
-        if (shooter.isYPushed()) {
-            indexer.startIntake();
-        } */
         
         if (shooter.getRawAxis(3) > 0.5) {
             indexer.startShooting();
@@ -393,10 +393,25 @@ public class Robot extends TimedRobot {
 
                 case 1:// Calibrate launcher
                     SmartDashboard.putString("Calibrate", "Climber");
-                    /*if (driver.isAPushed()) {
-                        climber.calibrateHeights();
+               
+                    if (firstTimeC) {
+                        firstTimeC = false;
+                        climber.initiateClimbMode();
+                        climber.startCalibrateOptions();
                     }
-                    climber.calibrateInches();*///! uncomment and fix first-time logic
+          
+                    if (driver.isBPushed()) {
+                        
+                        climber.calibrateInches();
+                    }
+                    if (Math.abs(driver.getRawAxis(1)) > 0.05) {
+                        climber.yStick1Calibrate(-driver.getRawAxis(1));// Keep both negative!
+                    }
+                    if (Math.abs(driver.getRawAxis(5)) > 0.05) {
+                        climber.yStick2Calibrate(-driver.getRawAxis(5));
+                    }
+                    climber.update();
+                    climber.displayOnShuffleboard();
                     break;
 
                 case 2:

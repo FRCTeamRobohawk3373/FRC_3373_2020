@@ -79,6 +79,7 @@ public class SwerveWheel {
 		m_pidController = rotateMotor.getPIDController();
 		m_pidController.setReference(0, ControlType.kPosition);
 		m_pidController.setFeedbackDevice(rotateEncoder);
+		m_pidController.setOutputRange(-0.8, 0.8);
 
 		//positionOffset = 0;
 		//position = new double[2];

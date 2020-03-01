@@ -16,19 +16,19 @@ public class Climber {
     final double START_POLE_TICKS_PER_INCH = 0.278;
     final double START_WINCH_TICKS_PER_INCH = 0.153;
 
-    final double ALL_MODES_MAX_SPEED = 0.05;
-    final double MAX_MANUAL_CONTROL_SPEED = 0.05;
-    final double MAX_CALIBRATE_CONTROL_SPEED = 0.05;
-    final double POLE_MOTOR_EXTENDED_INCHES = 25;//! For calibration
-    final double WINCH_MOTOR_EXTENDED_INCHES = 25;//!
+    final double ALL_MODES_MAX_SPEED = 0.9;
+    final double MAX_MANUAL_CONTROL_SPEED = 0.9;
+    final double MAX_CALIBRATE_CONTROL_SPEED = 0.9;
+    final double POLE_MOTOR_EXTENDED_INCHES = 24;//! For calibration
+    final double WINCH_MOTOR_EXTENDED_INCHES = 24;//!
 
-    final double LOW_POSITION_INCHES = 15;
+    final double LOW_POSITION_INCHES = 16;
     final double MIDDLE_POSITION_INCHES = 20;
-    final double HIGH_POSITION_INCHES = 25;
+    final double HIGH_POSITION_INCHES = 24;
     final double CLIMB_POSITION_INCHES = 0;
     final double SOLENOID_POSITION_INCHES = -1;
-    final double WINCH_CLIMB_INCHES = -5;
-    final double INCLINE_MOTOR_SPEED = 0.1;
+    final double WINCH_CLIMB_INCHES = -2;
+    final double INCLINE_MOTOR_SPEED = 0.9;
 
     private double p_manualSpeed = MAX_MANUAL_CONTROL_SPEED;
     private double p_calibrateSpeed = MAX_CALIBRATE_CONTROL_SPEED;
@@ -311,9 +311,11 @@ public class Climber {
             poleSolenoid.set(true);
             winchSolenoid.set(true);
             if (RobotState.isTest()) {// If in test mode, have option to go to position in inches from ShuffleBoard
-                SmartDashboard.putNumber("Go to (inches)", 0);
-            }
+                SmartDashboard.putNumber("Go to (inches)", 0.0001);
+                climberMode = climber_state.POGO;
+            } else {
             climberMode = climber_state.GOTO_SOLENOID;
+            }
         } else if (climberMode == climber_state.POGO) {
             poleSolenoid.set(false);
             winchSolenoid.set(false);
