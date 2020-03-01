@@ -15,7 +15,7 @@
     "conveyorSensorDelay": 0.16,
     "reverseConveyorDelay": 0.05,
     "preloadSensorDelay": 0.35,
-    "launcherMaxSpeed": 0.7,
+    "launcherMaxSpeed": 1,
     "lockLoadDelay": 0.84,
     "conveyorMoveDelay": 0.247,
     "shooterSpinUpDeadband":0.02,

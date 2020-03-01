@@ -23,6 +23,8 @@ public class DelayTrueBoolean {
         //     return true;
         // }
 
+        // value = m_old || override;
+
         if (!m_old && value) {
             t.reset();
             t.start();

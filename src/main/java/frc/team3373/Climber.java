@@ -11,12 +11,14 @@ import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Climber {
+
+    //TODO PUT IN CONSTANTS!!!
     final double START_POLE_ZERO_POSITION = 0;
     final double START_WINCH_ZERO_POSITION = 0;
-    final double START_POLE_TICKS_PER_INCH = 6.952898157527673;
-    final double START_WINCH_TICKS_PER_INCH = 17.6308339958545;
+    final double START_POLE_TICKS_PER_INCH = 7.606507339328597;//6.952898157527673;
+    final double START_WINCH_TICKS_PER_INCH = 16.14835958033776;//17.6308339958545;
 
-    final double ALL_MODES_MAX_SPEED = 0.9;
+    final double ALL_MODES_MAX_SPEED = 0.6;
     final double MAX_MANUAL_CONTROL_SPEED = 0.9;
     final double MAX_CALIBRATE_CONTROL_SPEED = 0.9;
     final double POLE_MOTOR_EXTENDED_INCHES = 24;//! For calibration
@@ -26,8 +28,8 @@ public class Climber {
     final double MIDDLE_POSITION_INCHES = 20;
     final double HIGH_POSITION_INCHES = 24;
     final double CLIMB_POSITION_INCHES = 0;
-    final double SOLENOID_POSITION_INCHES = -1;
-    final double WINCH_CLIMB_INCHES = -2;
+    final double SOLENOID_POSITION_INCHES = -0.25;
+    final double WINCH_CLIMB_INCHES = -2;// Max. limit on how high the winch motor can climb
     final double INCLINE_MOTOR_SPEED = 0.9;
 
     private double p_manualSpeed = MAX_MANUAL_CONTROL_SPEED;
@@ -90,6 +92,7 @@ public class Climber {
         poleMotor.setIdleMode(IdleMode.kBrake);
 
         poleEncoder = new CANEncoder(poleMotor);
+        poleEncoder.setPosition(0);
         
         poleSolenoid = new Solenoid(Constants.PCM_ID, Constants.POLE_SOLENOID_ID);
         poleSolenoid.set(true);
@@ -99,11 +102,12 @@ public class Climber {
         winchMotor.setIdleMode(IdleMode.kBrake);
 
         winchEncoder = new CANEncoder(winchMotor);
+        winchEncoder.setPosition(0);
 
         winchSolenoid = new Solenoid(Constants.PCM_ID, Constants.WINCH_SOLENOID_ID);
         winchSolenoid.set(true);
-
-        //inclineMotor = new CANSparkMax(Constants.INCLINE_MOTOR_ID, MotorType.kBrushed);
+        
+        inclineMotor = new CANSparkMax(Constants.INCLINE_MOTOR_ID, MotorType.kBrushless);
     
         p_pid = poleMotor.getPIDController();
         p_pid.setP(p_p);
@@ -111,6 +115,7 @@ public class Climber {
         p_pid.setD(p_d);
         p_pid.setOutputRange(-ALL_MODES_MAX_SPEED, ALL_MODES_MAX_SPEED);
         p_pid.setReference(0, ControlType.kPosition);
+
         w_pid = winchMotor.getPIDController();
         w_pid.setP(w_p);
         w_pid.setI(w_i);
@@ -131,11 +136,11 @@ public class Climber {
         SmartDashboard.putNumber("Go to (inches)", 0);
     }
 
-    public void setMotorsToZero() {
+    /* public void setMotorsToZero() {
         poleEncoder.setPosition(0);
         winchEncoder.setPosition(0);
 
-    }
+    } */
 
     public boolean getCalibrating() {
         return isCalibrating;
@@ -197,7 +202,7 @@ public class Climber {
 
     public void xStickManual(double value) {
         if (climberMode == climber_state.CLIMB) {
-            ////inclineMotor.set(INCLINE_MOTOR_SPEED);
+            inclineMotor.set(value*INCLINE_MOTOR_SPEED);
         }
     }
 
@@ -314,7 +319,7 @@ public class Climber {
                 SmartDashboard.putNumber("Go to (inches)", 0.0001);
                 climberMode = climber_state.POGO;
             } else {
-            climberMode = climber_state.GOTO_SOLENOID;
+                climberMode = climber_state.GOTO_SOLENOID;
             }
         } else if (climberMode == climber_state.POGO) {
             poleSolenoid.set(false);
@@ -340,7 +345,7 @@ public class Climber {
                 }
                 break;
 
-            case POGO:
+            case POGO: //TODO why?
                 break;
 
             case CLIMB:

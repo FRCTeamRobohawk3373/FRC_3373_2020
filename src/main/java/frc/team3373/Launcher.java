@@ -93,7 +93,7 @@ public class Launcher {
 
         if(val<0)
             val=powerTable[powerTable.length-1][1];// Set to max shooter speed if distance is greater than max shoot table value
-        targetSpeed = MathUtil.clamp(val, 0, Constants.SHOOTER_MAX_SPEED);
+        targetSpeed = MathUtil.clamp(val, 0, Config.getNumber("launcherMaxSpeed", 0.7));
         setSpeed(targetSpeed);// 70% is max speed
     }
 

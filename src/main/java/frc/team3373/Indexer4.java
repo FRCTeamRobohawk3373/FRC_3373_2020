@@ -156,6 +156,10 @@ public class Indexer4 {
         isShooting = false;
         is3Locked = false;
         is4Locked = false;
+        intake.set(0);
+        conveyor.set(0);
+        preload.set(0);
+        load.set(0);
 
         return true;
     }
@@ -404,6 +408,11 @@ public class Indexer4 {
         conveyor.set(0);
         setState(1, State.AVAILABLE);
         setState(2, State.AVAILABLE);
+        for (State b : ballStates) {
+            if (b == State.OCCUPIED) {
+                addBall();
+            }
+        }
         panicTimer.reset();
         panicTimer.stop();
     }

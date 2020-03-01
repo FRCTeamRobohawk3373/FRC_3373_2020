@@ -85,16 +85,17 @@ public class Constants{
 
     public static final int POLE_MOTOR_ID = 10;
     public static final int WINCH_MOTOR_ID = 9;
+    public static final int INCLINE_MOTOR_ID = 11;
     public static final int PCM_ID = 19;
     public static final int POLE_SOLENOID_ID = 0;
     public static final int WINCH_SOLENOID_ID = 1;
-    public static final int INCLINE_MOTOR_ID = -1;
+    
 
     // Shooter constants
     public static final int SHOOTER_MOTOR_ID = 12;
-    public static final double SHOOTER_RAMP_RATE = 5;
+    public static final double SHOOTER_RAMP_RATE = 3;
     public static final double SHOOTER_BUMP_AMOUNT = 0.02;
-    public static final double SHOOTER_MAX_SPEED = 0.7;
+    public static final double SHOOTER_MAX_SPEED = 1;
 
     public static final double[][] SHOOT_TABLE = new double[][] {
         {24.000000, 0.071515},

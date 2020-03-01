@@ -182,6 +182,13 @@ public class Robot extends TimedRobot {
          */
     }
 
+    @Override
+    public void disabledPeriodic() {
+        if(shooter.isStartPushed()){
+            indexer.setInitialBallStates(new State[]{State.AVAILABLE,State.OCCUPIED,State.OCCUPIED,State.OCCUPIED}); 
+        }
+    }
+
     /**
      * This autonomous (along with the chooser code above) shows how to select
      * between different autonomous modes using the dashboard. The sendable chooser
@@ -294,7 +301,6 @@ public class Robot extends TimedRobot {
         /*
          * ######################### Shooter Controls #########################
          */
-
         
         if(shooter.getRawAxis(5) < -0.5){
             indexer.startIntake();
@@ -338,22 +344,25 @@ public class Robot extends TimedRobot {
         }
 
         
-        /* Climber
+        //* Climber
         double lStickx = shooter.getRawAxis(0);
-        if (Math.abs(lStickx) > 0.05) {
-        climber.xStickManual(lStickx);
+        if (Math.abs(lStickx) > 0.1) {
+            climber.xStickManual(lStickx);
+        }else{
+            climber.xStickManual(0);
         }
+        
         double lSticky = -shooter.getRawAxis(1);
         if (Math.abs(lSticky) > 0.05) {
-        climber.yStickManual(lSticky);
+            climber.yStickManual(lSticky);
         } else if (shooter.isDPadDownPushed()) {
-        climber.gotoLowPosition();
+            climber.gotoLowPosition();
         } else if (shooter.isDPadLeftPushed() || shooter.isDPadRightPushed()) {
-        climber.gotoMiddlePosition();
+            climber.gotoMiddlePosition();
         } else if (shooter.isDPadUpPushed()) {
-        climber.gotoHighPosition();
+            climber.gotoHighPosition();
         } else if (shooter.isYPushed()) {
-        climber.initiateClimbMode();
+            climber.initiateClimbMode();
         }
         climber.update();
         //*/
@@ -391,7 +400,7 @@ public class Robot extends TimedRobot {
 
                     break;
 
-                case 1:// Calibrate launcher
+                case 1:// Calibrate Climber
                     SmartDashboard.putString("Calibrate", "Climber");
                
                     if (firstTimeC) {
