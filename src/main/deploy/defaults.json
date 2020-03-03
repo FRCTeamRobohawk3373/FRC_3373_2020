@@ -20,5 +20,21 @@
     "conveyorMoveDelay": 0.247,
     "shooterSpinUpDeadband":0.02,
     "intakeReleaseSpeed":0.2,
-    "intakeReleaseTime":4
+    "intakeReleaseTime":4,
+
+    "startPoleZeroPosition":0,
+    "startWinchZeroPosition":0,
+    "poleTicksPerInch":7.606507339328597,
+    "winchTicksPerInch":16.14835958033776,
+    "allModesMaxSpeed":0.9,
+    "maxManualControlSpeed":0.9,
+    "maxCalibrateControlSpeed":0.9,
+    "calibratePoleMotorExtendedInches":24,
+    "calibrateWinchMotorExtendedInches":24,
+    "climbLowInches":16.0,
+    "climbMiddleInches":16.0,
+    "climbHighInches":16.0,
+    "poleClimbUpInches":16.0,
+    "winchClimbUpInches":16.0,
+    "solenoidPositionInches":-0.25
 }

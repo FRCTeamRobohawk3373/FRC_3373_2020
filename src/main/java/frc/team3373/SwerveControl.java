@@ -204,7 +204,7 @@ public class SwerveControl {
 
 		calculateSwerveControl(0,0,0); //stops robot spinning
 		SmartDashboard.putNumber("Current Angle:", currentAngle);
-	} 
+	}
 
 	// ######################################################
 	// ########### 				Teleop 		     ############
@@ -590,6 +590,10 @@ public class SwerveControl {
 		targetRobotAngle = 0;
 	}
 
+	public double getDriveSpeed() {
+		return maxTargetSpeed;
+	}
+
 	public void setDriveSpeed(double speed) {
 		speed = Math.abs(speed);
 		if (speed > 1)
@@ -599,66 +603,10 @@ public class SwerveControl {
 
 	/* public void printPositions() {
 		for (SwerveWheel wheel : wheelArray) {
-			//System.out.print(wheel.name + "'s position: " + wheel.getRawEncoderValue() + ", ");
+			//*System.out.print(wheel.name + "'s position: " + wheel.getRawEncoderValue() + ", ");
 			SmartDashboard.putNumber(wheel.name, wheel.getMotorPosition());
 		}
-		//System.out.println();
-	} */
-
-	/* public void calibrateMinMax() {
-		System.out.println("Getting the Mins and Maxs of the Swerve Wheels.");
-		for (SwerveWheel wheel : wheelArray) {
-			double speed;
-			double currentValue = wheel.getMotorPosition();
-			double previousValue = currentValue;
-			double min = currentValue;
-			double max = currentValue;
-			byte sameNumberCount = 0;
-
-			for (int i = 0; i < 3; i++) {
-				speed = 0.01;
-				System.out.println(i);
-				wheel.rawRotate(speed);
-				while (previousValue <= currentValue) {
-					previousValue = currentValue;
-					currentValue = wheel.getMotorPosition();
-					if (previousValue == currentValue) {
-						sameNumberCount++;
-						if (sameNumberCount > 20) {
-							if(speed<.1)
-								speed += 0.001;
-								wheel.rawRotate(speed);
-							sameNumberCount = 0;
-						}
-					} else {
-						sameNumberCount = 0;
-					}
-					if (currentValue - previousValue > 4) {
-						speed -= 0.01;
-						wheel.rawRotate(speed);
-					}
-
-					if (currentValue > max)
-						max = currentValue;
-					if (currentValue < min)
-						min = currentValue;
-
-					try {
-						Thread.sleep(10);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-				System.out.println(wheel.name + " min: " + min + " max: " + max);
-			}
-			wheel.rawRotate(0);
-		}
-	}
-
-	public void calibrateHome() {
-		for (SwerveWheel wheel : wheelArray)
-			System.out.print(wheel.name + " Home: " + wheel.getMotorPosition()+" ");
-		System.out.println();
+		//*System.out.println();
 	} */
 
 	private void stopMoving() {

@@ -211,7 +211,7 @@ public class Robot extends TimedRobot {
         indexer.startInit();
         swerve.recalculateWheelPosition();
         swerve.resetOrentation();
-        autoControl.init(0);
+        autoControl.start(0);
     }
 
     /**
@@ -219,11 +219,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousPeriodic() {
-        try {
-            autoControl.start();
-        } catch (Exception e) {
-            autoControl.stop();
-        }
+        autoControl.update();
     }
 
     public void teleopInit() {
@@ -364,6 +360,9 @@ public class Robot extends TimedRobot {
         } else if (shooter.isYPushed()) {
             climber.initiateClimbMode();
         }
+
+        climber.teleOpControl(-shooter.getRawAxis(1), shooter.getRawAxis(2));
+
         climber.update();
         //*/
 
@@ -408,17 +407,19 @@ public class Robot extends TimedRobot {
                         climber.initiateClimbMode();
                         climber.startCalibrateOptions();
                     }
-          
                     if (driver.isBPushed()) {
-                        
                         climber.calibrateInches();
                     }
-                    if (Math.abs(driver.getRawAxis(1)) > 0.05) {
-                        climber.yStick1Calibrate(-driver.getRawAxis(1));// Keep both negative!
+                    if (climber.getCalibrating()) {// If calibrating (B pressed), control each motor individually
+                        climber.calibrateControl(-driver.getRawAxis(1), -driver.getRawAxis(5));
+                    } else {// If not calibrating, control both motors together
+                        
                     }
-                    if (Math.abs(driver.getRawAxis(5)) > 0.05) {
-                        climber.yStick2Calibrate(-driver.getRawAxis(5));
-                    }
+
+                    //
+                    climber.testControl(-shooter.getRawAxis(1), shooter.getRawAxis(2), -shooter.getRawAxis(5));
+
+
                     climber.update();
                     climber.displayOnShuffleboard();
                     break;

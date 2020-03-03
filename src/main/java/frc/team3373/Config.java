@@ -61,6 +61,11 @@ public class Config {
         if (configObject != null) {
             initialized = true;
         }
+        try {
+            Thread.sleep(100);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
         display();
     }
 
@@ -79,6 +84,11 @@ public class Config {
         configObject = new JSONObject(st);
         if (configObject != null) {
             initialized = true;
+        }
+        try {
+            Thread.sleep(50);
+        } catch(Exception e) {
+            e.printStackTrace();
         }
         display();
     }

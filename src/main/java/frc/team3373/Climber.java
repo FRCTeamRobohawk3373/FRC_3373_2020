@@ -12,30 +12,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Climber {
 
-    //TODO PUT IN CONSTANTS!!!
-    final double START_POLE_ZERO_POSITION = 0;
-    final double START_WINCH_ZERO_POSITION = 0;
-    final double START_POLE_TICKS_PER_INCH = 7.606507339328597;//6.952898157527673;
-    final double START_WINCH_TICKS_PER_INCH = 16.14835958033776;//17.6308339958545;
-
-    final double ALL_MODES_MAX_SPEED = 0.6;
-    final double MAX_MANUAL_CONTROL_SPEED = 0.9;
-    final double MAX_CALIBRATE_CONTROL_SPEED = 0.9;
-    final double POLE_MOTOR_EXTENDED_INCHES = 24;//! For calibration
-    final double WINCH_MOTOR_EXTENDED_INCHES = 24;//!
-
-    final double LOW_POSITION_INCHES = 16;
-    final double MIDDLE_POSITION_INCHES = 20;
-    final double HIGH_POSITION_INCHES = 24;
-    final double CLIMB_POSITION_INCHES = 0;
-    final double SOLENOID_POSITION_INCHES = -0.25;
-    final double WINCH_CLIMB_INCHES = -2;// Max. limit on how high the winch motor can climb
-    final double INCLINE_MOTOR_SPEED = 0.9;
-
-    private double p_manualSpeed = MAX_MANUAL_CONTROL_SPEED;
-    private double p_calibrateSpeed = MAX_CALIBRATE_CONTROL_SPEED;
-    private double w_manualSpeed = MAX_MANUAL_CONTROL_SPEED;
-    private double w_calibrateSpeed = MAX_CALIBRATE_CONTROL_SPEED;
+    private double p_manualSpeed = Config.getNumber("maxManualControlSpeed", 0.9);
+    private double p_calibrateSpeed = Config.getNumber("maxCalibrateControlSpeed", 0.9);
+    private double w_manualSpeed = Config.getNumber("maxManualControlSpeed", 0.9);
+    private double w_calibrateSpeed = Config.getNumber("maxCalibrateControlSpeed", 0.9);
 
     CANSparkMax poleMotor, winchMotor, inclineMotor;
     CANEncoder poleEncoder, winchEncoder;
@@ -44,6 +24,9 @@ public class Climber {
 
     CANPIDController p_pid, w_pid;
 
+    /* For calibration */
+    private double p_zeroPosition = Config.getNumber("startPoleZeroPosition", 0);
+    private double w_zeroPosition = Config.getNumber("startWinchZeroPosition", 0);
     private double p_ticksPerInch = 1;
     private double w_ticksPerInch = 1;
 
@@ -113,22 +96,22 @@ public class Climber {
         p_pid.setP(p_p);
         p_pid.setI(p_i);
         p_pid.setD(p_d);
-        p_pid.setOutputRange(-ALL_MODES_MAX_SPEED, ALL_MODES_MAX_SPEED);
+        p_pid.setOutputRange(-Config.getNumber("allModesMaxSpeed", 0.9), Config.getNumber("allModesMaxSpeed", 0.9));
         p_pid.setReference(0, ControlType.kPosition);
 
         w_pid = winchMotor.getPIDController();
         w_pid.setP(w_p);
         w_pid.setI(w_i);
         w_pid.setD(w_d);
-        w_pid.setOutputRange(-ALL_MODES_MAX_SPEED, ALL_MODES_MAX_SPEED);
+        w_pid.setOutputRange(-Config.getNumber("allModesMaxSpeed", 0.9), Config.getNumber("allModesMaxSpeed", 0.9));
         w_pid.setReference(0, ControlType.kPosition);
 
-        setPoleZeroInches(START_POLE_ZERO_POSITION);
-        setPoleExtenedInches(START_POLE_ZERO_POSITION+START_POLE_TICKS_PER_INCH, 1);
+        setPoleZeroInches(p_zeroPosition);
+        setPoleExtenedInches(p_zeroPosition+Config.getNumber("poleTicksPerInch", 1), 1);
         setPoleGotoInches(0);
 
-        setWinchZeroInches(START_WINCH_ZERO_POSITION);
-        setWinchExtenedInches(START_WINCH_ZERO_POSITION+START_WINCH_TICKS_PER_INCH, 1);
+        setWinchZeroInches(w_zeroPosition);
+        setWinchExtenedInches(w_zeroPosition+Config.getNumber("winchTicksPerInch", 1), 1);
         setWinchGotoInches(0);
 
         adjustManualAndCalibrateSpeeds();
@@ -158,20 +141,20 @@ public class Climber {
 
     public void gotoLowPosition() {
         if (climberMode == climber_state.POGO) {
-            setPoleGotoInches(LOW_POSITION_INCHES);
-            setWinchGotoInches(LOW_POSITION_INCHES);
+            setPoleGotoInches(Config.getNumber("climbLowInches", 16));
+            setWinchGotoInches(Config.getNumber("climbLowInches", 16));
         }
     }
     public void gotoMiddlePosition() {
         if (climberMode == climber_state.POGO) {
-            setPoleGotoInches(MIDDLE_POSITION_INCHES);
-            setWinchGotoInches(MIDDLE_POSITION_INCHES);
+            setPoleGotoInches(Config.getNumber("climbMiddleInches", 20));
+            setWinchGotoInches(Config.getNumber("climbMiddleInches", 20));
         }
     }
     public void gotoHighPosition() {
         if (climberMode == climber_state.POGO) {
-            setPoleGotoInches(HIGH_POSITION_INCHES);
-            setWinchGotoInches(HIGH_POSITION_INCHES);
+            setPoleGotoInches(Config.getNumber("climbHighInches", 24));
+            setWinchGotoInches(Config.getNumber("climbHighInches", 24));
         }
     }
 
@@ -200,9 +183,40 @@ public class Climber {
         w_ticksPerInch = (pos - w_zeroInchesPos)/heightInInches;
     }
 
+    /**
+     * Controller inputs
+     * @param ly Left joystick Y input
+     * @param lx Left joystick X input
+     * @param ry Right joystick Y input
+     * @param high Dpad up
+     * @param mid Dpad left and right
+     * @param low Dpad down
+     * 
+     * 
+     */
+    public void teleOpControl(double ly, double lx) {
+        if (Math.abs(lx) > 0.1) {
+            xStickManual(lx);
+        } else {
+            xStickManual(0);
+        }
+        if (Math.abs(ly) > 0.05) {
+            yStickManual(ly);
+        }
+    }
+
+    public void calibrateControl(double ly, double ry) {
+        if (Math.abs(ly) > 0.05) {
+            climber.yStick1Calibrate(ly);// Keep both negative!
+        }
+        if (Math.abs(ry) > 0.05) {
+            climber.yStick2Calibrate(ry);
+        }
+    }
+
     public void xStickManual(double value) {
         if (climberMode == climber_state.CLIMB) {
-            inclineMotor.set(value*INCLINE_MOTOR_SPEED);
+            inclineMotor.set(value*Config.getNumber("inclineMotorSpeed", 0.9));
         }
     }
 
@@ -211,21 +225,21 @@ public class Climber {
             p_goto += value*p_manualSpeed;
             if (polePosToInches(p_goto) < 0) {
                 p_goto = poleInchesToPos(0);
-            } else if (polePosToInches(p_goto) > POLE_MOTOR_EXTENDED_INCHES) {
-                p_goto = poleInchesToPos(POLE_MOTOR_EXTENDED_INCHES);
+            } else if (polePosToInches(p_goto) > Config.getNumber("calibratePoleMotorExtendedInches", 24)) {
+                p_goto = poleInchesToPos(Config.getNumber("calibratePoleMotorExtendedInches", 24));
             }
             w_goto += value*w_manualSpeed;
             if (winchPosToInches(w_goto) < 0) {
                 w_goto = winchInchesToPos(0);
-            } else if (winchPosToInches(w_goto) > WINCH_MOTOR_EXTENDED_INCHES) {
-                w_goto = winchInchesToPos(WINCH_MOTOR_EXTENDED_INCHES);
+            } else if (winchPosToInches(w_goto) > Config.getNumber("calibrateWinchMotorExtendedInches", 24)) {
+                w_goto = winchInchesToPos(Config.getNumber("calibrateWinchMotorExtendedInches", 24));
             }
             p_pid.setReference(p_goto, ControlType.kPosition);
             w_pid.setReference(w_goto, ControlType.kPosition);
         } else if (climberMode == climber_state.CLIMB) {
             w_goto += Math.min(0, value*w_manualSpeed);
-            if (winchPosToInches(w_goto) < WINCH_CLIMB_INCHES) {
-                w_goto = winchInchesToPos(WINCH_CLIMB_INCHES);
+            if (winchPosToInches(w_goto) < Config.getNumber("winchClimbUpInches", -2)) {
+                w_goto = winchInchesToPos(Config.getNumber("winchClimbUpInches", -2));
             }
             w_pid.setReference(w_goto, ControlType.kPosition);
         }
@@ -235,7 +249,6 @@ public class Climber {
         p_goto += value*p_calibrateSpeed;
         p_pid.setReference(p_goto, ControlType.kPosition);
     }
-
     
     public void yStick2Calibrate(double value) {
         w_goto += value*w_calibrateSpeed;
@@ -245,15 +258,15 @@ public class Climber {
     private void adjustManualAndCalibrateSpeeds() {
         double ratio = p_ticksPerInch/w_ticksPerInch;
         if (ratio > 1) {
-            p_manualSpeed = MAX_MANUAL_CONTROL_SPEED;
-            p_calibrateSpeed = MAX_CALIBRATE_CONTROL_SPEED;
-            w_manualSpeed = MAX_MANUAL_CONTROL_SPEED / ratio;
-            w_calibrateSpeed = MAX_CALIBRATE_CONTROL_SPEED;
+            p_manualSpeed = Config.getNumber("maxManualControlSpeed", 0.9);
+            p_calibrateSpeed = Config.getNumber("maxCalibrateControlSpeed", 0.9);
+            w_manualSpeed = Config.getNumber("maxManualControlSpeed", 0.9) / ratio;
+            w_calibrateSpeed = Config.getNumber("maxCalibrateControlSpeed", 0.9);
         } else {
-            p_manualSpeed = MAX_MANUAL_CONTROL_SPEED * ratio;
-            p_calibrateSpeed = MAX_CALIBRATE_CONTROL_SPEED;
-            w_manualSpeed = MAX_MANUAL_CONTROL_SPEED;
-            w_calibrateSpeed = MAX_CALIBRATE_CONTROL_SPEED;
+            p_manualSpeed = Config.getNumber("maxManualControlSpeed", 0.9) * ratio;
+            p_calibrateSpeed = Config.getNumber("maxCalibrateControlSpeed", 0.9);
+            w_manualSpeed = Config.getNumber("maxManualControlSpeed", 0.9);
+            w_calibrateSpeed = Config.getNumber("maxCalibrateControlSpeed", 0.9);
         }
     }   
 
@@ -262,7 +275,6 @@ public class Climber {
             isCalibrating = false;
             SmartDashboard.putString("Calibration", "Calibration aborted");
         } else{
-
             if (climberMode == climber_state.POGO) { 
                 isCalibrating = true;
                 calibrationMode = calibration_state.WAITING_FOR_A_OR_B;
@@ -295,14 +307,14 @@ public class Climber {
                 calibrationMode = calibration_state.B_WAIT_FOR_ZERO_INCHES;
                 break;
             case B_WAIT_FOR_ZERO_INCHES:
-                SmartDashboard.putString("Calibration", "[B] Waiting for "+POLE_MOTOR_EXTENDED_INCHES+" inches");
+                SmartDashboard.putString("Calibration", "[B] Waiting for "+Config.getNumber("calibratePoleMotorExtendedInches", 24)+" inches");
                 setPoleZeroInches(p_goto);
                 setWinchZeroInches(w_goto);
                 calibrationMode = calibration_state.B_WAIT_FOR_EXTENDED_INCHES;
                 break;
             case B_WAIT_FOR_EXTENDED_INCHES:
-                setPoleExtenedInches(p_goto, POLE_MOTOR_EXTENDED_INCHES);
-                setWinchExtenedInches(w_goto, WINCH_MOTOR_EXTENDED_INCHES);
+                setPoleExtenedInches(p_goto, Config.getNumber("calibratePoleMotorExtendedInches", 24));
+                setWinchExtenedInches(w_goto, Config.getNumber("calibrateWinchMotorExtendedInches", 24));
                 SmartDashboard.putString("Calibration", "[B] Done");
                 calibrationMode = calibration_state.FAIL_SAFE;
                 adjustManualAndCalibrateSpeeds();
@@ -324,7 +336,7 @@ public class Climber {
         } else if (climberMode == climber_state.POGO) {
             poleSolenoid.set(false);
             winchSolenoid.set(false);
-            setPoleGotoInches(CLIMB_POSITION_INCHES);
+            setPoleGotoInches(Config.getNumber("poleClimbUpInches", 0));
             climberMode = climber_state.CLIMB;
         }
     }
@@ -332,15 +344,15 @@ public class Climber {
     public void update() {
         switch (climberMode) {
             case INIT:
-                setPoleGotoInches(START_POLE_ZERO_POSITION);
-                setWinchGotoInches(START_WINCH_ZERO_POSITION);
+                setPoleGotoInches(p_zeroPosition);
+                setWinchGotoInches(w_zeroPosition);
                 break;
             
             case GOTO_SOLENOID:
-                setPoleGotoInches(START_POLE_ZERO_POSITION+SOLENOID_POSITION_INCHES);
-                setWinchGotoInches(START_WINCH_ZERO_POSITION+SOLENOID_POSITION_INCHES);
-                if (Math.abs(polePosToInches(poleEncoder.getPosition())   - (START_POLE_ZERO_POSITION+SOLENOID_POSITION_INCHES)) < 0.1 &&
-                    Math.abs(winchPosToInches(winchEncoder.getPosition()) - (START_WINCH_ZERO_POSITION+SOLENOID_POSITION_INCHES)) < 0.1) {
+                setPoleGotoInches(p_zeroPosition+Config.getNumber("solenoidPositionInches", -0.25));
+                setWinchGotoInches(w_zeroPosition+Config.getNumber("solenoidPositionInches", -0.25));
+                if (Math.abs(polePosToInches(poleEncoder.getPosition())   - (p_zeroPosition+Config.getNumber("solenoidPositionInches", -0.25))) < 0.1 &&
+                    Math.abs(winchPosToInches(winchEncoder.getPosition()) - (w_zeroPosition+Config.getNumber("solenoidPositionInches", -0.25))) < 0.1) {
                     climberMode = climber_state.POGO;
                 }
                 break;
@@ -353,7 +365,6 @@ public class Climber {
         }
         SmartDashboard.putString("Climb Mode", climberMode.toString());
     }
-
 
     public void displayOnShuffleboard() {
 
@@ -380,9 +391,9 @@ public class Climber {
             if (inch < 0) {
                 inch = 0;
                 SmartDashboard.putNumber("Go to (inches)", 0);
-            } else if (inch > POLE_MOTOR_EXTENDED_INCHES) {
-                inch = POLE_MOTOR_EXTENDED_INCHES;
-                SmartDashboard.putNumber("Go to (inches)", POLE_MOTOR_EXTENDED_INCHES);
+            } else if (inch > Config.getNumber("calibratePoleMotorExtendedInches", 24)) {
+                inch = Config.getNumber("calibratePoleMotorExtendedInches", 24);
+                SmartDashboard.putNumber("Go to (inches)", Config.getNumber("calibratePoleMotorExtendedInches", 24));
             }
             p_inch = inch;
             setPoleGotoInches(inch);
