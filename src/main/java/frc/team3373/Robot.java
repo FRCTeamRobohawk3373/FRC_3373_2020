@@ -341,17 +341,9 @@ public class Robot extends TimedRobot {
 
         
         //* Climber
-        double lStickx = shooter.getRawAxis(0);
-        if (Math.abs(lStickx) > 0.1) {
-            climber.xStickManual(lStickx);
-        }else{
-            climber.xStickManual(0);
-        }
-        
-        double lSticky = -shooter.getRawAxis(1);
-        if (Math.abs(lSticky) > 0.05) {
-            climber.yStickManual(lSticky);
-        } else if (shooter.isDPadDownPushed()) {
+        climber.teleOpControl(-shooter.getRawAxis(1), shooter.getRawAxis(2));
+    
+        if (shooter.isDPadDownPushed()) {
             climber.gotoLowPosition();
         } else if (shooter.isDPadLeftPushed() || shooter.isDPadRightPushed()) {
             climber.gotoMiddlePosition();
@@ -360,8 +352,6 @@ public class Robot extends TimedRobot {
         } else if (shooter.isYPushed()) {
             climber.initiateClimbMode();
         }
-
-        climber.teleOpControl(-shooter.getRawAxis(1), shooter.getRawAxis(2));
 
         climber.update();
         //*/
@@ -407,18 +397,15 @@ public class Robot extends TimedRobot {
                         climber.initiateClimbMode();
                         climber.startCalibrateOptions();
                     }
-                    if (driver.isBPushed()) {
-                        climber.calibrateInches();
-                    }
+                    
                     if (climber.getCalibrating()) {// If calibrating (B pressed), control each motor individually
                         climber.calibrateControl(-driver.getRawAxis(1), -driver.getRawAxis(5));
                     } else {// If not calibrating, control both motors together
-                        
+                        climber.teleOpControl(-driver.getRawAxis(1), driver.getRawAxis(2));
+                        if (driver.isBPushed()) {// Go into calibration mode
+                            climber.calibrateInches();
+                        }
                     }
-
-                    //
-                    climber.testControl(-shooter.getRawAxis(1), shooter.getRawAxis(2), -shooter.getRawAxis(5));
-
 
                     climber.update();
                     climber.displayOnShuffleboard();

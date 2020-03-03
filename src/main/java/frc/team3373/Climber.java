@@ -187,12 +187,6 @@ public class Climber {
      * Controller inputs
      * @param ly Left joystick Y input
      * @param lx Left joystick X input
-     * @param ry Right joystick Y input
-     * @param high Dpad up
-     * @param mid Dpad left and right
-     * @param low Dpad down
-     * 
-     * 
      */
     public void teleOpControl(double ly, double lx) {
         if (Math.abs(lx) > 0.1) {
@@ -205,12 +199,17 @@ public class Climber {
         }
     }
 
+    /**
+     * Controller inputs
+     * @param ly Left joystick Y input
+     * @param ry Right joystick Y input
+     */
     public void calibrateControl(double ly, double ry) {
         if (Math.abs(ly) > 0.05) {
-            climber.yStick1Calibrate(ly);// Keep both negative!
+            yStick1Calibrate(ly);// Keep both negative!
         }
         if (Math.abs(ry) > 0.05) {
-            climber.yStick2Calibrate(ry);
+            yStick2Calibrate(ry);
         }
     }
 
