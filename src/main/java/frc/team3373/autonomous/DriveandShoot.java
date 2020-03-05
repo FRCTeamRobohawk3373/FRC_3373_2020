@@ -26,9 +26,9 @@ public class DriveandShoot implements Runnable {
                     state = 1;
                     break;
                 case 1:
-                    if (autoControl.finishedMoving()) {
-                        state = 3;
-                    }
+                    //if (autoControl.finishedMoving()) {
+                    //    state = 3;
+                    //}
             }
             /* swerve.relativeMoveRobot(0, 0.3, 1.5);
             launcher.setSpeed(0.4);

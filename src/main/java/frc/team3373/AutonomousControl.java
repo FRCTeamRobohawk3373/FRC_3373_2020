@@ -48,9 +48,9 @@ public class AutonomousControl {
 		}
 	}
 
-	public boolean finishedMoving() {
+	//public boolean finishedMoving() {
 
-	}
+	//}
 
 	private void initPIDController() {
 		rotationPID.reset();
