@@ -165,46 +165,59 @@ public class Climber {
      * @param lx Left joystick X input
      */
     public void teleOpControl(double ly, double lx) {
-        if (Math.abs(lx) > 0.1) {
-            xStickManual(lx);
-        } else {
-            xStickManual(0);
-        }
-        if (Math.abs(ly) > 0.05) {
-            yStickManual(ly);
-        }
-    }
 
+        // Deadband
+        if(Math.abs(lx) < 0.05)
+            lx=0;
 
-    public void xStickManual(double value) {
+        if(Math.abs(ly) < 0.05)
+            ly=0;
+            
+        // Divide joystick movement into 8 sections
+        double mag = Math.sqrt(lx*lx+ly*ly);
+        double regionFactor = Math.PI / (Constants.numberOfControlSegments);
+        double regionNumber = Math.round(Math.atan2(ly, lx) / regionFactor);
+        if (regionNumber == 0 || Math.abs(regionNumber) == Constants.numberOfControlSegments
+                || Math.abs(regionNumber) == Constants.numberOfControlSegments / 2) {
+            double angle = regionNumber * regionFactor;
+            lx = mag*Math.cos(angle);
+            ly = mag*Math.sin(angle);
+        }
+
+        // Incline
         if (climberMode == climber_state.CLIMB) {
-            inclineMotor.set(value*Config.getNumber("inclineMotorSpeed", 0.9));
+            inclineMotor.set(lx*Config.getNumber("inclineMotorSpeed", 0.9));
         }
-    }
 
-    public void yStickManual(double value) {
+        // Climbing up/down
         if (climberMode == climber_state.POGO) {
-            p_goto += value*p_manualSpeed;
-            if (polePosToInches(p_goto) < 0) {
+            p_goto += ly*p_manualSpeed;
+            if (p_goto < poleInchesToPos(0)) {
                 p_goto = poleInchesToPos(0);
             } else if (polePosToInches(p_goto) > Config.getNumber("calibratePoleMotorExtendedInches", 24)) {
                 p_goto = poleInchesToPos(Config.getNumber("calibratePoleMotorExtendedInches", 24));
             }
-            w_goto += value*w_manualSpeed;
+            w_goto += ly*w_manualSpeed;
             if (winchPosToInches(w_goto) < 0) {
                 w_goto = winchInchesToPos(0);
             } else if (winchPosToInches(w_goto) > Config.getNumber("calibrateWinchMotorExtendedInches", 24)) {
                 w_goto = winchInchesToPos(Config.getNumber("calibrateWinchMotorExtendedInches", 24));
             }
+
+            setPoleGotoInches(MathUtil.)
+
             p_pid.setReference(p_goto, ControlType.kPosition);
             w_pid.setReference(w_goto, ControlType.kPosition);
         } else if (climberMode == climber_state.CLIMB) {
-            w_goto += Math.min(0, value*w_manualSpeed);
+            w_goto += ly*w_manualSpeed;
             if (winchPosToInches(w_goto) < Config.getNumber("winchClimbUpInches", -2)) {
                 w_goto = winchInchesToPos(Config.getNumber("winchClimbUpInches", -2));
+            } else if (winchPosToInches(w_goto) > Config.getNumber("calibrateWinchMotorExtendedInches", 24)) {
+                w_goto = winchInchesToPos(Config.getNumber("calibrateWinchMotorExtendedInches", 24));
             }
             w_pid.setReference(w_goto, ControlType.kPosition);
         }
+    
     }
 
     public void update() {
@@ -266,7 +279,6 @@ public class Climber {
     public boolean getCalibrating() {
         return isCalibrating;
     }
-
     private void setPoleZeroInches(double pos) {// Calibrate 0 inches
         p_zeroInchesPos = pos;
     }
@@ -332,6 +344,8 @@ public class Climber {
                 setPoleGotoInches(0);
                 setWinchGotoInches(0);
                 break;
+            default:
+                break;
         }
     }
 
@@ -354,6 +368,8 @@ public class Climber {
                 calibrationMode = calibration_state.FAIL_SAFE;
                 adjustManualAndCalibrateSpeeds();
                 isCalibrating = false;
+                break;
+            default:
                 break;
         }
     }
