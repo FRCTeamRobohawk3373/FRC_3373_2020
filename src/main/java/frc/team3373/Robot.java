@@ -258,8 +258,8 @@ public class Robot extends TimedRobot {
                     if (climber.getCalibrating()) {// If calibrating (B pressed), control each motor individually
                         climber.calibrateControl(-driver.getRawAxis(1), -driver.getRawAxis(5));
                     } else {// If not calibrating, control both motors together
-                        //TODO check that solenoid won't break
-                        //!climber.teleOpControl(-driver.getRawAxis(1), driver.getRawAxis(2));
+                        
+                        climber.teleOpControl(-driver.getRawAxis(1), driver.getRawAxis(2));//!
                     }
 
                     if (driver.isBPushed()) {// Go into calibration mode
