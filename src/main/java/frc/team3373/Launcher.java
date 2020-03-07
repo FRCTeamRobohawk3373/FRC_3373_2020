@@ -53,7 +53,7 @@ public class Launcher {
 
     public boolean isUpToSpeed(){
         double speed = motor.get();
-        if(speed >= targetSpeed+liveSpeedAdjustment-Config.getNumber("shooterSpinUpDeadband",0.02) && speed <= targetSpeed+liveSpeedAdjustment+Config.getNumber("shooterSpinUpDeadband",0.02)){
+        if(speed >= targetSpeed+liveSpeedAdjustment-Config.getNumber("launcherSpinUpDeadband",0.02) && speed <= targetSpeed+liveSpeedAdjustment+Config.getNumber("launcherSpinUpDeadband",0.02)){
             return true;
         }
         return false;

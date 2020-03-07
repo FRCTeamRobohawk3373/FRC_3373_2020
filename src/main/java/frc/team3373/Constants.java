@@ -14,7 +14,7 @@ public class Constants{
 
     public static final double ROTATIONAL_CORRECTION_FACTOR = 4; 
 
-
+    //*Swerve motors ID
     public static final int BLDriveMotorID = 1;
     public static final int BLRotateMotorID = 2;
 
@@ -29,19 +29,19 @@ public class Constants{
 
     public static final byte numberOfControlSegments = 8;
 
-    //* Drive motors PID
+    //*Swerve Drive motors PID
     public static final PIDConstant DRIVE_FL_PID = new PIDConstant(5e-5, 1e-6, 0, 1.56e-4, 0, -1, 1);
     public static final PIDConstant DRIVE_FR_PID = new PIDConstant(5e-5, 1e-6, 0, 1.56e-4, 0, -1, 1);
     public static final PIDConstant DRIVE_BL_PID = new PIDConstant(5e-5, 1e-6, 0, 1.56e-4, 0, -1, 1);
     public static final PIDConstant DRIVE_BR_PID = new PIDConstant(5e-5, 1e-6, 0, 1.56e-4, 0, -1, 1);
 
-    //* Rotation motors PID
+    //*Swerve Rotation motors PID
     public static final PIDConstant ROTATE_FL_PID = new PIDConstant(1, 1e-6, 0, 1.56e-4, 0, -1, 1);
     public static final PIDConstant ROTATE_FR_PID = new PIDConstant(1, 1e-6, 0, 1.56e-4, 0, -1, 1);
     public static final PIDConstant ROTATE_BL_PID = new PIDConstant(1, 1e-6, 0, 1.56e-4, 0, -1, 1);
     public static final PIDConstant ROTATE_BR_PID = new PIDConstant(1, 1e-6, 0, 1.56e-4, 0, -1, 1);
 
-    //* Encoder Positions 
+    //*Swerve Absolute Encoder Positions 
     // Front left
     public static final double FLEncMin = 0.0078125; //0.015625;
     public static final double FLEncMax = 3.3125;
@@ -75,17 +75,18 @@ public class Constants{
     public static final double INTAKE_SPEED = -1;
 
     //Climber values
-    public static final double C_PP=0.5;
-    public static final double C_PI=0;
-    public static final double C_PD=0;
+    public static final double CLIMBER_PP=0.5;
+    public static final double CLIMBER_PI=0;
+    public static final double CLIMBER_PD=0;
 
-    public static final double C_WP=0.5;
-    public static final double C_WI=0;
-    public static final double C_WD=0;
+    public static final double CLIMBER_WP=0.5;
+    public static final double CLIMBER_WI=0;
+    public static final double CLIMBER_WD=0;
 
     public static final int POLE_MOTOR_ID = 1;
     public static final int WINCH_MOTOR_ID = 4;
     public static final int INCLINE_MOTOR_ID = 3;
+
     public static final int PCM_ID = 19;
     public static final int POLE_SOLENOID_ID = 0;
     public static final int WINCH_SOLENOID_ID = 1;
