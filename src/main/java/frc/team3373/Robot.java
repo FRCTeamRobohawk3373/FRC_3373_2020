@@ -251,8 +251,9 @@ public class Robot extends TimedRobot {
                
                     if (firstTimeC) {
                         firstTimeC = false;
-                        climber.changeClimbMode();
-                        climber.startCalibrateOptions();
+                        //climber.changeClimbMode();
+                        climber.calibrateInches();
+                        //climber.startCalibrateOptions();
                     }
                     
                     if (climber.getCalibrating()) {// If calibrating (B pressed), control each motor individually
