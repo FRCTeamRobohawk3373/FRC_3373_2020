@@ -4,6 +4,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team3373.util.MathUtil;
 import frc.team3373.Constants;
@@ -15,6 +16,8 @@ public class Launcher {
     private int liveSpeedDisplay = 0;
     private double liveSpeedAdjustment = 0;
     private double targetSpeed = 0;
+
+    private Timer readyTimer;
 
     // For calibration
     private boolean isFirstTime;
@@ -38,6 +41,9 @@ public class Launcher {
         motor.setIdleMode(IdleMode.kCoast);
         motor.setClosedLoopRampRate(Constants.SHOOTER_RAMP_RATE);
         motor.setOpenLoopRampRate(Constants.SHOOTER_RAMP_RATE);
+
+        readyTimer = new Timer();
+
         powerTable = Constants.SHOOT_TABLE;
         isFirstTime = true;
         isCalibrationDone = false;
@@ -54,7 +60,14 @@ public class Launcher {
     public boolean isUpToSpeed(){
         double speed = motor.get();
         if(speed >= targetSpeed+liveSpeedAdjustment-Config.getNumber("shooterSpinUpDeadband",0.02) && speed <= targetSpeed+liveSpeedAdjustment+Config.getNumber("shooterSpinUpDeadband",0.02)){
-            return true;
+            if(readyTimer.get()>Config.getNumber("launcherReadyDelay",1)){
+                readyTimer.stop();
+                return true;
+            }
+            return false;
+        }else{
+            readyTimer.reset();
+            readyTimer.start();
         }
         return false;
     }

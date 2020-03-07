@@ -43,9 +43,9 @@ public class Constants{
 
     //* Encoder Positions 
     // Front left
-    public static final double FLEncMin = 0.0078125; //0.015625;
+    public static final double FLEncMin = 0.01171875; //0.0078125; //0.015625;
     public static final double FLEncMax = 3.3125;
-    public static final double FLEncHome = 0.464844; //1.519531;
+    public static final double FLEncHome = 2.742188;//0.464844; //1.519531;
 
     // Back left
     public static final double BLEncMin = 0.4453125;

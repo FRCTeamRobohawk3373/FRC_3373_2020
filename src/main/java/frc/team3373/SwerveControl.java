@@ -269,10 +269,10 @@ public class SwerveControl {
 			}else{
 				rAxis=getRotationalCorrection();
 			}
-			/* if(LX == 0 && LY ==0 ){
+			if(LX == 0 && LY ==0 ){
 				rAxis=0;
 			}
-			RX=rAxis; */
+			RX=rAxis;
 		}
 
 		if (isFieldCentric) {

@@ -255,11 +255,11 @@ public class Robot extends TimedRobot {
         }
 
         if (driver.isLBHeld()) {
-            swerve.setDriveSpeed(0.15);
+            swerve.setDriveSpeed(0.45);
         } else if (driver.isRBHeld()) {
             swerve.setDriveSpeed(.75);
         } else {
-            swerve.setDriveSpeed(0.45);
+            swerve.setDriveSpeed(0.15);
         }
 
         /*

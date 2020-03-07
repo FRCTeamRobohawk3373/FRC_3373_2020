@@ -444,20 +444,25 @@ public class Indexer4 {
 
         } else {
             // When 4 -> 5 and timer on boolean has ended, set 5 to occupied
-            if (timedLock4) {//TODO move to better place 
-                occupy4 = false;
-                setState(4, State.OCCUPIED);
-            }
+            
             pos1 = timedBool1.update(intakeSensor.get(), Config.getNumber("intakeSensorDelay", 0.3));
             pos2 = timedBool2.update(conveyorSensor.get(), Config.getNumber("conveyorSensorDelay", 0.2));        
-            pos3 = timedBool3.update(preloadSensor.get(), Config.getNumber("preloadSensorDelay", 0.5));
-            timedLock4 = timedBool4.update(occupy4, Config.getNumber("lockLoadDelay", 0.84));
+            //pos3 = timedBool3.update(preloadSensor.get(), Config.getNumber("preloadSensorDelay", 0.5));
+            //timedLock4 = timedBool4.update(occupy4, Config.getNumber("lockLoadDelay", 0.84));
 
             updatePos1();
             updateConveyor();
-            updatePos3();
-            updatePos4();
         }
+
+        if (timedLock4) {//TODO move to better place 
+            occupy4 = false;
+            setState(4, State.OCCUPIED);
+        }
+
+        pos3 = timedBool3.update(preloadSensor.get(), Config.getNumber("preloadSensorDelay", 0.5));
+        timedLock4 = timedBool4.update(occupy4, Config.getNumber("lockLoadDelay", 0.84));
+        updatePos3();
+        updatePos4();
 
         // ! testing code
         displayData();

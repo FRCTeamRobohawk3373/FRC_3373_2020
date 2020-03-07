@@ -16,7 +16,7 @@
     "reverseConveyorDelay": 0.05,
     "preloadSensorDelay": 0.35,
     "launcherMaxSpeed": 1,
-    "lockLoadDelay": 0.84,
+    "lockLoadDelay": 0.80,
     "conveyorMoveDelay": 0.247,
     "shooterSpinUpDeadband":0.02,
     "intakeReleaseSpeed":0.2,
@@ -36,5 +36,6 @@
     "climbHighInches":16.0,
     "poleClimbUpInches":16.0,
     "winchClimbUpInches":16.0,
-    "solenoidPositionInches":-0.25
+    "solenoidPositionInches":-0.25,
+    "launcherReadyDelay":1
 }
