@@ -4,17 +4,20 @@ public class VisionObject {
     public double x;
     public double y;
     public double distance;
-    public double rotation;
+    public double rAngle;
+    public double tAngle;
 
-    public VisionObject(double positionX, double positionY, double distance, double rotation) {
+    public VisionObject(double positionX, double positionY, double distance, double robotAngle, double targetAngle) {
         x = positionX;
         y = positionY;
         this.distance = distance;
-        this.rotation = rotation;
+        rAngle = robotAngle;
+        tAngle = targetAngle;
     }
 
-    public void print(){
-		System.out.println("Target at (" + x + "," + y + ") " + distance + "in and " + rotation + " degrees.");
+    public String toString() {
+        return "X: " + x + "\nY: " + y + "\nDistance: " + distance + "\nRobot Angle: " + rAngle + "\nTarget Angle: "
+                + tAngle;
     }
-    
+
 }
