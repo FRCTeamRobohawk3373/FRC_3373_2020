@@ -98,9 +98,9 @@ public class Indexer {
         preload.config_kP(0, Config.getNumber("preload_P", 5));
         preload.config_kI(0, 0);
         preload.config_kD(0, 0);
-        preload.configClosedLoopPeakOutput(0, Config.getNumber("maxPreloadSpeed", 0.7));
+        preload.configClosedLoopPeakOutput(0, Config.getNumber("preloadMotorSpeed", 0.7));
         preload.configAllowableClosedloopError(0,
-                (int) (Config.getNumber("pidError", 0.1) * Config.getNumber("preloadEncoderScale", 1992)));
+                (int) (Config.getNumber("indexerPIDError", 0.1) * Config.getNumber("preloadEncoderScale", 1992)));
         preload.getSensorCollection().setQuadraturePosition(0, 100);
         preload.set(ControlMode.Position, 0);
 
@@ -110,9 +110,9 @@ public class Indexer {
         load.config_kP(0, Config.getNumber("preload_P", 5));
         load.config_kI(0, 0);
         load.config_kD(0, 0);
-        load.configClosedLoopPeakOutput(0, Config.getNumber("maxLoadSpeed", 0.7));
+        load.configClosedLoopPeakOutput(0, Config.getNumber("loadMotorSpeed", 0.7));
         load.configAllowableClosedloopError(0,
-                (int) (Config.getNumber("pidError", 0.05) * Config.getNumber("loadEncoderScale", 1992)));
+                (int) (Config.getNumber("indexerPIDError", 0.05) * Config.getNumber("loadEncoderScale", 1992)));
         load.getSensorCollection().setQuadraturePosition(0, 100);
         load.set(ControlMode.Position, 0);
     }
@@ -322,7 +322,7 @@ public class Indexer {
                 setState(3, State.REVERSE);
                 conveyor.set(-Config.getNumber("conveyorMotorSpeed", 0.7));
             } else if (isState(3, State.REVERSE)) {
-                if (timedBool2.update(conveyorSensor.get(), Config.getNumber("reverseConveyorDelay"))) {
+                if (timedBool2.update(conveyorSensor.get(), Config.getNumber("conveyorReverseDelay"))) {
                     setState(2, State.OCCUPIED);
                     setState(3, State.AVAILABLE);
                     conveyor.set(0);
@@ -388,7 +388,7 @@ public class Indexer {
             break;
 
         case REVERSE:
-            if (timedBool2.update(!conveyorSensor.get(), Config.getNumber("reverseConveyorDelay", 0.05))) {
+            if (timedBool2.update(!conveyorSensor.get(), Config.getNumber("conveyorReverseDelay", 0.05))) {
                 setState(2, State.OCCUPIED);// ! look at later
                 setState(3, State.AVAILABLE);
                 conveyor.set(0);
@@ -458,7 +458,7 @@ public class Indexer {
             double posError = Math.abs(preloadPos) * Config.getNumber("preloadEncoderScale", 1992)
                     - Math.abs(preload.getSensorCollection().getQuadraturePosition());
 
-            if (Math.abs(posError) < Config.getNumber("pidError", 0.05)
+            if (Math.abs(posError) < Config.getNumber("indexerPIDError", 0.05)
                     * Config.getNumber("preloadEncoderScale", 1992)) {
                 preload.set(0);
                 setState(4, State.AVAILABLE);
@@ -485,7 +485,7 @@ public class Indexer {
             double posError = Math.abs(loadPos) * Config.getNumber("loadEncoderScale", 3413)
                     - Math.abs(load.getSensorCollection().getQuadraturePosition()); // Calculate PID error
 
-            if (Math.abs(posError) < Config.getNumber("pidError", 0.05) * Config.getNumber("loadEncoderScale", 3413)) {
+            if (Math.abs(posError) < Config.getNumber("indexerPIDError", 0.05) * Config.getNumber("loadEncoderScale", 3413)) {
 
                 is5Locked = false;
                 load.set(0); // Stop motor after PID exits
@@ -543,7 +543,7 @@ public class Indexer {
             pos1 = timedBool1.update(intakeSensor.get(), Config.getNumber("intakeSensorDelay", 0.3));
             pos2 = timedBool2.update(conveyorSensor.get(), Config.getNumber("conveyorSensorDelay", 0.2));
             pos4 = timedBool4.update(preloadSensor.get(), Config.getNumber("preloadSensorDelay", 0.5));
-            timedLock5 = timedBool5.update(occupy5, Config.getNumber("lockLoadDelay", 0.84));
+            timedLock5 = timedBool5.update(occupy5, Config.getNumber("loadLockingDelay", 0.84));
 
             updatePos1();
             updateConveyor();
@@ -644,7 +644,7 @@ public class Indexer {
             }
             break;
         case "load":
-            preload.set(-Config.getNumber("maxPreloadSpeed", 0.7));
+            preload.set(-Config.getNumber("preloadMotorSpeed", 0.7));
             loadCal = !loadCal;
             if (!loadCal) {
                 calTimer.stop();

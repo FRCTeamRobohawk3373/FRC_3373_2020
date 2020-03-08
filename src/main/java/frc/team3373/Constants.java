@@ -75,13 +75,13 @@ public class Constants{
     public static final double INTAKE_SPEED = -1;
 
     //Climber values
-    public static final double C_PP=0.5;
-    public static final double C_PI=0;
-    public static final double C_PD=0;
+	public static final double CLIMBER_PP=0.5;
+    public static final double CLIMBER_PI=0;
+    public static final double CLIMBER_PD=0;
 
-    public static final double C_WP=0.5;
-    public static final double C_WI=0;
-    public static final double C_WD=0;
+    public static final double CLIMBER_WP=0.5;
+    public static final double CLIMBER_WI=0;
+    public static final double CLIMBER_WD=0;
 
     public static final int POLE_MOTOR_ID = 10;
     public static final int WINCH_MOTOR_ID = 9;
