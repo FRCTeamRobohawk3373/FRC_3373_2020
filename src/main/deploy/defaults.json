@@ -36,22 +36,24 @@
     "launcherSpinUpDeadband":0.02,
 
     "comment-6": "CLIMBER",
-    "climberZeroInchesOffset":5.5,
-    "climberLowInches":7.5,
-    "climberMiddleInches":12,
-    "climberHighInches":25,
-    "climberMaxSpeed":0.0900000000000000000000000,
+    "climberZeroInchesOffset":44.5,
+    "climberLowInches":55.25,
+    "climberMiddleInches":61,
+    "climberHighInches":67,
+    "climberMaxInches":69,
+    "climberMaxSpeed":0.5,
     "climberReleaseOffsetInches":-0.25,
-    "climberManualIncrement":1.5,
-    "climberCalibrateIncrementRatio":0.01, 
-    "climberInclineMotorSpeed":0.20000000000000000000,
+    "climberManualIncrement":1,
+    "climberCalibrateIncrementRatio":0.3, 
+    "climberInclineMotorSpeed":0.9,
+    "climberAdditionalSyncRatio":1.2,
 
     "comment-7": "POGO",
-    "pogoMaxRotations": 500,
-    "pogoRotationPerInch":0.17305443926555356,
+    "pogoMaxRotations": 146,
+    "pogoRotationPerInch":6.312807,
 
     "comment-8": "WINCH",
-    "winchMaxRotations": 500,
-    "winchRotationPerInch":0.30313584862685783
+    "winchMaxRotations": 389,
+    "winchRotationPerInch":16.974159
 }
 

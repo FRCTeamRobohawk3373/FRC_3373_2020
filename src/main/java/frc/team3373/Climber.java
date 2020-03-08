@@ -126,13 +126,7 @@ public class Climber {
         w_pid.setOutputRange(-Config.getNumber("climberMaxSpeed", 0.9), Config.getNumber("climberMaxSpeed", 0.9));
         w_pid.setReference(0, ControlType.kPosition);
 
-        //// setPoleExtenedInches(p_zeroInchesOffset+Config.getNumber("pogoRotationPerInch",
-        //// 1), 1);
-        //// setPoleGotoInches(0);
-
-        //// setWinchExtenedInches(w_zeroInchesOffset+Config.getNumber("winchRotationPerInch",
-        //// 1), 1);
-        //// setWinchGotoInches(0);
+        adjustMotorSpeeds();
 
         //adjustManualAndCalibrateSpeeds();
 
@@ -145,18 +139,17 @@ public class Climber {
      * 
      * }
      */
-/*
-    private void adjustManualAndCalibrateSpeeds() {
-        double ratio = 1;
+    private void adjustMotorSpeeds() {
+        double ratio = w_rotPerInch/p_rotPerInch;
         if (ratio > 1) {
-            p_manualIncrement = Config.getNumber("climberManualIncrement", 0.9);
-            w_manualIncrement = Config.getNumber("climberManualIncrement", 0.9) / ratio;
+            double speed = Config.getNumber("climberMaxSpeed", 0.9) / (ratio*Config.getNumber("climberAdditionalSyncRatio",1));
+            p_pid.setOutputRange(-speed, speed);
         } else {
-            p_manualIncrement = Config.getNumber("climberManualIncrement", 0.9) * ratio;
-            w_manualIncrement = Config.getNumber("climberManualIncrement", 0.9);
+            double speed = Config.getNumber("climberMaxSpeed", 0.9) * (ratio*Config.getNumber("climberAdditionalSyncRatio",1));
+            w_pid.setOutputRange(-speed, speed);
         }
     }
-*/
+
     public void gotoLowPosition() {
         if (climberMode == climber_state.POGO) {
             setPoleGotoInches(Config.getNumber("climberLowInches", 16));
@@ -180,11 +173,11 @@ public class Climber {
 
     private void setPoleGotoInches(double inches) {
         inches = Math.max(inches, zeroInchesOffset + Config.getNumber("climberReleaseOffsetInches", -0.25));
-        p_inch = inches;
+        p_inch = Math.min(inches, Config.getNumber("climberMaxInches", 67));
         SmartDashboard.putNumber("pogoTargetPosition", p_inch);//TODO remove
-        p_goto = (inches - zeroInchesOffset) * p_rotPerInch;
+        p_goto = (p_inch - zeroInchesOffset) * p_rotPerInch;
 
-        p_goto = Math.min(p_goto, Config.getNumber("pogoMaxRotations"));
+        ////p_goto = Math.min(p_goto, Config.getNumber("pogoMaxRotations"));
 
         SmartDashboard.putNumber("pogoTargetRotations", p_goto);//TODO remove
         p_pid.setReference(p_goto, ControlType.kPosition);
@@ -192,11 +185,11 @@ public class Climber {
 
     private void setWinchGotoInches(double inches) {
         inches = Math.max(inches, zeroInchesOffset + Config.getNumber("climberReleaseOffsetInches", -0.25));
-        w_inch = inches;
+        w_inch = Math.min(inches, Config.getNumber("climberMaxInches", 67));
         SmartDashboard.putNumber("winchTargetPosition", w_inch);//TODO remove
-        w_goto = (inches - zeroInchesOffset) * w_rotPerInch;
+        w_goto = (w_inch - zeroInchesOffset) * w_rotPerInch;
 
-        w_goto = Math.min(w_goto, Config.getNumber("winchMaxRotations"));
+        ////w_goto = Math.min(w_goto, Config.getNumber("winchMaxRotations"));
 
         SmartDashboard.putNumber("winchTargetRotations", w_goto);//TODO remove
         w_pid.setReference(w_goto, ControlType.kPosition);
@@ -231,7 +224,8 @@ public class Climber {
             lx = mag * Math.cos(angle);
             ly = mag * Math.sin(angle);
         }
-
+        
+        SmartDashboard.putNumber("LX control", lx);
         // Incline
         if (climberMode == climber_state.CLIMB) {
             inclineMotor.set(lx * Config.getNumber("climberInclineMotorSpeed", 0.9));
@@ -458,12 +452,12 @@ public class Climber {
         }*/
 
         SmartDashboard.putNumber("zero position", zeroInchesOffset);
-        SmartDashboard.putNumber("pole rotations/inch", p_rotPerInch);
+        SmartDashboard.putNumber("pogo rotations/inch", p_rotPerInch);
         SmartDashboard.putNumber("winch rotations/inch", w_rotPerInch);
-        SmartDashboard.putNumber("[!]Pole Encoder", poleEncoder.getPosition());
+        SmartDashboard.putNumber("[!]Pogo Encoder", poleEncoder.getPosition());
         SmartDashboard.putNumber("[!]Winch Encoder", winchEncoder.getPosition());
 
-        SmartDashboard.putNumber("Pole Inches", polePosToInches(poleEncoder.getPosition()));
+        SmartDashboard.putNumber("Pogo Inches", polePosToInches(poleEncoder.getPosition()));
         SmartDashboard.putNumber("Winch Inches", winchPosToInches(winchEncoder.getPosition()));//!!
 
         /* Winch motor */

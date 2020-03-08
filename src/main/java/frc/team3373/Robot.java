@@ -80,6 +80,8 @@ public class Robot extends TimedRobot {
 
         try {
             Config.loadConfig();
+            //Config.loadDefaults();
+            //Config.saveConfig();
             System.out.println("Configs loaded");
         } catch (IOException | JSONException e) {
             try {
@@ -401,7 +403,7 @@ public class Robot extends TimedRobot {
                         climber.calibrateControl(-driver.getRawAxis(1), -driver.getRawAxis(5));
                     } else {// If not calibrating, control both motors together
                         
-                        climber.teleOpControl(-driver.getRawAxis(1), driver.getRawAxis(2));
+                        climber.teleOpControl(-driver.getRawAxis(1), driver.getRawAxis(0));
                     }
 
                     if (driver.isBPushed()) {// Go into calibration mode
