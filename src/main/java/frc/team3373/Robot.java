@@ -350,7 +350,7 @@ public class Robot extends TimedRobot {
         } else if (shooter.isDPadUpPushed()) {
             climber.gotoHighPosition();
         } else if (shooter.isYPushed()) {
-            climber.initiateClimbMode();
+            climber.changeClimbMode();
         }
 
         climber.update();
@@ -390,21 +390,22 @@ public class Robot extends TimedRobot {
                     break;
 
                 case 1:// Calibrate Climber
-                    SmartDashboard.putString("Calibrate", "Climber");
+                SmartDashboard.putString("Calibrate", "Climber");
                
-                    if (firstTimeC) {
-                        firstTimeC = false;
-                        climber.initiateClimbMode();
-                        climber.startCalibrateOptions();
+                if (firstTimeC) {
+                    firstTimeC = false;
+                        climber.calibrateInches();
                     }
                     
                     if (climber.getCalibrating()) {// If calibrating (B pressed), control each motor individually
                         climber.calibrateControl(-driver.getRawAxis(1), -driver.getRawAxis(5));
                     } else {// If not calibrating, control both motors together
+                        
                         climber.teleOpControl(-driver.getRawAxis(1), driver.getRawAxis(2));
-                        if (driver.isBPushed()) {// Go into calibration mode
-                            climber.calibrateInches();
-                        }
+                    }
+
+                    if (driver.isBPushed()) {// Go into calibration mode
+                        climber.calibrateInches();
                     }
 
                     climber.update();
