@@ -292,7 +292,7 @@ public class Climber {
             }
         } else if (climberMode == climber_state.POGO) {// POGO -> CLIMB
             poleSolenoid.set(false);
-            winchSolenoid.set(false);
+            //winchSolenoid.set(false);
             setPoleGotoInches(Config.getNumber("climberZeroInchesOffset", 0));// Retract pogo stick
             climberMode = climber_state.CLIMB;
         }
