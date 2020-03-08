@@ -85,10 +85,10 @@ public class Climber {
 
         // Solenoids
         poleSolenoid = new Solenoid(Constants.PCM_ID, Constants.POLE_SOLENOID_ID);
-        poleSolenoid.set(true);
+        poleSolenoid.set(false);
 
         winchSolenoid = new Solenoid(Constants.PCM_ID, Constants.WINCH_SOLENOID_ID);
-        winchSolenoid.set(true);
+        winchSolenoid.set(false);
 
         // Motor setup
         poleMotor = new CANSparkMax(Constants.POLE_MOTOR_ID, MotorType.kBrushless);
