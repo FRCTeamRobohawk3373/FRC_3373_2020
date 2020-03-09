@@ -16,8 +16,9 @@ public class VisionObject {
     }
 
     public String toString() {
-        return "X: " + x + "\nY: " + y + "\nDistance: " + distance + "\nRobot Angle: " + rAngle + "\nTarget Angle: "
-                + tAngle;
+        return "Target at ("+x+","+y+") "+distance+"in, Robot Angle: "+rAngle+" degrees, Target Angle: "+tAngle+" degrees";
+        //return "X: " + x + "\nY: " + y + "\nDistance: " + distance + "\nRobot Angle: " + rAngle + "\nTarget Angle: "
+        //        + tAngle;
     }
 
 }

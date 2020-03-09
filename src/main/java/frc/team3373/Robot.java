@@ -49,6 +49,7 @@ public class Robot extends TimedRobot {
     private Launcher launcher;
     private Indexer4 indexer;
     private Climber climber;
+    private Vision vis;
     // TODO add ManualInput.java?
     
     private int calibrationMode = -1;
@@ -108,6 +109,8 @@ public class Robot extends TimedRobot {
         swerve = SwerveControl.getInstance();
         swerve.setDriveSpeed(0.25);
         swerve.changeControllerLimiter(3);
+
+        vis = Vision.getInstance();
 
         firstTimeC = true;
 
@@ -171,7 +174,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("orientationDegree", Math.toDegrees(orientationOffset));
         SmartDashboard.putNumber("orientationRadians", orientationOffset);
         SmartDashboard.putBoolean("isNavxCalibrating", ahrs.isCalibrating());
-        swerve.showPositions();
+        //swerve.showPositions();
         
         /*if (shooter.isStartPushed()) {
             indexer.setInitialBallStates(
@@ -234,11 +237,12 @@ public class Robot extends TimedRobot {
     /**
      * This function is called periodically during operator control.
      */
-    @Override
     public void teleopPeriodic() {
         joystickControls();
+
         indexer.update();
         launcher.updateTeleOp();
+        climber.update();
         /*
          * try { Thread.sleep(1000); } catch (InterruptedException e) {
          * e.printStackTrace(); }
@@ -311,12 +315,15 @@ public class Robot extends TimedRobot {
         if (shooter.getRawAxis(3) > 0.5) {
             indexer.startShooting();
             double launcher_inches = SmartDashboard.getNumber("Shoot Distance", 0);
-            launcher.setSpeedFromDistance(launcher_inches);
+            launcher.setSpeed(0.45);
+            //launcher.setSpeedFromDistance(launcher_inches);
+            vis.switchStreamCam(2);
             if(launcher.isUpToSpeed() && shooter.isAHeld()) { // ? Change?
                 indexer.unloadBall();
             }
 
         } else {
+            vis.switchStreamCam(1);
             if(!indexer.isBallUnloading()){
                 launcher.stop();
                 indexer.stopShooting();
@@ -343,7 +350,7 @@ public class Robot extends TimedRobot {
 
         
         //* Climber
-        climber.teleOpControl(-shooter.getRawAxis(1), shooter.getRawAxis(2));
+        climber.teleOpControl(-shooter.getRawAxis(1), shooter.getRawAxis(0));
     
         if (shooter.isDPadDownPushed()) {
             climber.gotoLowPosition();
@@ -355,13 +362,17 @@ public class Robot extends TimedRobot {
             climber.changeClimbMode();
         }
 
-        climber.update();
         //*/
 
         driver.clearButtons();
         driver.clearDPad();
         shooter.clearButtons();
         shooter.clearDPad();
+    }
+
+    @Override
+    public void testInit() {
+        climber.unlockSolenoids();
     }
 
     /**

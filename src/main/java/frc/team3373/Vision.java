@@ -2,60 +2,211 @@ package frc.team3373;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.EntryNotification;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
 public class Vision {
 	private NetworkTableInstance inst;
-	private NetworkTable vTable;
-	private NetworkTable streaming;
-	private NetworkTable processing;
+	private NetworkTable visionTable;
+	private NetworkTable streamingTable;
+	private NetworkTable processingTable;
 
-	private boolean loaded = false;
-	private boolean lock = false;
-	private boolean refresh = false;
+	//private boolean loaded = false;
+	//private boolean lock = false;
+	//private boolean refresh = false;
 
-	private Map<Integer, String> cammap;
-	private ArrayList<VisionObject> objects = new ArrayList<VisionObject>();
+	private static Vision instance;
+
+	private int activeCamNum = -1;
+	private String activeCamName = "";
+
+	//private Map<Integer, String> cammap;
+	//private ArrayList<VisionObject> objects = new ArrayList<VisionObject>();
+
+	private VisionData vData;
+	private CameraData cData;
+
+	class VisionData{
+		private ArrayList<VisionObject> targetObjects = new ArrayList<VisionObject>();
+	
+		//private VisionObject[] targetObjects;
+	
+		private boolean lock = false;
+	
+		public synchronized ArrayList<VisionObject> getData(){
+			if(lock){
+				try {
+					wait();
+				 } catch (InterruptedException e) {
+					e.printStackTrace();
+				 }
+			}
+			lock=true;
+			ArrayList<VisionObject> data = (ArrayList<VisionObject>)targetObjects.clone();
+			lock=false;
+			notify();
+			return data;
+		}
+	
+		public synchronized int getSize(){
+			if(lock){
+				try {
+					wait();
+				 } catch (InterruptedException e) {
+					e.printStackTrace();
+				 }
+			}
+			lock=true;
+			int size = targetObjects.size();
+			lock=false;
+			notify();
+			return size;
+		}
+	
+		public synchronized void updateVisionData(EntryNotification event){
+			if(lock){
+				try {
+					wait();
+				 } catch (InterruptedException e) {
+					e.printStackTrace();
+				 }
+			}
+			lock=true;
+			String[] data = event.getEntry().getStringArray(null);
+	
+			if (data != null || data.length != 0) {
+				targetObjects.clear();
+				String[] sa;
+				for (String str : data) {
+					str.replace("[", "");
+					str.replace("]", "");
+					str.replace(" ", "");
+					sa = str.split(",");
+					if (Arrays.binarySearch(sa, "None") < 0)
+						targetObjects.add(new VisionObject(Double.parseDouble(sa[1]), Double.parseDouble(sa[2]),
+								Double.parseDouble(sa[3]), Double.parseDouble(sa[4]), Double.parseDouble(sa[5])));
+				}
+			}
+			//update code
+			lock=false;
+			notify();
+		}
+	}
+	
+	class CameraData{
+		private boolean lock = false;
+		private Map<Integer, String> cammap = new HashMap<Integer, String>();
+	
+		public synchronized Map<Integer, String> getCameraMap(){
+			if(lock){
+				try {
+					wait();
+				 } catch (InterruptedException e) {
+					e.printStackTrace();
+				 }
+			}
+			lock=true;
+			Map<Integer, String> data = Map.copyOf(cammap);
+			lock=false;
+			notify();
+			return data;
+		}
+	
+		public synchronized void updateCamMap(EntryNotification event){
+			updateCamMap(event.getEntry());
+		}
+
+		public synchronized void updateCamMap(NetworkTableEntry entry){
+			System.out.println("camMap updating");
+			if(lock){
+				try {
+					wait();
+				 } catch (InterruptedException e) {
+					e.printStackTrace();
+				 }
+			}
+			lock=true;
+			String[] c = entry.getStringArray(null);
+			System.out.println("got: "+c);
+			if (c != null) {
+				String[] sa;
+				for (String str : c) {
+					str.replace("[", "");
+					str.replace("]", "");
+					sa = str.split(",");
+					cammap.put(Integer.parseInt(sa[0]), sa[1].replace(" ", ""));
+				}
+			}
+			System.out.println(cammap);
+			lock=false;
+			notify();
+		}
+
+	}
+
+	public static Vision getInstance(){
+		if(instance == null){
+			instance = new Vision();
+		}
+		return instance;
+	}
 
 	public Vision() {
+		cData=new CameraData();
+		vData=new VisionData();
+
 		inst = NetworkTableInstance.getDefault();
-		vTable = inst.getTable("vision");
-		processing = vTable.getSubTable("processing");
-		streaming.getEntry("CamMap").addListener((event) -> loadCammap(event), EntryListenerFlags.kNew);
-		processing.getEntry("targetInfo").addListener((event) -> setRefresh(event),
+		visionTable = inst.getTable("vision");
+		processingTable = visionTable.getSubTable("processing");
+		streamingTable = visionTable.getSubTable("switching");
+		streamingTable.getEntry("CamMap").addListener(event -> cData.updateCamMap(event),//{System.out.println("New CamMap Data: "+event.name); cData.updateCamMap(event); }, 
+				EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+		//streamingTable.getEntry("CamMap").addListener(event -> cData.updateCamMap(event), 
+		//		EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+		processingTable.getEntry("targetInfo").addListener(event -> vData.updateVisionData(event),
 				EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
+		cData.updateCamMap(streamingTable.getEntry("CamMap"));
 		// update();
 	}
 
 	public int size() {
-		return objects.size();
+		return vData.getSize();
 	}
 
 	public void switchStreamCam(int streamIndex) {
-		if (cammap.containsKey(streamIndex)) {
-			streaming.getEntry("selectedCamIndex").setNumber(streamIndex);
+		if (cData.getCameraMap().containsKey(streamIndex)) {
+			if(activeCamNum!=streamIndex){
+				streamingTable.getEntry("selectedCamIndex").setNumber(streamIndex);
+				activeCamNum = streamIndex;
+				activeCamName = cData.getCameraMap().get(streamIndex);
+			}
 		} else {
 			System.out.println("ERROR: Invalid camera stream index");
 		}
 	}
 
 	public void switchStreamCam(String streamName) {
-		if (cammap.containsValue(streamName)) {
-			streaming.getEntry("selectedCamName").setString(streamName);
+		if (cData.getCameraMap().containsValue(streamName)) {
+			if(!streamingTable.getEntry("selectedCamName").getString("").equals(streamName))
+				streamingTable.getEntry("selectedCamName").setString(streamName);
 		} else {
 			System.out.println("ERROR: Invalid camera stream name");
 		}
 	}
 
+	/** Gets any object that is the closest*/
 	public VisionObject getClosestObject() {
 		int closest = -1;
-		double cdist = 100000.0;
+		double cdist = Double.POSITIVE_INFINITY;
+		ArrayList<VisionObject> objects = vData.getData();
 		for (int i = 0; i < objects.size(); i++) {
 			VisionObject object = objects.get(i);
 			if (object.distance < cdist) {
@@ -69,7 +220,22 @@ public class Vision {
 		return objects.get(closest);
 	}
 
-	public ArrayList<VisionObject> getObjectsInRange(double max, double min) {
+	/**
+	 * gets the firt vision target, Null if there are no targets
+	 */
+	public VisionObject getFirstObject() {
+		ArrayList<VisionObject> objects = vData.getData();
+		if(objects.size()>0)
+			return objects.get(0);
+		return null;
+	}
+
+	/** Gets objects within a range of distance in inches
+	 * @param min the minimum distance
+	 * @param max the maximum distance
+	*/
+	public ArrayList<VisionObject> getObjectsInRange(double min, double max) {
+		ArrayList<VisionObject> objects = vData.getData();
 		ArrayList<VisionObject> inRange = new ArrayList<VisionObject>();
 		for (int i = 0; i < objects.size(); i++) {
 			VisionObject object = objects.get(i);
@@ -83,7 +249,8 @@ public class Vision {
 		return inRange;
 	}
 
-	public ArrayList<VisionObject> getObjectsInRotation(double max, double min) {
+	public ArrayList<VisionObject> getObjectsInRotation(double min, double max) {
+		ArrayList<VisionObject> objects = vData.getData();
 		ArrayList<VisionObject> inRange = new ArrayList<VisionObject>();
 		for (int i = 0; i < objects.size(); i++) {
 			VisionObject object = objects.get(i);
@@ -97,12 +264,13 @@ public class Vision {
 		return inRange;
 	}
 
+	/**Gets object with x absolute value closest to zero (center of screen)*/
 	public VisionObject getObjectClosestToCenter() {
 		int closest = -1;
 		double cx = 2.0;
+		ArrayList<VisionObject> objects = vData.getData();
 		// ArrayList<VisionObject> objs = new ArrayList<VisionObject>();
 		// objs.addAll(objects);
-		lock = true;
 		for (int i = 0; i < objects.size(); i++) {
 			VisionObject object = objects.get(i);
 			if (Math.abs(object.x) < cx) {
@@ -110,18 +278,13 @@ public class Vision {
 				cx = Math.abs(object.x);
 			}
 		}
-		lock = false;
 		if (closest == -1) {
 			return null;
 		}
-		try {
-			return objects.get(closest);
-		} catch (IndexOutOfBoundsException e) {
-			return null;
-		}
+		return objects.get(closest);
 	}
 
-	public void setRefresh(EntryNotification event) {
+	/* public void setRefresh(EntryNotification event) {
 		if (loaded) {
 			refresh = true;
 		}
@@ -131,10 +294,10 @@ public class Vision {
 		if (refresh && !lock) {
 			refresh();
 		}
-	}
+	} */
 
-	private void loadCammap(EntryNotification event) {
-		String[] c = streaming.getEntry("CamMap").getStringArray(null);
+	/* private void loadCammap(EntryNotification event) {
+		String[] c = streamingTable.getEntry("CamMap").getStringArray(null);
 		if (c != null) {
 			String[] sa;
 			for (String str : c) {
@@ -145,12 +308,12 @@ public class Vision {
 			}
 		}
 		loaded = true;
-	}
+	} */
 
-	private void refresh() {
+	/* private void refresh() {
 		try {
 			if (!lock) {
-				String[] data = processing.getEntry("targetInfo").getStringArray(null);
+				String[] data = processingTable.getEntry("targetInfo").getStringArray(null);
 				if (data == null || data.length == 0) {
 					return;
 				}
@@ -169,5 +332,5 @@ public class Vision {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
+	} */
 }
