@@ -353,6 +353,11 @@ public class Climber {
         }
     } */
 
+    public void unlockSolenoids(){
+        poleSolenoid.set(true);
+        winchSolenoid.set(true);
+    }
+
     public void calibrateInches() {
         switch (calibrationMode) {
         case INITIAL:// <-- previous state

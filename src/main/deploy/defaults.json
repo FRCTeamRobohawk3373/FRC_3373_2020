@@ -46,7 +46,7 @@
     "climberManualIncrement":1,
     "climberCalibrateIncrementRatio":0.3, 
     "climberInclineMotorSpeed":0.9,
-    "climberAdditionalSyncRatio":1.2,
+    "climberAdditionalSyncRatio":1.5,
 
     "comment-7": "POGO",
     "pogoMaxRotations": 146,
