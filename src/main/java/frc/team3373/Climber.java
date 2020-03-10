@@ -244,7 +244,9 @@ public class Climber {
             //!setWinchGotoInches(w_inch);
             
             if (ly == 0) {
-                setWinchGotoInches(w_inch);// Hold saved position
+                w_goto = (w_inch - zeroInchesOffset) * w_rotPerInch;
+                w_pid.setReference(w_goto, ControlType.kPosition);
+                //setWinchGotoInches(w_inch);// Hold saved position
             } else {
                 w_inch = winchPosToInches(winchEncoder.getPosition());// Save position
 
@@ -253,9 +255,9 @@ public class Climber {
                 
                 if (ly > 0 && w_inch > high) {
                     setWinchGotoInches(high);// Hold
-                } else if (ly < 0 && w_inch < low) {
+                } /*else if (ly < 0 && w_inch < low) {
                     setWinchGotoInches(low);// Hold
-                } else {
+                }*/ else {
                     winchMotor.set(ly*Config.getNumber("climberMaxSpeed", 0.5));
                 }
             }

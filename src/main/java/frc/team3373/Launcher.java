@@ -78,6 +78,8 @@ public class Launcher {
     }
 
     public void setSpeed(double speed) {
+        speed = MathUtil.clamp(speed, 0, Config.getNumber("launcherMaxSpeed", 0.7));
+        targetSpeed = speed;
         motor.set(MathUtil.clamp(speed+liveSpeedAdjustment, 0.0, Config.getNumber("launcherMaxSpeed", 0.7)));
     }
 

@@ -408,6 +408,7 @@ public class Indexer4 {
         conveyor.set(0);
         setState(1, State.AVAILABLE);
         setState(2, State.AVAILABLE);
+        ballCount=0;
         for (State b : ballStates) {
             if (b == State.OCCUPIED) {
                 addBall();
