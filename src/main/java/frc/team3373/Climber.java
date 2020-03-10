@@ -242,6 +242,15 @@ public class Climber {
         } else if (climberMode == climber_state.CLIMB) {
             w_inch += ly * w_manualIncrement;
             setWinchGotoInches(w_inch);
+
+            /*
+            if (ly > 0 && w_inch > Config.getNumber("climberMaxInches")) {
+                winchMotor.set(0);
+            } else if (ly < 0 && w_inch < zeroInchesOffset + Config.getNumber("climberReleaseOffsetInches", -0.25)) {
+                winchMotor.set(0);
+            } else {
+                winchMotor.set(ly*0.9);
+            }*/
         }
     }
 
