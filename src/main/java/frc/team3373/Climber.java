@@ -244,12 +244,21 @@ public class Climber {
             setWinchGotoInches(w_inch);
 
             /*
+            if (ly == 0) {
+                // hold position
+                setWinchGotoInches(inches);
+            }
+            w_inch = winchPosToInches(winchEncoder.getPosition());
+            
             if (ly > 0 && w_inch > Config.getNumber("climberMaxInches")) {
                 winchMotor.set(0);
             } else if (ly < 0 && w_inch < zeroInchesOffset + Config.getNumber("climberReleaseOffsetInches", -0.25)) {
                 winchMotor.set(0);
             } else {
                 winchMotor.set(ly*0.9);
+                if (ly == 0) {
+                    // hold position
+                }
             }*/
         }
     }
@@ -296,6 +305,7 @@ public class Climber {
         } else if (climberMode == climber_state.POGO) {// POGO -> CLIMB
             poleSolenoid.set(false);
             //winchSolenoid.set(false);
+            p_pid.setOutputRange(-0.8, 0.8);
             setPoleGotoInches(Config.getNumber("climberZeroInchesOffset", 0));// Retract pogo stick
             climberMode = climber_state.CLIMB;
         }
