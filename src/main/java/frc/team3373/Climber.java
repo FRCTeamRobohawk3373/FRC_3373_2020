@@ -353,9 +353,10 @@ public class Climber {
         }
     } */
 
-    public void unlockSolenoids(){
+    public void unlockSolenoids() {
         poleSolenoid.set(true);
         winchSolenoid.set(true);
+        climberMode = climber_state.GOTO_SOLENOID;
     }
 
     public void calibrateInches() {
