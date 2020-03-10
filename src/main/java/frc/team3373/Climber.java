@@ -305,7 +305,7 @@ public class Climber {
         } else if (climberMode == climber_state.POGO) {// POGO -> CLIMB
             poleSolenoid.set(false);
             //winchSolenoid.set(false);
-            p_pid.setOutputRange(-0.8, 0.8);
+            p_pid.setOutputRange(-Config.getNumber("climberMaxSpeed"), Config.getNumber("climberMaxSpeed"));
             setPoleGotoInches(Config.getNumber("climberZeroInchesOffset", 0));// Retract pogo stick
             climberMode = climber_state.CLIMB;
         }
