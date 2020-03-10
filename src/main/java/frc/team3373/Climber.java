@@ -12,12 +12,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team3373.util.MathUtil;
 
 public class Climber {
-    CANSparkMax poleMotor, winchMotor, inclineMotor;
-    CANEncoder poleEncoder, winchEncoder;
+    private CANSparkMax poleMotor, winchMotor, inclineMotor;
+    private CANEncoder poleEncoder, winchEncoder;
 
-    Solenoid poleSolenoid, winchSolenoid;
+    private Solenoid poleSolenoid, winchSolenoid;
 
-    CANPIDController p_pid, w_pid;
+    private CANPIDController p_pid, w_pid;
 
     /* For calibration */
     //// private double p_zeroInchesOffset =

@@ -395,7 +395,10 @@ public class Robot extends TimedRobot {
                 case 0:
                     SmartDashboard.putString("Calibrate", "Menu");
 
-                    if (driver.isDPadUpPushed()) calibrationMode = 1;// Climber
+                    if (driver.isDPadUpPushed()){ 
+                        calibrationMode = 1;
+                        climber.unlockSolenoids();
+                    }// Climber
                     if (driver.isDPadRightPushed()) calibrationMode = 2;// Calibrate launcher
                     if (driver.isDPadDownPushed()) calibrationMode = 3; // Calibrate indexer
                     if (driver.isDPadLeftPushed()) calibrationMode = 4; // calabrate swerve
