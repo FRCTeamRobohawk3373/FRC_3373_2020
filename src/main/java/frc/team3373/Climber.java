@@ -240,26 +240,25 @@ public class Climber {
             setWinchGotoInches(w_inch);
 
         } else if (climberMode == climber_state.CLIMB) {
-            w_inch += ly * w_manualIncrement;
-            setWinchGotoInches(w_inch);
-
-            /*
-            if (ly == 0) {
-                // hold position
-                setWinchGotoInches(inches);
-            }
-            w_inch = winchPosToInches(winchEncoder.getPosition());
+            //!w_inch += ly * w_manualIncrement;
+            //!setWinchGotoInches(w_inch);
             
-            if (ly > 0 && w_inch > Config.getNumber("climberMaxInches")) {
-                winchMotor.set(0);
-            } else if (ly < 0 && w_inch < zeroInchesOffset + Config.getNumber("climberReleaseOffsetInches", -0.25)) {
-                winchMotor.set(0);
+            if (ly == 0) {
+                setWinchGotoInches(w_inch);// Hold saved position
             } else {
-                winchMotor.set(ly*0.9);
-                if (ly == 0) {
-                    // hold position
+                w_inch = winchPosToInches(winchEncoder.getPosition());// Save position
+
+                double high = Config.getNumber("climberMaxInches");
+                double low = zeroInchesOffset + Config.getNumber("climberReleaseOffsetInches", -0.25);
+                
+                if (ly > 0 && w_inch > high) {
+                    setWinchGotoInches(high);// Hold
+                } else if (ly < 0 && w_inch < low) {
+                    setWinchGotoInches(low);// Hold
+                } else {
+                    winchMotor.set(ly*Config.getNumber("climberMaxSpeed", 0.5));
                 }
-            }*/
+            }
         }
     }
 
