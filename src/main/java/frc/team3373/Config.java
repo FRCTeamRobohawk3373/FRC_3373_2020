@@ -61,11 +61,6 @@ public class Config {
         if (configObject != null) {
             initialized = true;
         }
-        try {
-            Thread.sleep(100);
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
         display();
     }
 
@@ -84,11 +79,6 @@ public class Config {
         configObject = new JSONObject(st);
         if (configObject != null) {
             initialized = true;
-        }
-        try {
-            Thread.sleep(50);
-        } catch(Exception e) {
-            e.printStackTrace();
         }
         display();
     }
@@ -258,8 +248,8 @@ public class Config {
         double value;
         for (String key : keys) {
             if (!(configObject.get(key) instanceof JSONArray)) {
-                value=table.getEntry(key).getDouble(Double.MAX_VALUE);
-                if(value == Double.MAX_VALUE){
+                value = table.getEntry(key).getDouble(Double.NaN);
+                if (Double.isNaN(value)) {
                     System.out.println("WARNING: Unable to get \"" + key + "\"");
                     continue;
                 }
