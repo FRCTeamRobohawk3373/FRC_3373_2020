@@ -34,6 +34,7 @@
     "launcherMaxSpeed": 1,
     "launcherReadyDelay":1,
     "launcherSpinUpDeadband":0.02,
+    "launcherPowerToRpm":5419,
 
     "comment-6": "CLIMBER",
     "climberZeroInchesOffset":44.5,
