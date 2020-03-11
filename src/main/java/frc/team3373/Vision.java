@@ -189,7 +189,7 @@ public class Vision {
 				activeCamName = cData.getCameraMap().get(streamIndex);
 			}
 		} else {
-			System.out.println("ERROR: Invalid camera stream index");
+			//System.out.println("ERROR: Invalid camera stream index");
 		}
 	}
 
@@ -198,7 +198,7 @@ public class Vision {
 			if(!streamingTable.getEntry("selectedCamName").getString("").equals(streamName))
 				streamingTable.getEntry("selectedCamName").setString(streamName);
 		} else {
-			System.out.println("ERROR: Invalid camera stream name");
+			//System.out.println("ERROR: Invalid camera stream name");
 		}
 	}
 
