@@ -79,8 +79,14 @@ public class Launcher {
 
     public void setSpeed(double speed) {
         speed = MathUtil.clamp(speed, 0, Config.getNumber("launcherMaxSpeed", 0.7));
+
+        double targetRpm = (speed+liveSpeedAdjustment) * Config.getNumber("launcherPowerToRpm");
+        double actualRpm = motor.getEncoder().getVelocity();
+        double speedCorrection = (targetRpm - actualRpm) / Config.getNumber("launcherPowerToRpm");
+        //!speedCorrection = 0;
+
         targetSpeed = speed;
-        motor.set(MathUtil.clamp(speed+liveSpeedAdjustment, 0.0, Config.getNumber("launcherMaxSpeed", 0.7)));
+        motor.set(MathUtil.clamp(speed+liveSpeedAdjustment+speedCorrection, 0.0, Config.getNumber("launcherMaxSpeed", 0.7)));
     }
 
     public void setSpeedFromDistance(double inches) {
