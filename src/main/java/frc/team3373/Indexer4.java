@@ -449,7 +449,7 @@ public class Indexer4 {
             pos1 = timedBool1.update(intakeSensor.get(), Config.getNumber("intakeSensorDelay", 0.3));
             pos2 = timedBool2.update(conveyorSensor.get(), Config.getNumber("conveyorSensorDelay", 0.2));        
             //pos3 = timedBool3.update(preloadSensor.get(), Config.getNumber("preloadSensorDelay", 0.5));
-            //timedLock4 = timedBool4.update(occupy4, Config.getNumber("lockLoadDelay", 0.84));
+            //timedLock4 = timedBool4.update(occupy4, Config.getNumber("loadLockingDelay", 0.84));
 
             updatePos1();
             updateConveyor();
@@ -461,7 +461,7 @@ public class Indexer4 {
         }
 
         pos3 = timedBool3.update(preloadSensor.get(), Config.getNumber("preloadSensorDelay", 0.5));
-        timedLock4 = timedBool4.update(occupy4, Config.getNumber("lockLoadDelay", 0.84));
+        timedLock4 = timedBool4.update(occupy4, Config.getNumber("loadLockingDelay", 0.84));
         updatePos3();
         updatePos4();
 

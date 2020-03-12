@@ -58,8 +58,12 @@ public class Launcher {
     }
 
     public boolean isUpToSpeed(){
-        double speed = motor.get();
-        if(speed >= targetSpeed+liveSpeedAdjustment-Config.getNumber("shooterSpinUpDeadband",0.02) && speed <= targetSpeed+liveSpeedAdjustment+Config.getNumber("shooterSpinUpDeadband",0.02)){
+        double targetRpm = (targetSpeed+liveSpeedAdjustment) * Config.getNumber("launcherPowerToRpm");
+        double actualRpm = motor.getEncoder().getVelocity();
+        //double speedCorrection = (targetRpm - actualRpm) / Config.getNumber("launcherPowerToRpm");
+        SmartDashboard.putNumber("targetVel", targetRpm);
+        //double speed = motor.get();
+        if(Math.abs(actualRpm-targetRpm) <= Config.getNumber("shooterSpinUpDeadband", 50)){
             if(readyTimer.get()>Config.getNumber("launcherReadyDelay",1)){
                 readyTimer.stop();
                 return true;
@@ -86,6 +90,11 @@ public class Launcher {
         //!speedCorrection = 0;
 
         targetSpeed = speed;
+
+        SmartDashboard.putNumber("ShooterVel", motor.getEncoder().getVelocity());
+        SmartDashboard.putNumber("targetPower", speed+liveSpeedAdjustment+speedCorrection);
+        SmartDashboard.putNumber("reportedPower", motor.get());
+
         motor.set(MathUtil.clamp(speed+liveSpeedAdjustment+speedCorrection, 0.0, Config.getNumber("launcherMaxSpeed", 0.7)));
     }
 

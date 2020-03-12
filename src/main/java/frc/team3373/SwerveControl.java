@@ -69,7 +69,7 @@ public class SwerveControl {
 		initPIDController();
 
 		ahrs = SuperAHRS.getInstance();
-		ahrs.reset();
+		// ahrs.reset();
 		// System.out.println(rotAngle);
 
 		FLWheel = new SwerveWheel("FrontLeft", Constants.FLRotateMotorID, Constants.FLDriveMotorID, Constants.FLEncMin, 
@@ -87,6 +87,9 @@ public class SwerveControl {
 		BRWheel.setPIDController(Constants.ROTATE_BR_PID);
 
 		wheelArray = new SwerveWheel[] { FLWheel, BLWheel, BRWheel, FRWheel };
+		
+		resetOrentation();
+		recalculateWheelPosition();
 	}
 
 	// ######################################################

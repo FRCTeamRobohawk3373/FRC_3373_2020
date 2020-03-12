@@ -33,7 +33,7 @@
     "comment-5": "LAUNCHER",
     "launcherMaxSpeed": 1,
     "launcherReadyDelay":1,
-    "launcherSpinUpDeadband":0.02,
+    "launcherSpinUpDeadband":50,
     "launcherPowerToRpm":5419,
 
     "comment-6": "CLIMBER",
