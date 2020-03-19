@@ -12,12 +12,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.team3373.util.MathUtil;
 
 public class Climber {
-    CANSparkMax poleMotor, winchMotor, inclineMotor;
-    CANEncoder poleEncoder, winchEncoder;
+    private CANSparkMax poleMotor, winchMotor, inclineMotor;
+    private CANEncoder poleEncoder, winchEncoder;
 
-    Solenoid poleSolenoid, winchSolenoid;
+    private Solenoid poleSolenoid, winchSolenoid;
 
-    CANPIDController p_pid, w_pid;
+    private CANPIDController p_pid, w_pid;
 
     /* For calibration */
     //// private double p_zeroInchesOffset =
@@ -240,8 +240,27 @@ public class Climber {
             setWinchGotoInches(w_inch);
 
         } else if (climberMode == climber_state.CLIMB) {
-            w_inch += ly * w_manualIncrement;
-            setWinchGotoInches(w_inch);
+            //!w_inch += ly * w_manualIncrement;
+            //!setWinchGotoInches(w_inch);
+            
+            if (ly == 0) {
+                w_goto = (w_inch - zeroInchesOffset) * w_rotPerInch;
+                w_pid.setReference(w_goto, ControlType.kPosition);
+                //setWinchGotoInches(w_inch);// Hold saved position
+            } else {
+                w_inch = winchPosToInches(winchEncoder.getPosition());// Save position
+
+                double high = Config.getNumber("climberMaxInches");
+                double low = zeroInchesOffset + Config.getNumber("climberReleaseOffsetInches", -0.25);
+                
+                if (ly > 0 && w_inch > high) {
+                    setWinchGotoInches(high);// Hold
+                } /*else if (ly < 0 && w_inch < low) {
+                    setWinchGotoInches(low);// Hold
+                }*/ else {
+                    winchMotor.set(ly*Config.getNumber("climberMaxSpeed", 0.5));
+                }
+            }
         }
     }
 
@@ -287,6 +306,7 @@ public class Climber {
         } else if (climberMode == climber_state.POGO) {// POGO -> CLIMB
             poleSolenoid.set(false);
             //winchSolenoid.set(false);
+            p_pid.setOutputRange(-Config.getNumber("climberMaxSpeed"), Config.getNumber("climberMaxSpeed"));
             setPoleGotoInches(Config.getNumber("climberZeroInchesOffset", 0));// Retract pogo stick
             climberMode = climber_state.CLIMB;
         }
@@ -353,9 +373,10 @@ public class Climber {
         }
     } */
 
-    public void unlockSolenoids(){
+    public void unlockSolenoids() {
         poleSolenoid.set(true);
         winchSolenoid.set(true);
+        climberMode = climber_state.GOTO_SOLENOID;
     }
 
     public void calibrateInches() {

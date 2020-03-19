@@ -39,8 +39,8 @@ public class Config {
     private static boolean isBackup = false;
 
     /**
-     * Reads constants.json and creates a JSON object.
-     * @throws IOException if file at constants path doesn't exist
+     * Reads config.json and creates a JSON object.
+     * @throws IOException if file at config path doesn't exist
      */
     public static void loadConfig() throws IOException {
         BufferedReader br;
@@ -61,11 +61,6 @@ public class Config {
         if (configObject != null) {
             initialized = true;
         }
-        try {
-            Thread.sleep(100);
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
         display();
     }
 
@@ -85,16 +80,11 @@ public class Config {
         if (configObject != null) {
             initialized = true;
         }
-        try {
-            Thread.sleep(50);
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
         display();
     }
 
     /**
-     * Copies constants.json to backup-constants.json and copies the Json object to constants.json
+     * Copies config.json to backup-config.json and copies the Json object to config.json
      * @throws IOException if there is an exception when writing the file
      */
     public static void saveConfig() throws IOException { 
@@ -118,8 +108,8 @@ public class Config {
     }
 
     /**
-     * Copies backup-constants.json to constants.json.
-     * @throws IOException if backup-constants.json doesn't exist.
+     * Copies backup-config.json to config.json.
+     * @throws IOException if backup-config.json doesn't exist.
      */
     public static void restoreBackup() throws IOException {
         copy(backupPath, path);
@@ -164,18 +154,18 @@ public class Config {
 
     /*
      * public static void writeString(String name, String value) {
-     * constantsObject.put(name, value); }
+     * config.put(name, value); }
      * 
      * public static void writeNumberArray(String name, int index1, int index2,
      * double value) {
-     * constantsObject.getJSONArray(name).getJSONArray(index1).put(index2, value); }
+     * configObject.getJSONArray(name).getJSONArray(index1).put(index2, value); }
      * 
      * public static void writeNumberArray(String name, double[] values) { JSONArray
-     * array = constantsObject.getJSONArray(name); for (int i = 0; i <
+     * array = configObject.getJSONArray(name); for (int i = 0; i <
      * values.length; i++) { array.put(i, values[i]); } }
      * 
      * public static void writeNumberArray(String name, double[][] values) {
-     * JSONArray array = constantsObject.getJSONArray(name); for (int i = 0; i <
+     * JSONArray array = configObject.getJSONArray(name); for (int i = 0; i <
      * values.length; i++) { for (int j = 0; j < values[i].length; j++) {
      * array.getJSONArray(i).put(j, values[i][j]); } } }
      */
@@ -231,14 +221,14 @@ public class Config {
             if (!(configObject.get(name) instanceof JSONArray)) {
                 table.getEntry(name).setValue(configObject.get(name));
             } // else {
-            //     if (!(constantsObject.getJSONArray(name).get(0) instanceof JSONArray)) {
-            //         JSONArray array = constantsObject.getJSONArray(name);
+            //     if (!(configObject.getJSONArray(name).get(0) instanceof JSONArray)) {
+            //         JSONArray array = configObject.getJSONArray(name);
             //         NetworkTable subTable = table.getSubTable(name);
             //         for (int i = 0; i < array.length(); i++) {
             //             subTable.getEntry(Integer.toString(i)).setDouble(array.getDouble(i));
             //         }
             //     } else {
-            //         JSONArray array = constantsObject.getJSONArray(name);
+            //         JSONArray array = configObject.getJSONArray(name);
             //         NetworkTable subTable = table.getSubTable(name);
             //         for (int i = 0; i < array.length(); i++) {
             //             JSONArray array2 = array.getJSONArray(i);
@@ -253,26 +243,26 @@ public class Config {
     }
 
     public static void updateValues() {
-        NetworkTable table = NetworkTableInstance.getDefault().getTable("Constants");
+        NetworkTable table = NetworkTableInstance.getDefault().getTable("Config");
         String[] keys = JSONObject.getNames(configObject);
         double value;
         for (String key : keys) {
             if (!(configObject.get(key) instanceof JSONArray)) {
-                value=table.getEntry(key).getDouble(Double.MAX_VALUE);
-                if(value == Double.MAX_VALUE){
+                value = table.getEntry(key).getDouble(Double.NaN);
+                if (Double.isNaN(value)) {
                     System.out.println("WARNING: Unable to get \"" + key + "\"");
                     continue;
                 }
                 configObject.put(key, value);
             } // else {
-            //     if (!(constantsObject.getJSONArray(key).get(0) instanceof JSONArray)) {
-            //         JSONArray array = constantsObject.getJSONArray(key);
+            //     if (!(configObject.getJSONArray(key).get(0) instanceof JSONArray)) {
+            //         JSONArray array = configObject.getJSONArray(key);
             //         NetworkTable subTable = table.getSubTable(key);
             //         for (int i = 0; i < array.length(); i++) {
             //             array.put(i, subTable.getEntry(Integer.toString(i)));
             //         }
             //     } else {
-            //         JSONArray array = constantsObject.getJSONArray(key);
+            //         JSONArray array = configObject.getJSONArray(key);
             //         NetworkTable subTable = table.getSubTable(key);
             //         for (int i = 0; i < array.length(); i++) {
             //             JSONArray array2 = array.getJSONArray(i);

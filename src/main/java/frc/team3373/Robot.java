@@ -109,6 +109,10 @@ public class Robot extends TimedRobot {
         swerve = SwerveControl.getInstance();
         swerve.setDriveSpeed(0.25);
         swerve.changeControllerLimiter(3);
+        //swerve.recalculateWheelPosition();
+        //swerve.resetOrentation();
+
+        //indexer.setInitialBallStates(new State[]{State.AVAILABLE,State.OCCUPIED,State.OCCUPIED,State.OCCUPIED});
 
         vis = Vision.getInstance();
 
@@ -191,6 +195,7 @@ public class Robot extends TimedRobot {
     public void disabledPeriodic() {
         if(shooter.isStartPushed()){
             indexer.setInitialBallStates(new State[]{State.AVAILABLE,State.OCCUPIED,State.OCCUPIED,State.OCCUPIED}); 
+            //indexer.setInitialBallStates(new State[]{State.AVAILABLE,State.AVAILABLE,State.AVAILABLE,State.AVAILABLE}); 
         }
     }
 
@@ -211,7 +216,7 @@ public class Robot extends TimedRobot {
         m_autoSelected = m_chooser.getSelected();
         m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
         //TODO Needs more testing with balls
-        indexer.setInitialBallStates(new State[]{State.AVAILABLE,State.AVAILABLE,State.AVAILABLE,State.AVAILABLE}); 
+        //indexer.setInitialBallStates(new State[]{State.AVAILABLE,State.AVAILABLE,State.AVAILABLE,State.AVAILABLE}); 
         System.out.println("Auto selected: " + m_autoSelected);
         indexer.startInit();
         swerve.recalculateWheelPosition();
@@ -224,6 +229,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousPeriodic() {
+        indexer.update();
         autoControl.update();
     }
 
@@ -395,7 +401,10 @@ public class Robot extends TimedRobot {
                 case 0:
                     SmartDashboard.putString("Calibrate", "Menu");
 
-                    if (driver.isDPadUpPushed()) calibrationMode = 1;// Climber
+                    if (driver.isDPadUpPushed()){ 
+                        calibrationMode = 1;
+                        climber.unlockSolenoids();
+                    }// Climber
                     if (driver.isDPadRightPushed()) calibrationMode = 2;// Calibrate launcher
                     if (driver.isDPadDownPushed()) calibrationMode = 3; // Calibrate indexer
                     if (driver.isDPadLeftPushed()) calibrationMode = 4; // calabrate swerve

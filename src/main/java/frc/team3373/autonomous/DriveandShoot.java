@@ -18,6 +18,7 @@ public class DriveandShoot implements Runnable {
         swerve = SwerveControl.getInstance();
         launcher = Launcher.getInstance();
         indexer = Indexer4.getInstance();
+        swerve.resetOrentation();
         
         while (!Thread.interrupted()) {
             switch (state) {
