@@ -402,7 +402,7 @@ public class Robot extends TimedRobot {
 
                     break;
 
-                case 1:// Calibrate Climber
+                case 1://! Calibrate Climber
                 SmartDashboard.putString("Calibrate", "Climber");
                
                 if (firstTimeC) {
@@ -425,7 +425,7 @@ public class Robot extends TimedRobot {
                     climber.displayOnShuffleboard();
                     break;
 
-                case 2:
+                case 2://! Calibrate Launcher
                     SmartDashboard.putString("Calibrate", "Launcher");
 
                     if (driver.isAPushed()) {
@@ -437,7 +437,7 @@ public class Robot extends TimedRobot {
                     }
                     break;
                     
-                case 3: 
+                case 3: //! Calibrate Indexer
                     SmartDashboard.putString("Calibrate", "Indexer");
 
                     if (driver.isDPadUpPushed()) {
@@ -456,7 +456,7 @@ public class Robot extends TimedRobot {
                     }
                     break;
                     
-                case 4:
+                case 4://! Calibrate Swerve
                     SmartDashboard.putString("Calibrate", "Swerve");
 
                     if (driver.isYPushed()) {
