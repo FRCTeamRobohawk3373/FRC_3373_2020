@@ -26,6 +26,7 @@ public class SwerveWheel {
 
 	private CANEncoder rotateEncoder;
 	private CANEncoder driveEncoder;
+	private
 
 	private String name; // used for helpful debug
 	private double EMin;
