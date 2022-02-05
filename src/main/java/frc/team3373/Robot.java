@@ -16,11 +16,6 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 //import edu.wpi.first.wpilibj.SPI;
-
-//import frc.team3373.util.MathUtil;
-import frc.team3373.SwerveControl.DriveMode;
-// import frc.team3373.SwerveControl.Side;
-
 import frc.team3373.Indexer4.State;
 
 /**
@@ -37,6 +32,8 @@ public class Robot extends TimedRobot {
     private static final String kRelRotAuto = "Test RelRotate";
     private static final String kAbsRotAuto = "Test ABSRotate";
     private String m_autoSelected;
+    public final double L = 18;
+    public final double W = 17;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
     private AutonomousControl autoControl;
@@ -44,7 +41,6 @@ public class Robot extends TimedRobot {
     private SuperJoystick driver;
     private SuperJoystick shooter;
 
-    private SwerveControl swerve;
     private SuperAHRS ahrs;
     private Launcher launcher;
     private Indexer4 indexer;
@@ -106,9 +102,7 @@ public class Robot extends TimedRobot {
         ahrs = SuperAHRS.getInstance();
         indexer = Indexer4.getInstance();
 
-        swerve = SwerveControl.getInstance();
-        swerve.setDriveSpeed(0.25);
-        swerve.changeControllerLimiter(3);
+
         //swerve.recalculateWheelPosition();
         //swerve.resetOrentation();
 
@@ -219,8 +213,6 @@ public class Robot extends TimedRobot {
         //indexer.setInitialBallStates(new State[]{State.AVAILABLE,State.AVAILABLE,State.AVAILABLE,State.AVAILABLE}); 
         System.out.println("Auto selected: " + m_autoSelected);
         indexer.startInit();
-        swerve.recalculateWheelPosition();
-        swerve.resetOrentation();
         autoControl.start(0);
     }
 
@@ -235,8 +227,6 @@ public class Robot extends TimedRobot {
 
     public void teleopInit() {
         //swerve.resetOrentation();
-        swerve.setControlMode(DriveMode.ROBOTCENTRIC);
-        swerve.recalculateWheelPosition();
         indexer.startInit();
     }
 
@@ -244,8 +234,7 @@ public class Robot extends TimedRobot {
      * This function is called periodically during operator control.
      */
     public void teleopPeriodic() {
-        joystickControls();
-
+        SwerveDrive.drive(driver.getRawAxis(1), driver.getRawAxis(0), driver.getRawAxis(4));
         indexer.update();
         launcher.updateTeleOp();
         climber.update();
@@ -255,126 +244,7 @@ public class Robot extends TimedRobot {
          */
     }
 
-    private void joystickControls() {
-        /*
-         * ######################## Driver Controls ########################
-         */
 
-        swerve.calculateSwerveControl(driver.getRawAxis(0), driver.getRawAxis(1), driver.getRawAxis(4) * 0.75);
-
-        if (driver.isBPushed()) {
-            swerve.changeControllerLimiter();
-        }
-
-        if (driver.isLBHeld()) {
-            swerve.setDriveSpeed(0.45);
-        } else if (driver.isRBHeld()) {
-            swerve.setDriveSpeed(.75);
-        } else {
-            swerve.setDriveSpeed(0.15);
-        }
-
-        /*
-         * if(driver.isStartPushed()){ swerve.calibrateHome(); }
-         */
-
-        if (driver.isYPushed()) {
-            swerve.recalculateWheelPosition();
-        }
-
-        if (driver.getRawAxis(2) > 0.8)
-            swerve.setControlMode(DriveMode.FIELDCENTRIC);
-        else if (driver.getRawAxis(3) > 0.8)
-            swerve.setControlMode(DriveMode.ROBOTCENTRIC);
-
-        switch (driver.getPOV()) {
-        case 0:
-            swerve.changeFront(SwerveControl.Side.NORTH);
-            break;
-        case 90:
-            swerve.changeFront(SwerveControl.Side.EAST);
-            break;
-        case 180:
-            swerve.changeFront(SwerveControl.Side.SOUTH);
-            break;
-        case 270:
-            swerve.changeFront(SwerveControl.Side.WEST);
-            break;
-        }
-
-        if (driver.isBackPushed()) {
-            swerve.resetOrentation();
-        }
-
-        /*
-         * ######################### Shooter Controls #########################
-         */
-        
-        if(shooter.getRawAxis(5) < -0.5){
-            indexer.startIntake();
-        }else if(shooter.getRawAxis(5) > 0.5){
-            indexer.reverseIntake(Config.getNumber("intakeMotorSpeed", -0.6));
-        }else {
-            indexer.stopIntake();
-        }
-        
-        if (shooter.getRawAxis(3) > 0.5) {
-            indexer.startShooting();
-            double launcher_inches = SmartDashboard.getNumber("Shoot Distance", 0);
-            launcher.setSpeed(0.45);
-            //launcher.setSpeedFromDistance(launcher_inches);
-            vis.switchStreamCam(2);
-            if(launcher.isUpToSpeed() && shooter.isAHeld()) { // ? Change?
-                indexer.unloadBall();
-            }
-
-        } else {
-            vis.switchStreamCam(1);
-            if(!indexer.isBallUnloading()){
-                launcher.stop();
-                indexer.stopShooting();
-            }
-        }
-        /* if (shooter.isBackPushed()) {
-            indexer.reverseConveyor();
-        } */
-
-        if (shooter.isLBPushed()) {
-            launcher.bumpDownSpeed();
-        }
-        if (shooter.isRBPushed()) {
-            launcher.bumpUpSpeed();
-        }
-
-        if (shooter.isBHeld()) {
-            indexer.enterPanicMode();
-        }
-
-        if (shooter.isBackPushed()) {
-            indexer.zeroMotors();
-        }
-
-        
-        //* Climber
-        climber.teleOpControl(-shooter.getRawAxis(1), shooter.getRawAxis(0));
-    
-        if (shooter.isDPadDownPushed()) {
-            climber.gotoLowPosition();
-        } else if (shooter.isDPadLeftPushed() || shooter.isDPadRightPushed()) {
-            climber.gotoMiddlePosition();
-        } else if (shooter.isDPadUpPushed()) {
-            climber.gotoHighPosition();
-        } else if (shooter.isYPushed()) {
-            climber.changeClimbMode();
-        }
-
-        //*/
-
-        driver.clearButtons();
-        driver.clearDPad();
-        shooter.clearButtons();
-        shooter.clearDPad();
-    }
 
     @Override
     public void testInit() {
@@ -465,28 +335,6 @@ public class Robot extends TimedRobot {
                     }
                     break;
                     
-                case 4://! Calibrate Swerve
-                    SmartDashboard.putString("Calibrate", "Swerve");
-
-                    if (driver.isYPushed()) {
-                        swerve.recalculateWheelPosition();
-                    }
-
-                    if (driver.isAPushed()) {
-                        swerve.calibrateHome();
-                    }
-                    if (driver.isBPushed()) {
-                        swerve.calibrateMinMax();
-                    }
-
-                    swerve.showPositions();
-                    
-                    if(driver.isRBHeld()){
-                        swerve.setDriveSpeed(0.15);
-                        swerve.calculateSwerveControl(driver.getRawAxis(0), driver.getRawAxis(1), driver.getRawAxis(4) * 0.75);
-                    }
-                    break;
-                
                 default:
                     SmartDashboard.putString("Calibrate", "broken robot mode");
                     break; //Don Nothing if invalid mode
